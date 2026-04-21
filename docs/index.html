@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/flickr-justified-layout@2.1.1/dist/justified-layout.min.js"></script>
+  <script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/1.7.1/cloudbase.full.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -523,8 +524,30 @@
 
 <script>
 const APP_KEY = 'portfolio_data_v3';
+const CLOUD_ENV_ID = 'my-web-d5gsldm9ha36297d1';
+
 let editMode = false;
 let darkMode = true;
+
+// 初始化腾讯云开发
+let tcbApp = null;
+let db = null;
+
+async function initCloudBase() {
+  try {
+    tcbApp = tcb.init({ env: CLOUD_ENV_ID });
+    await tcbApp.auth().signInAnonymously();
+    db = tcbApp.database();
+    console.log('✓ 云开发初始化成功');
+    return true;
+  } catch (e) {
+    console.error('云开发初始化失败:', e);
+    return false;
+  }
+}
+
+// 页面加载时初始化云开发
+initCloudBase();
 
 let DATA = {
   practice: [],
@@ -579,63 +602,77 @@ function loadData(){
 }
 
 // Push DATA.json to GitHub so any visitor can load it
-async function publishDataToGitHub(){
-  const useProxy = window.location.hostname.includes('netlify.app') ||
-                   window.location.hostname.includes('netlify.com');
-  if(useProxy){
-    try{
-      const r = await fetch('/.netlify/functions/gh-proxy',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({action:'save-data', data:DATA})
-      });
-      if(r.ok){ console.log('✓ 数据已同步到 GitHub'); }
-      else { console.error('同步失败:', await r.text()); }
-    }catch(e){ console.error('同步出错:', e); }
+async function publishDataToCloud() {
+  if (!db) {
+    console.error('云数据库未初始化');
     return;
   }
-  // Fallback: direct GitHub API (localhost)
-  if(!ghConfig.user||!ghConfig.token){ return; }
-  const msg = document.getElementById('gh-msg');
-  if(msg){ msg.textContent='发布中…'; msg.style.color='#8a8480'; }
-  const path='portfolio-data.json';
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(DATA))));
-  let sha;
-  try{
-    const r=await fetch(`https://api.github.com/repos/${ghConfig.user}/${ghConfig.repo}/contents/${path}`,
-      {headers:{Authorization:'token '+ghConfig.token}});
-    if(r.ok){ const d=await r.json(); sha=d.sha; }
-  }catch(e){}
-  const body={message:'publish portfolio data', content};
-  if(sha) body.sha=sha;
-  try{
-    const r=await fetch(`https://api.github.com/repos/${ghConfig.user}/${ghConfig.repo}/contents/${path}`,{
-      method:'PUT',
-      headers:{Authorization:'token '+ghConfig.token,'Content-Type':'application/json'},
-      body:JSON.stringify(body)
-    });
-    if(r.ok){
-      if(msg){ msg.textContent='发布成功 ✓'; msg.style.color='#60c060'; setTimeout(()=>{ if(msg) msg.textContent=''; },3000); }
+  
+  try {
+    // 检查是否已有数据记录
+    const collection = db.collection('portfolio');
+    const existing = await collection.where({ _id: 'main' }).get();
+    
+    const dataToSave = {
+      _id: 'main',
+      data: DATA,
+      updatedAt: new Date()
+    };
+    
+    if (existing.data && existing.data.length > 0) {
+      // 更新现有记录
+      await collection.doc('main').update(dataToSave);
     } else {
-      if(msg){ msg.textContent='发布失败'; msg.style.color='#e06060'; }
+      // 新增记录
+      await collection.add(dataToSave);
     }
-  }catch(e){}
+    
+    console.log('✓ 数据已同步到云端');
+  } catch (e) {
+    console.error('同步失败:', e);
+  }
 }
 
-// Load DATA.json from GitHub on page open (for visitors)
-async function loadDataFromGitHub(){
-  if(!ghConfig.user||!ghConfig.repo) return;
-  try{
-    const r=await fetch(`https://raw.githubusercontent.com/${ghConfig.user}/${ghConfig.repo}/main/portfolio-data.json?t=${Date.now()}`);
-    if(!r.ok) return;
-    const remote=await r.json();
-    // merge: remote wins except blobs
-    DATA=Object.assign(DATA,remote);
-    ['practice','mg','aigc-img','aigc-vid','agent'].forEach(sec=>{
-      if(!DATA[sec]) return;
-      DATA[sec].forEach(item=>{
-        if(item.media&&item.media.startsWith('blob:')) item.media='';
-        if(item.cover&&item.cover.startsWith('blob:')) item.cover='';
+// 兼容旧代码的别名
+async function publishDataToGitHub() {
+  return publishDataToCloud();
+}
+
+// 从云端加载数据
+async function loadDataFromCloud() {
+  if (!db) return;
+  
+  try {
+    const collection = db.collection('portfolio');
+    const result = await collection.where({ _id: 'main' }).get();
+    
+    if (result.data && result.data.length > 0) {
+      const cloudData = result.data[0].data;
+      if (cloudData) {
+        // 清理 blob 链接
+        ['practice','mg','aigc-img','aigc-vid','agent'].forEach(sec=>{
+          if(!cloudData[sec]) return;
+          cloudData[sec].forEach(item=>{
+            if(item.media && item.media.startsWith('blob:')) item.media='';
+            if(item.cover && item.cover.startsWith('blob:')) item.cover='';
+          });
+        });
+        
+        DATA = Object.assign(DATA, cloudData);
+        try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); }catch(e){}
+        renderAll();
+        console.log('✓ 从云端加载数据成功');
+      }
+    }
+  } catch (e) {
+    console.error('从云端加载失败:', e);
+  }
+}
+
+// 兼容旧代码的别名
+async function loadDataFromGitHub() {
+  return loadDataFromCloud();
+}
       });
     });
     // save to local for offline
@@ -1396,65 +1433,58 @@ async function testGh(){
   }catch(e){ msg.textContent='网络错误'; msg.style.color='#e06060'; }
 }
 
-async function uploadToGitHub(file){
-  // Try Netlify proxy first (no token needed client-side)
-  const useProxy = window.location.hostname.includes('netlify.app') ||
-                   window.location.hostname.includes('netlify.com');
-  if(useProxy){
-    const reader = new FileReader();
-    return new Promise(resolve=>{
-      reader.onload = async ()=>{
-        const base64 = reader.result.split(',')[1];
-        const path = 'media/'+Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-        try{
-          const r = await fetch('/.netlify/functions/gh-proxy',{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({action:'upload', path, content:base64, filename:file.name})
-          });
-          if(r.ok){ const d=await r.json(); resolve(d.url||null); }
-          else resolve(null);
-        }catch(e){ resolve(null); }
-      };
-      reader.readAsDataURL(file);
-    });
+async function uploadToCloudStorage(file) {
+  if (!tcbApp) {
+    console.error('云开发未初始化');
+    return null;
   }
-  // Fallback: direct GitHub API with stored token (localhost dev)
-  if(!ghConfig.user||!ghConfig.token) return null;
-  const path='media/'+Date.now()+'-'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-  const reader=new FileReader();
-  return new Promise(resolve=>{
-    reader.onload=async()=>{
-      const base64=reader.result.split(',')[1];
-      try{
-        const r=await fetch(`https://api.github.com/repos/${ghConfig.user}/${ghConfig.repo}/contents/${path}`,{
-          method:'PUT',
-          headers:{Authorization:'token '+ghConfig.token,'Content-Type':'application/json'},
-          body:JSON.stringify({message:'upload '+file.name, content:base64})
-        });
-        if(r.ok){ const d=await r.json(); resolve(d.content.download_url); }
-        else resolve(null);
-      }catch(e){ resolve(null); }
-    };
-    reader.readAsDataURL(file);
-  });
+  
+  try {
+    // 生成唯一文件名
+    const ext = file.name.split('.').pop() || 'bin';
+    const cloudPath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    
+    // 上传到云存储
+    const result = await tcbApp.uploadFile({
+      cloudPath,
+      filePath: file
+    });
+    
+    if (result.fileID) {
+      // 获取临时访问链接
+      const urlResult = await tcbApp.getTempFileURL({
+        fileList: [result.fileID]
+      });
+      
+      if (urlResult.fileList && urlResult.fileList[0] && urlResult.fileList[0].tempFileURL) {
+        console.log('✓ 文件上传成功:', urlResult.fileList[0].tempFileURL);
+        return urlResult.fileList[0].tempFileURL;
+      }
+    }
+    return null;
+  } catch (e) {
+    console.error('上传失败:', e);
+    return null;
+  }
 }
 
-function init(){
+// 兼容旧代码的别名
+async function uploadToGitHub(file) {
+  return uploadToCloudStorage(file);
+}
+
+async function init(){
+  // 初始化云开发
+  const cloudReady = await initCloudBase();
+  
+  // 先从本地加载数据
   loadData();
-  // purge empty (no media) cards from previous sessions
-  const sections = ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
-  sections.forEach(sec=>{
-    if(!DATA[sec]) return;
-    DATA[sec] = DATA[sec].filter(item=>item.media || item.type==='prompt');
-  });
-  saveData();
-  localStorage.removeItem('portfolio_data_v2');
-  localStorage.removeItem('portfolio_data_v1');
   renderAll();
-  loadGh();
-  // after local render, try loading published data from GitHub
-  setTimeout(loadDataFromGitHub, 500);
+  
+  // 如果云开发初始化成功，从云端加载数据
+  if (cloudReady) {
+    setTimeout(loadDataFromCloud, 500);
+  }
 }
 
 init();
