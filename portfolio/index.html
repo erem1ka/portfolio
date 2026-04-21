@@ -542,8 +542,14 @@ let DATA = {
   cols: { practice:4, mg:3, 'aigc-img':4, 'aigc-vid':4, 'aigc-prompt':3, agent:3 }
 };
 
+let _publishTimer = null;
 function saveData(){
   try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); } catch(e){}
+  // Auto-publish to GitHub with 3s debounce
+  if(ghConfig.user && ghConfig.token){
+    clearTimeout(_publishTimer);
+    _publishTimer = setTimeout(publishDataToGitHub, 3000);
+  }
 }
 function loadData(){
   try{
