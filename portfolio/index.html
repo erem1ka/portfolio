@@ -825,12 +825,17 @@ function renderSection(sectionKey, gridId, type){
     if(item.type==='img') card = makeImgCard(item);
     else if(item.type==='prompt') card = makePromptCard(item);
     else card = makeMp4Card(item);  // mp4, webp, gif all via makeMp4Card
-    // Set card width = rowH × AR (fallback 16/9)
-    const ar = item.ar || (16/9);
-    const cardW = Math.round(rowH * ar);
-    card.style.width = cardW + 'px';
-    const mediaEl = card.querySelector('.card-media');
-    if(mediaEl) mediaEl.style.height = rowH + 'px';
+    // Prompt cards: fixed width, no justified layout
+    if(item.type==='prompt'){
+      card.style.width = '280px';
+    } else {
+      // Justified: width = rowH × AR
+      const ar = item.ar || (16/9);
+      const cardW = Math.round(rowH * ar);
+      card.style.width = cardW + 'px';
+      const mediaEl = card.querySelector('.card-media');
+      if(mediaEl) mediaEl.style.height = rowH + 'px';
+    }
     container.appendChild(card);
     requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*25));
   });
@@ -1154,6 +1159,8 @@ fileInput.addEventListener('change', async ()=>{
     const cover = await extractFirstFrame(file);
     item.cover = cover;
     item.ar = await getVideoAR(file);
+  } else if(isWebpGif){
+    item.ar = await getImageAR(blobUrl);
   } else if(isImg){
     item.ar = await getImageAR(blobUrl);
   }
