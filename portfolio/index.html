@@ -498,6 +498,7 @@
         <button onclick="testGh()" class="flex-1 border border-sep rounded py-1.5 font-mono text-[.55rem] text-sub hover:text-main transition-colors">测试连接</button>
         <button onclick="saveGh()" class="flex-1 bg-mod1 border border-sep rounded py-1.5 font-mono text-[.55rem] text-main hover:border-opacity-70 transition-colors">保存</button>
       </div>
+      <button onclick="publishDataToGitHub()" class="w-full mt-1 border border-sep rounded py-1.5 font-mono text-[.55rem] text-main hover:border-opacity-70 transition-colors" style="background:linear-gradient(135deg,rgba(37,244,238,.08),rgba(0,119,255,.06));border-color:rgba(37,244,238,.2)">🚀 发布数据（让所有人可见）</button>
       <p id="gh-msg" class="font-mono text-[.52rem] text-center h-4 transition-colors"></p>
     </div>
   </div>
@@ -558,6 +559,59 @@ function loadData(){
       });
     }
   } catch(e){}
+}
+
+// Push DATA.json to GitHub so any visitor can load it
+async function publishDataToGitHub(){
+  if(!ghConfig.user||!ghConfig.token){ alert('请先配置 GitHub 存储'); return; }
+  const msg = document.getElementById('gh-msg');
+  if(msg){ msg.textContent='发布中…'; msg.style.color='#8a8480'; }
+  const path='portfolio-data.json';
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(DATA))));
+  // get existing SHA if any
+  let sha;
+  try{
+    const r=await fetch(`https://api.github.com/repos/${ghConfig.user}/${ghConfig.repo}/contents/${path}`,
+      {headers:{Authorization:'token '+ghConfig.token}});
+    if(r.ok){ const d=await r.json(); sha=d.sha; }
+  }catch(e){}
+  const body={message:'publish portfolio data', content};
+  if(sha) body.sha=sha;
+  try{
+    const r=await fetch(`https://api.github.com/repos/${ghConfig.user}/${ghConfig.repo}/contents/${path}`,{
+      method:'PUT',
+      headers:{Authorization:'token '+ghConfig.token,'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    if(r.ok){
+      if(msg){ msg.textContent='发布成功 ✓ 所有访客现在可以看到你的作品'; msg.style.color='#60c060'; }
+      setTimeout(()=>{ if(msg) msg.textContent=''; },4000);
+    } else {
+      if(msg){ msg.textContent='发布失败，请检查 Token 权限'; msg.style.color='#e06060'; }
+    }
+  }catch(e){ if(msg){ msg.textContent='网络错误'; msg.style.color='#e06060'; } }
+}
+
+// Load DATA.json from GitHub on page open (for visitors)
+async function loadDataFromGitHub(){
+  if(!ghConfig.user||!ghConfig.repo) return;
+  try{
+    const r=await fetch(`https://raw.githubusercontent.com/${ghConfig.user}/${ghConfig.repo}/main/portfolio-data.json?t=${Date.now()}`);
+    if(!r.ok) return;
+    const remote=await r.json();
+    // merge: remote wins except blobs
+    DATA=Object.assign(DATA,remote);
+    ['practice','mg','aigc-img','aigc-vid','agent'].forEach(sec=>{
+      if(!DATA[sec]) return;
+      DATA[sec].forEach(item=>{
+        if(item.media&&item.media.startsWith('blob:')) item.media='';
+        if(item.cover&&item.cover.startsWith('blob:')) item.cover='';
+      });
+    });
+    // save to local for offline
+    try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); }catch(e){}
+    renderAll();
+  }catch(e){}
 }
 
 function toggleTheme(){
@@ -1273,6 +1327,8 @@ function init(){
   localStorage.removeItem('portfolio_data_v1');
   renderAll();
   loadGh();
+  // after local render, try loading published data from GitHub
+  setTimeout(loadDataFromGitHub, 500);
 }
 
 init();
