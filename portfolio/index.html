@@ -235,7 +235,7 @@
       <div class="flex-1">
         <div class="section-title-wrap">
           <h2 class="font-sans font-bold text-main text-[1.4rem] tracking-tight" id="practice-title" contenteditable="false">短视频平台 · 业务作品</h2>
-          <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="practice-cols" type="number" min="1" max="8" value="4" onchange="setGridCols('practice-grid',this.value)"></span>
+          <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="practice-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('practice-grid',this.value)"></span>
         </div>
         <p class="font-mono text-[.55rem] text-sub mt-1.5" id="practice-desc" contenteditable="false">参与短视频平台全链路特效素材设计，独立完成动态特效、画面转场、轻量化动画素材的 AE 全流程制作与方案输出</p>
       </div>
@@ -244,8 +244,8 @@
       <div class="flex items-center gap-2 mb-4">
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="practice-vid-label" contenteditable="false">特效 / 转场 / 模板</span>
       </div>
-      <div class="masonry-grid" id="practice-grid" style="--cols:4"></div>
-      <div class="add-card mt-2" id="practice-add" onclick="addWorkCard('practice','mp4')">
+      <div class="masonry-grid" id="practice-grid" style="--cols:8"></div>
+      <div class="add-card mt-2" id="practice-add" onclick="addWorkCard('practice','auto')">
         <div class="add-label">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           添加作品
@@ -261,13 +261,13 @@
       <div class="flex-1">
         <div class="section-title-wrap">
           <h2 class="font-sans font-bold text-main text-[1.4rem] tracking-tight" id="mg-title" contenteditable="false">无畏契约 LOGO · 原创 MG 动画</h2>
-          <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="mg-cols" type="number" min="1" max="8" value="3" onchange="setGridCols('mg-grid',this.value)"></span>
+          <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="mg-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('mg-grid',this.value)"></span>
         </div>
         <p class="font-mono text-[.55rem] text-sub mt-1.5" id="mg-desc" contenteditable="false">基于 IP 原生视觉体系，全程 AE 矢量形状图层原创手搓制作，独立完成 LOGO 图形拆解、形变动画、版式动态延展、节奏卡点与氛围光效设计</p>
       </div>
     </div>
-    <div class="masonry-grid" id="mg-grid" style="--cols:3"></div>
-    <div class="add-card mt-2" id="mg-add" onclick="addWorkCard('mg','mp4')">
+    <div class="masonry-grid" id="mg-grid" style="--cols:8"></div>
+    <div class="add-card mt-2" id="mg-add" onclick="addWorkCard('mg','auto')">
       <div class="add-label">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         添加作品
@@ -290,10 +290,10 @@
     <div class="mb-10">
       <div class="flex items-center gap-2 mb-4">
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="aigc-img-label" contenteditable="false">AI 生成原画素材</span>
-        <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="aigc-img-cols" type="number" min="1" max="8" value="4" onchange="setGridCols('aigc-img-grid',this.value)"></span>
+        <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="aigc-img-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('aigc-img-grid',this.value)"></span>
       </div>
-      <div class="work-grid" id="aigc-img-grid" style="--cols:4"></div>
-      <div class="add-card mt-2" id="aigc-img-add" onclick="addWorkCard('aigc-img','img')">
+      <div class="work-grid" id="aigc-img-grid" style="--cols:8"></div>
+      <div class="add-card mt-2" id="aigc-img-add" onclick="addWorkCard('aigc-img','auto')">
         <div class="add-label">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           添加图片
@@ -304,10 +304,10 @@
     <div class="mb-10 border-t border-sep pt-8">
       <div class="flex items-center gap-2 mb-4">
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="aigc-vid-label" contenteditable="false">AE 木偶骨骼绑定动效</span>
-        <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="aigc-vid-cols" type="number" min="1" max="8" value="4" onchange="setGridCols('aigc-vid-grid',this.value)"></span>
+        <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="aigc-vid-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('aigc-vid-grid',this.value)"></span>
       </div>
-      <div class="masonry-grid" id="aigc-vid-grid" style="--cols:4"></div>
-      <div class="add-card mt-2" id="aigc-vid-add" onclick="addWorkCard('aigc-vid','mp4')">
+      <div class="masonry-grid" id="aigc-vid-grid" style="--cols:8"></div>
+      <div class="add-card mt-2" id="aigc-vid-add" onclick="addWorkCard('aigc-vid','auto')">
         <div class="add-label">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           添加动效
@@ -318,9 +318,9 @@
     <div class="border-t border-sep pt-8">
       <div class="flex items-center gap-2 mb-4">
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="aigc-prompt-label" contenteditable="false">Prompt 工程</span>
-        <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="aigc-prompt-cols" type="number" min="1" max="6" value="3" onchange="setGridCols('aigc-prompt-grid',this.value)"></span>
+        <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="aigc-prompt-cols" type="number" min="1" max="6" value="8" onchange="setGridCols('aigc-prompt-grid',this.value)"></span>
       </div>
-      <div class="work-grid" id="aigc-prompt-grid" style="--cols:3"></div>
+      <div class="work-grid" id="aigc-prompt-grid" style="--cols:8"></div>
       <div class="add-card mt-2" id="aigc-prompt-add" onclick="addPromptCard()">
         <div class="add-label">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -369,10 +369,10 @@
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-4">
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="agent-vid-label" contenteditable="false">工具演示</span>
-        <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="agent-cols" type="number" min="1" max="8" value="3" onchange="setGridCols('agent-grid',this.value)"></span>
+        <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="agent-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('agent-grid',this.value)"></span>
       </div>
-      <div class="masonry-grid" id="agent-grid" style="--cols:3"></div>
-      <div class="add-card mt-2" id="agent-add" onclick="addWorkCard('agent','mp4')">
+      <div class="masonry-grid" id="agent-grid" style="--cols:8"></div>
+      <div class="add-card mt-2" id="agent-add" onclick="addWorkCard('agent','auto')">
         <div class="add-label">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           添加演示
@@ -720,7 +720,7 @@ function makeMp4Card(item){
       ? `<img src="${coverSrc}" alt=""><div class="play-badge"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>`
       : `<div class="no-thumb">待上传</div>`;
   }
-  const uploadLabel = isAnim ? '上传 WebP/GIF' : '上传视频 (mp4/webp/gif)';
+  const uploadLabel = '上传视频 / 图片 / GIF';
   card.innerHTML = `
     <div class="card-media${!mediaSrc?' empty-card':''}">
       ${mediaHtml}
@@ -1121,8 +1121,7 @@ function triggerMediaUpload(itemId, type){
   _uploadType = type;
   // All cards accept video + images (webp/gif animate, jpg/png as static)
   if(type==='img') fileInput.accept='image/jpeg,image/png,image/webp,image/gif';
-  else fileInput.accept='video/mp4,video/webm,video/*,image/webp,image/gif,image/jpeg,image/png';
-  fileInput.value='';
+  else fileInput.accept='video/mp4,video/webm,video/*,image/webp,image/gif,image/jpeg,image/png';  fileInput.value='';
   fileInput.click();
 }
 
