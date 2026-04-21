@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flickr-justified-layout@2.1.1/dist/justified-layout.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -116,15 +117,14 @@
     .expand-btn{font-family:'Space Mono',monospace;font-size:.48rem;letter-spacing:.08em;cursor:pointer;padding:3px 0;text-transform:uppercase;color:#7a7570;background:none;border:none;transition:color .15s}
     .expand-btn:hover{color:#a8a3a0}
 
-    /* Justified / horizontal masonry: fixed row height, width = height × AR */
+    /* Justified layout: positioned via JS */
     .masonry-grid,.work-grid{
       display:flex;
       flex-wrap:wrap;
-      gap:6px;
+      gap:4px;
       align-items:flex-start;
     }
     .masonry-grid .vcard,.work-grid .vcard{
-      flex:none;
       display:flex;
       flex-direction:column;
     }
@@ -818,36 +818,56 @@ function renderSection(sectionKey, gridId, type){
   const container = document.getElementById(gridId);
   if(!container) return;
   container.innerHTML = '';
-  // row height: use --row-h CSS var or fallback 160px
-  const rowH = parseInt(container.dataset.rowH || container.style.getPropertyValue('--row-h')) || 160;
-  items.forEach((item, i)=>{
+
+  // Prompt cards: simple flex wrap, fixed width
+  if(items.length && items[0].type==='prompt'){
+    items.forEach((item,i)=>{
+      const card = makePromptCard(item);
+      card.style.width = '280px';
+      container.appendChild(card);
+      requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*25));
+    });
+    return;
+  }
+
+  // Media cards: use flickr justified layout
+  const ratios = items.map(item => item.ar || (16/9));
+  const geometry = justifiedLayout(ratios, {
+    containerWidth: container.offsetWidth || 1000,
+    containerPadding: 0,
+    boxSpacing: 4,
+    targetRowHeight: 160,
+    targetRowHeightTolerance: 0.25
+  });
+
+  geometry.boxes.forEach((box, i)=>{
+    const item = items[i];
     let card;
     if(item.type==='img') card = makeImgCard(item);
-    else if(item.type==='prompt') card = makePromptCard(item);
-    else card = makeMp4Card(item);  // mp4, webp, gif all via makeMp4Card
-    // Prompt cards: fixed width, no justified layout
-    if(item.type==='prompt'){
-      card.style.width = '280px';
-    } else {
-      // Justified: width = rowH × AR
-      const ar = item.ar || (16/9);
-      const cardW = Math.round(rowH * ar);
-      card.style.width = cardW + 'px';
-      const mediaEl = card.querySelector('.card-media');
-      if(mediaEl) mediaEl.style.height = rowH + 'px';
-    }
+    else card = makeMp4Card(item);
+    card.style.position = 'absolute';
+    card.style.left = box.left + 'px';
+    card.style.top = box.top + 'px';
+    card.style.width = box.width + 'px';
+    card.style.height = box.height + 'px';
+    const mediaEl = card.querySelector('.card-media');
+    if(mediaEl) mediaEl.style.height = '100%';
     container.appendChild(card);
-    requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*25));
+    requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*15));
   });
+
+  // Set container height
+  container.style.position = 'relative';
+  container.style.height = geometry.containerHeight + 'px';
 }
 
 function renderAll(){
-  renderSection('practice', 'practice-grid', 'mp4');
-  renderSection('mg', 'mg-grid', 'mp4');
-  renderSection('aigc-img', 'aigc-img-grid', 'img');
-  renderSection('aigc-vid', 'aigc-vid-grid', 'mp4');
-  renderSection('aigc-prompt', 'aigc-prompt-grid', 'prompt');
-  renderSection('agent', 'agent-grid', 'mp4');
+  renderSection('practice', 'practice-grid', 'auto');
+  renderSection('mg', 'mg-grid', 'auto');
+  renderSection('aigc-img', 'aigc-img-grid', 'auto');
+  renderSection('aigc-vid', 'aigc-vid-grid', 'auto');
+  renderSection('aigc-prompt', 'aigc-prompt-grid', 'auto');
+  renderSection('agent', 'agent-grid', 'auto');
   restoreCols();
   restoreSectionTitles();
   restoreContact();
@@ -855,6 +875,12 @@ function renderAll(){
   renderTags('hero-tags','hero');
   renderTags('contact-tags','contact');
 }
+
+let _resizeTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(renderAll, 200);
+});
 
 function restoreCols(){
   const map = {
