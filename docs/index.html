@@ -482,7 +482,10 @@
   <div class="bg-card border border-card rounded p-5 w-64 space-y-2">
     <p class="font-mono text-[.52rem] tracking-widest uppercase text-dim mb-3">管理面板</p>
     <button onclick="toggleEdit();closeEditMenu()" class="w-full text-left text-[.78rem] text-sub hover:text-main py-1.5 border-b border-sep transition-colors" id="editMenuBtn">进入编辑模式</button>
-    <button onclick="closeEditMenu();openGhPanel()" class="w-full text-left text-[.78rem] text-sub hover:text-main py-1.5 transition-colors">GitHub 存储配置</button>
+    <button onclick="closeEditMenu();openGhPanel()" class="w-full text-left text-[.78rem] text-sub hover:text-main py-1.5 border-b border-sep transition-colors">GitHub 存储配置</button>
+    <button onclick="exportData()" class="w-full text-left text-[.78rem] text-sub hover:text-main py-1.5 border-b border-sep transition-colors">导出数据备份</button>
+    <button onclick="document.getElementById('importFile').click()" class="w-full text-left text-[.78rem] text-sub hover:text-main py-1.5 transition-colors">导入数据恢复</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this.files[0])">
   </div>
 </div>
 
@@ -696,6 +699,41 @@ function toggleEdit(){
 
 function openEditMenu(){ document.getElementById('editMenu').classList.add('open'); }
 function closeEditMenu(){ document.getElementById('editMenu').classList.remove('open'); }
+
+function exportData(){
+  const data = {
+    portfolio: JSON.parse(localStorage.getItem('portfolio_data_v3')||'{}'),
+    gh_config: JSON.parse(localStorage.getItem('gh_config')||'{}')
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'portfolio-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(data.portfolio){
+        localStorage.setItem('portfolio_data_v3', JSON.stringify(data.portfolio));
+      }
+      if(data.gh_config){
+        localStorage.setItem('gh_config', JSON.stringify(data.gh_config));
+      }
+      alert('导入成功！页面将刷新。');
+      location.reload();
+    }catch(e){
+      alert('导入失败：文件格式错误');
+    }
+  };
+  reader.readAsText(file);
+}
 
 function setGridCols(gridId, n){
   n = Math.max(1, Math.min(8, parseInt(n)||4));
