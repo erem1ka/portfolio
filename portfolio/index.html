@@ -586,8 +586,9 @@ async function publishDataToGitHub(){
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({action:'save-data', data:DATA})
       });
-      // silent — no UI feedback for auto-save
-    }catch(e){}
+      if(r.ok){ console.log('✓ 数据已同步到 GitHub'); }
+      else { console.error('同步失败:', await r.text()); }
+    }catch(e){ console.error('同步出错:', e); }
     return;
   }
   // Fallback: direct GitHub API (localhost)
