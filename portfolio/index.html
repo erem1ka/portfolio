@@ -116,14 +116,21 @@
     .expand-btn{font-family:'Space Mono',monospace;font-size:.48rem;letter-spacing:.08em;cursor:pointer;padding:3px 0;text-transform:uppercase;color:#7a7570;background:none;border:none;transition:color .15s}
     .expand-btn:hover{color:#a8a3a0}
 
-    .masonry-grid{columns:var(--cols,4);column-gap:8px;display:block}
-    .masonry-grid .vcard{break-inside:avoid;display:inline-block;width:100%;margin-bottom:8px}
-    .work-grid{columns:var(--cols,4);column-gap:8px;display:block}
-    .work-grid .vcard{break-inside:avoid;display:inline-block;width:100%;margin-bottom:8px}
-    .masonry-grid .vcard,.work-grid .vcard{display:flex;flex-direction:column}
-    .card-media{width:100%;overflow:hidden;position:relative;flex:none}
-    .card-media img,.card-media video{width:100%;height:auto;display:block}
-    .card-media .no-thumb{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:.52rem;color:#4a4540;background:rgba(255,255,255,.03);position:relative}
+    /* Justified / horizontal masonry: fixed row height, width = height × AR */
+    .masonry-grid,.work-grid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      align-items:flex-start;
+    }
+    .masonry-grid .vcard,.work-grid .vcard{
+      flex:none;
+      display:flex;
+      flex-direction:column;
+    }
+    .card-media{overflow:hidden;position:relative;flex:none}
+    .card-media img,.card-media video{width:100%;height:100%;display:block;object-fit:cover}
+    .card-media .no-thumb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:.52rem;color:#4a4540;background:rgba(255,255,255,.03);position:relative}
     /* upload-ov must be inside a relative container */
     .upload-ov{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:5px;z-index:8;border:1.5px dashed rgba(200,196,190,.3)}
 
@@ -244,7 +251,7 @@
       <div class="flex items-center gap-2 mb-4">
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="practice-vid-label" contenteditable="false">特效 / 转场 / 模板</span>
       </div>
-      <div class="masonry-grid" id="practice-grid" style="--cols:8"></div>
+      <div class="masonry-grid" data-row-h="160" id="practice-grid" style="--cols:8"></div>
       <div class="add-card mt-2" id="practice-add" onclick="addWorkCard('practice','auto')">
         <div class="add-label">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -266,7 +273,7 @@
         <p class="font-mono text-[.55rem] text-sub mt-1.5" id="mg-desc" contenteditable="false">基于 IP 原生视觉体系，全程 AE 矢量形状图层原创手搓制作，独立完成 LOGO 图形拆解、形变动画、版式动态延展、节奏卡点与氛围光效设计</p>
       </div>
     </div>
-    <div class="masonry-grid" id="mg-grid" style="--cols:8"></div>
+    <div class="masonry-grid" data-row-h="160" id="mg-grid" style="--cols:8"></div>
     <div class="add-card mt-2" id="mg-add" onclick="addWorkCard('mg','auto')">
       <div class="add-label">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -292,7 +299,7 @@
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="aigc-img-label" contenteditable="false">AI 生成原画素材</span>
         <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="aigc-img-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('aigc-img-grid',this.value)"></span>
       </div>
-      <div class="work-grid" id="aigc-img-grid" style="--cols:8"></div>
+      <div class="work-grid" data-row-h="160" id="aigc-img-grid" style="--cols:8"></div>
       <div class="add-card mt-2" id="aigc-img-add" onclick="addWorkCard('aigc-img','auto')">
         <div class="add-label">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -306,7 +313,7 @@
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="aigc-vid-label" contenteditable="false">AE 木偶骨骼绑定动效</span>
         <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="aigc-vid-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('aigc-vid-grid',this.value)"></span>
       </div>
-      <div class="masonry-grid" id="aigc-vid-grid" style="--cols:8"></div>
+      <div class="masonry-grid" data-row-h="160" id="aigc-vid-grid" style="--cols:8"></div>
       <div class="add-card mt-2" id="aigc-vid-add" onclick="addWorkCard('aigc-vid','auto')">
         <div class="add-label">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -320,7 +327,7 @@
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="aigc-prompt-label" contenteditable="false">Prompt 工程</span>
         <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="aigc-prompt-cols" type="number" min="1" max="6" value="8" onchange="setGridCols('aigc-prompt-grid',this.value)"></span>
       </div>
-      <div class="work-grid" id="aigc-prompt-grid" style="--cols:8"></div>
+      <div class="work-grid" data-row-h="160" id="aigc-prompt-grid" style="--cols:8"></div>
       <div class="add-card mt-2" id="aigc-prompt-add" onclick="addPromptCard()">
         <div class="add-label">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -371,7 +378,7 @@
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="agent-vid-label" contenteditable="false">工具演示</span>
         <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="agent-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('agent-grid',this.value)"></span>
       </div>
-      <div class="masonry-grid" id="agent-grid" style="--cols:8"></div>
+      <div class="masonry-grid" data-row-h="160" id="agent-grid" style="--cols:8"></div>
       <div class="add-card mt-2" id="agent-add" onclick="addWorkCard('agent','auto')">
         <div class="add-label">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -811,17 +818,22 @@ function renderSection(sectionKey, gridId, type){
   const container = document.getElementById(gridId);
   if(!container) return;
   container.innerHTML = '';
+  // row height: use --row-h CSS var or fallback 160px
+  const rowH = parseInt(container.dataset.rowH || container.style.getPropertyValue('--row-h')) || 160;
   items.forEach((item, i)=>{
     let card;
     if(item.type==='img') card = makeImgCard(item);
     else if(item.type==='prompt') card = makePromptCard(item);
     else card = makeMp4Card(item);  // mp4, webp, gif all via makeMp4Card
+    // Set card width = rowH × AR (fallback 16/9)
+    const ar = item.ar || (16/9);
+    const cardW = Math.round(rowH * ar);
+    card.style.width = cardW + 'px';
+    const mediaEl = card.querySelector('.card-media');
+    if(mediaEl) mediaEl.style.height = rowH + 'px';
     container.appendChild(card);
     requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*25));
   });
-  const n = DATA.cols[sectionKey] || 4;
-  container.style.setProperty('--cols', n);
-  container.style.columns = n;
 }
 
 function renderAll(){
