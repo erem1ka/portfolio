@@ -10,7 +10,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="./justified-layout.min.js"></script>
   <script src="./cloudbase-sdk.min.js"></script>
-  <script>var tcb = window.cloudbaseSDK.default || window.cloudbaseSDK;</script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -536,9 +535,13 @@ let db = null;
 
 async function initCloudBase() {
   try {
-    tcbApp = tcb.init({ env: CLOUD_ENV_ID });
+    const sdk = window.cloudbaseSDK;
+    if (!sdk || !sdk.default) {
+      console.warn('CloudBase SDK 未加载');
+      return false;
+    }
+    tcbApp = sdk.default.init({ env: CLOUD_ENV_ID });
     const auth = tcbApp.auth();
-    // v1 SDK: signInAnonymously; v2+ SDK: anonymousAuthProvider().signIn()
     if (auth.signInAnonymously) {
       await auth.signInAnonymously();
     } else {
@@ -552,9 +555,6 @@ async function initCloudBase() {
     return false;
   }
 }
-
-// 页面加载时初始化云开发
-initCloudBase();
 
 let DATA = {
   practice: [],
