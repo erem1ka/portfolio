@@ -593,22 +593,26 @@ async function publishDataToCloud() {
   }
   
   try {
-    // 检查是否已有数据记录
     const collection = db.collection('portfolio');
-    const existing = await collection.where({ _id: 'main' }).get();
+    // 深拷贝 DATA 避免引用问题，去掉 _id 避免冲突
+    const dataToSave = JSON.parse(JSON.stringify(DATA));
     
-    const dataToSave = {
-      _id: 'main',
-      data: DATA,
-      updatedAt: new Date()
-    };
+    // 先查是否存在
+    let exists = false;
+    try {
+      const existing = await collection.doc('main').get();
+      if (existing.data && existing.data.length > 0) exists = true;
+    } catch(e) {
+      // doc 不存在会抛错，忽略
+      exists = false;
+    }
     
-    if (existing.data && existing.data.length > 0) {
-      // 更新现有记录
-      await collection.doc('main').update(dataToSave);
+    if (exists) {
+      // 用 set 覆盖整个文档
+      await collection.doc('main').set({ data: dataToSave, updatedAt: new Date() });
     } else {
-      // 新增记录
-      await collection.add(dataToSave);
+      // 新增记录，手动指定 _id
+      await collection.add({ _id: 'main', data: dataToSave, updatedAt: new Date() });
     }
     
     console.log('✓ 数据已同步到云端');
