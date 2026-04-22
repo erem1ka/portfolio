@@ -902,8 +902,9 @@ function makeImgCard(item){
         <button class="del-ov-btn" onclick="event.stopPropagation();deleteCard('${item.id}')">&#x2715; 删除</button>
       </div>
     </div>
-    <div class="p-2 pb-2">
-      <p class="text-sub font-light text-[.66rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${item.desc||''}</p>
+    <div class="p-2.5 pb-2">
+      <p class="font-sans font-medium text-main text-[.78rem] leading-snug mb-0.5" data-field="title">${item.title||'作品标题'}</p>
+      <p class="text-sub font-light text-[.68rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${item.desc||''}</p>
     </div>`;
   setupEditableFields(card, item);
   return card;
@@ -916,17 +917,42 @@ function makePromptCard(item){
   card.dataset.type = 'prompt';
   const body = item.body || '';
   const needFold = body.split('\n').length > 3 || body.length > 200;
+  const hasMedia = item.media;
+  let mediaHtml = '';
+  if(hasMedia){
+    const mt = item.mediaType || item.type;
+    if(mt==='webp'){
+      mediaHtml = `<img src="${item.media}" alt="" style="max-width:100%;border-radius:8px;pointer-events:none;margin-bottom:6px">`;
+    } else if(mt==='mp4'){
+      const coverSrc = item.cover || item.media;
+      mediaHtml = `<div class="prompt-media" style="cursor:pointer;position:relative;margin-bottom:6px">
+        <img src="${coverSrc}" alt="" style="max-width:100%;border-radius:8px">
+        <div class="play-badge" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+      </div>`;
+    } else {
+      mediaHtml = `<img src="${item.media}" alt="" style="max-width:100%;border-radius:8px;margin-bottom:6px">`;
+    }
+  }
   card.innerHTML = `
     <div class="p-3 pb-3.5 relative">
       <div class="flex items-start justify-between gap-2 mb-2">
         <p class="font-sans font-semibold text-main text-[.82rem] leading-snug flex-1" data-field="title">${item.title||'Prompt 标题'}</p>
         <div class="upload-ov" style="position:static;background:none;border:none;display:none;flex-direction:row;gap:4px;align-items:center;padding:0">
+          <button class="upload-ov-btn" onclick="event.stopPropagation();triggerMediaUpload('${item.id}','prompt')" style="font-size:.55rem;padding:3px 8px;border-radius:4px">上传媒体</button>
           <button class="del-ov-btn" onclick="deleteCard('${item.id}')">✕</button>
         </div>
       </div>
+      ${hasMedia ? `<div class="mb-1 prompt-media-wrap">${mediaHtml}</div>` : ''}
       <div class="prompt-body ${needFold?'collapsed':''}" data-field="body">${escHtml(body)}</div>
-      ${needFold ? `<button class="expand-btn mt-1.5" onclick="togglePrompt(this)">展开全文 ▾</button>` : ''}
+      ${needFold ? `<button class="expand-btn mt-1.5" onclick="togglePrompt(this)" style="font-size:.6rem">展开全文 ▾</button>` : ''}
     </div>`;
+  if(hasMedia && item.mediaType==='mp4'){
+    const pm = card.querySelector('.prompt-media');
+    if(pm) pm.addEventListener('click', e=>{
+      if(e.target.closest('.upload-ov') || editMode) return;
+      openInlinePlayer(item.media, card);
+    });
+  }
   card.addEventListener('mouseenter',()=>{ if(editMode) card.querySelector('.upload-ov').style.display='flex'; });
   card.addEventListener('mouseleave',()=>{ card.querySelector('.upload-ov').style.display='none'; });
   setupEditableFields(card, item);
@@ -1324,9 +1350,11 @@ fileInput.type='file';
 function triggerMediaUpload(itemId, type){
   _uploadTarget = itemId;
   _uploadType = type;
-  // All cards accept video + images (webp/gif animate, jpg/png as static)
-  if(type==='img') fileInput.accept='image/jpeg,image/png,image/webp,image/gif';
-  else fileInput.accept='video/mp4,video/webm,video/*,image/webp,image/gif,image/jpeg,image/png';  fileInput.value='';
+  // Prompt cards also accept video + images
+  if(type==='prompt') fileInput.accept='video/mp4,video/webm,video/*,image/webp,image/gif,image/jpeg,image/png';
+  else if(type==='img') fileInput.accept='image/jpeg,image/png,image/webp,image/gif';
+  else fileInput.accept='video/mp4,video/webm,video/*,image/webp,image/gif,image/jpeg,image/png';
+  fileInput.value='';
   fileInput.click();
 }
 
@@ -1338,9 +1366,16 @@ fileInput.addEventListener('change', async ()=>{
   const isVideo = file.type.startsWith('video/');
   const isWebpGif = file.type==='image/webp' || file.type==='image/gif';
   const isImg = file.type.startsWith('image/') && !isWebpGif;
-  if(isVideo) item.type='mp4';
-  else if(isWebpGif) item.type='webp';
-  else if(isImg) item.type='img';
+  const isPrompt = item.type==='prompt';
+  // For prompt cards, keep type='prompt' but set mediaType sub-field
+  if(!isPrompt){
+    if(isVideo) item.type='mp4';
+    else if(isWebpGif) item.type='webp';
+    else if(isImg) item.type='img';
+  }
+  if(isVideo) item.mediaType='mp4';
+  else if(isWebpGif) item.mediaType='webp';
+  else if(isImg) item.mediaType='img';
   
   // 压缩图片（webp/gif 不压缩）
   let uploadFile = file;
