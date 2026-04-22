@@ -1076,10 +1076,11 @@ function triggerResumeUpload(){
     saveData();
     updateResumeUI();
     // try upload to GitHub
-    const ghUrl = await uploadToGitHub(file);
-    if(ghUrl){
+    const result = await uploadToGitHub(file);
+    if(result){
       URL.revokeObjectURL(blobUrl);
-      DATA.contact.resumeUrl = ghUrl;
+      DATA.contact.resumeUrl = result.url;
+      DATA.contact.resumeFileID = result.fileID;
       saveData();
       updateResumeUI();
     }
@@ -1201,15 +1202,16 @@ function addPromptCard(){
 }
 
 async function deleteCard(id){
-  // Find the item first to get its media/cover URLs
-  let mediaUrl = '', coverUrl = '';
+  // Find the item first to get its fileIDs for cloud storage cleanup
   let sec = '';
+  let fileIDs = [];
   ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(s=>{
     const idx = DATA[s].findIndex(x=>x.id===id);
     if(idx>-1){
       sec = s;
-      mediaUrl = DATA[s][idx].media || '';
-      coverUrl = DATA[s][idx].cover || '';
+      const item = DATA[s][idx];
+      if(item.fileID) fileIDs.push(item.fileID);
+      if(item.coverFileID && item.coverFileID !== item.fileID) fileIDs.push(item.coverFileID);
     }
   });
   if(sec){
@@ -1217,15 +1219,12 @@ async function deleteCard(id){
     DATA[sec].splice(idx,1);
     saveData();
     renderSection(sec, sec+'-grid');
-    // Delete files from cloud storage
-    if(tcbApp){
-      [mediaUrl, coverUrl].forEach(url=>{
-        if(url && url.includes('tcb.qcloud.la')){
-          const cloudPath = url.split('.la/').pop();
-          if(cloudPath){
-            tcbApp.deleteFile({ fileList: [cloudPath.startsWith('portfolio/') ? cloudPath : 'portfolio/' + cloudPath] }).catch(()=>{});
-          }
-        }
+    // Delete files from cloud storage using fileID
+    if(tcbApp && fileIDs.length){
+      tcbApp.deleteFile({ fileList: fileIDs }).then(()=>{
+        console.log('✓ 云存储文件已删除:', fileIDs);
+      }).catch(e=>{
+        console.warn('云存储文件删除失败:', e);
       });
     }
   }
@@ -1269,10 +1268,12 @@ fileInput.addEventListener('change', async ()=>{
   }
   saveData();
   rerenderItemSection(_uploadTarget);
-  const ghUrl = await uploadToGitHub(file);
-  if(ghUrl){
+  const result = await uploadToGitHub(file);
+  if(result){
     URL.revokeObjectURL(blobUrl);
-    item.media = ghUrl;
+    item.media = result.url;
+    item.fileID = result.fileID;
+    if(item.cover) item.coverFileID = result.fileID; // cover uses same file
     saveData();
     rerenderItemSection(_uploadTarget);
   }
@@ -1391,11 +1392,12 @@ function triggerQRUpload(){
     if(actions) actions.style.display='flex';
     DATA.contact.wechatQr=blobUrl;
     saveData();
-    const ghUrl=await uploadToGitHub(file);
-    if(ghUrl){
+    const result=await uploadToGitHub(file);
+    if(result){
       URL.revokeObjectURL(blobUrl);
-      if(img) img.src=ghUrl;
-      DATA.contact.wechatQr=ghUrl;
+      if(img) img.src=result.url;
+      DATA.contact.wechatQr=result.url;
+      DATA.contact.wechatQrFileID=result.fileID;
       saveData();
     }
   });
@@ -1438,7 +1440,8 @@ async function uploadToCloudStorage(file) {
     if (result.fileID) {
       const url = `${CLOUD_CDN}/${cloudPath}`;
       console.log('✓ 文件上传成功:', url);
-      return url;
+      // 返回对象包含 url 和 fileID，方便后续删除云存储文件
+      return { url, fileID: result.fileID };
     }
     return null;
   } catch (e) {
