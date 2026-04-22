@@ -160,8 +160,6 @@
     #editEntryBtn:hover{opacity:.4}
     .editing #editEntryBtn{opacity:.7;color:#25f4ee}
 
-    #ghOverlay{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.82);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s}
-    #ghOverlay.open{opacity:1;pointer-events:all}
     #editMenu{position:fixed;inset:0;z-index:880;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
     #editMenu.open{opacity:1;pointer-events:all}
 
@@ -483,7 +481,6 @@
   <div class="bg-card border border-card rounded p-5 w-64 space-y-2">
     <p class="font-mono text-[.52rem] tracking-widest uppercase text-dim mb-3">管理面板</p>
     <button onclick="toggleEdit();closeEditMenu()" class="w-full text-left text-[.78rem] text-sub hover:text-main py-1.5 border-b border-sep transition-colors" id="editMenuBtn">进入编辑模式</button>
-    <button onclick="closeEditMenu();openGhPanel()" class="w-full text-left text-[.78rem] text-sub hover:text-main py-1.5 border-b border-sep transition-colors">GitHub 存储配置</button>
     <button onclick="exportData()" class="w-full text-left text-[.78rem] text-sub hover:text-main py-1.5 border-b border-sep transition-colors">导出数据备份</button>
     <button onclick="document.getElementById('importFile').click()" class="w-full text-left text-[.78rem] text-sub hover:text-main py-1.5 transition-colors">导入数据恢复</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this.files[0])">
@@ -492,28 +489,6 @@
 
 <div id="qrZoom" onclick="closeQrZoom()">
   <img id="qrZoomImg" src="" alt="微信二维码">
-</div>
-
-<div id="ghOverlay" onclick="if(event.target===this)closeGhPanel()">
-  <div class="bg-card border border-card rounded p-6 w-96">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="font-sans font-medium text-main text-[.88rem]">GitHub 存储配置</h3>
-      <button onclick="closeGhPanel()" class="font-mono text-[.5rem] text-sub hover:text-main border border-sep rounded px-2 py-1 bg-none transition-colors">关闭</button>
-    </div>
-    <p class="text-sub font-light text-[.72rem] leading-relaxed mb-4">上传的媒体文件将保存到你的 GitHub 仓库，生成永久公开链接。</p>
-    <div class="space-y-2">
-      <input id="gh-user" type="text" placeholder="GitHub 用户名" class="w-full bg-mod1 border border-sep rounded px-3 py-1.5 text-main font-mono text-[.65rem] outline-none focus:border-opacity-50 placeholder:text-dim">
-      <input id="gh-repo" type="text" placeholder="仓库名（默认 portfolio）" value="portfolio" class="w-full bg-mod1 border border-sep rounded px-3 py-1.5 text-main font-mono text-[.65rem] outline-none placeholder:text-dim">
-      <input id="gh-token" type="password" placeholder="Personal Access Token" class="w-full bg-mod1 border border-sep rounded px-3 py-1.5 text-main font-mono text-[.65rem] outline-none placeholder:text-dim">
-      <p class="font-mono text-[.48rem] text-dim">Token 仅保存在浏览器本地</p>
-      <div class="flex gap-2 pt-1">
-        <button onclick="testGh()" class="flex-1 border border-sep rounded py-1.5 font-mono text-[.55rem] text-sub hover:text-main transition-colors">测试连接</button>
-        <button onclick="saveGh()" class="flex-1 bg-mod1 border border-sep rounded py-1.5 font-mono text-[.55rem] text-main hover:border-opacity-70 transition-colors">保存</button>
-      </div>
-      <button onclick="publishDataToGitHub()" class="w-full mt-1 border border-sep rounded py-1.5 font-mono text-[.55rem] text-main hover:border-opacity-70 transition-colors" style="background:linear-gradient(135deg,rgba(37,244,238,.08),rgba(0,119,255,.06));border-color:rgba(37,244,238,.2)">🚀 发布数据（让所有人可见）</button>
-      <p id="gh-msg" class="font-mono text-[.52rem] text-center h-4 transition-colors"></p>
-    </div>
-  </div>
 </div>
 
 <div id="playerBackdrop" onclick="closeInlinePlayer()"></div>
@@ -1405,38 +1380,6 @@ function triggerQRUpload(){
     }
   });
   inp.click();
-}
-
-let ghConfig={user:'',repo:'portfolio',token:''};
-function loadGh(){
-  try{ const s=localStorage.getItem('gh_config'); if(s) ghConfig=JSON.parse(s); } catch(e){}
-  document.getElementById('gh-user').value=ghConfig.user||'';
-  document.getElementById('gh-repo').value=ghConfig.repo||'portfolio';
-  document.getElementById('gh-token').value=ghConfig.token||'';
-}
-function saveGh(){
-  ghConfig.user=document.getElementById('gh-user').value.trim();
-  ghConfig.repo=document.getElementById('gh-repo').value.trim()||'portfolio';
-  ghConfig.token=document.getElementById('gh-token').value.trim();
-  localStorage.setItem('gh_config',JSON.stringify(ghConfig));
-  document.getElementById('gh-msg').textContent='已保存';
-  setTimeout(()=>{ document.getElementById('gh-msg').textContent=''; },2000);
-}
-function openGhPanel(){ loadGh(); document.getElementById('ghOverlay').classList.add('open'); }
-function closeGhPanel(){ document.getElementById('ghOverlay').classList.remove('open'); }
-
-async function testGh(){
-  const user=document.getElementById('gh-user').value.trim();
-  const token=document.getElementById('gh-token').value.trim();
-  const repo=document.getElementById('gh-repo').value.trim()||'portfolio';
-  const msg=document.getElementById('gh-msg');
-  if(!user||!token){ msg.textContent='请填写用户名和 Token'; msg.style.color='#e06060'; return; }
-  msg.textContent='测试中…'; msg.style.color='#8a8480';
-  try{
-    const r=await fetch(`https://api.github.com/repos/${user}/${repo}`,{headers:{Authorization:'token '+token}});
-    if(r.ok){ msg.textContent='连接成功 ✓'; msg.style.color='#60c060'; }
-    else { const d=await r.json(); msg.textContent=d.message||'连接失败'; msg.style.color='#e06060'; }
-  }catch(e){ msg.textContent='网络错误'; msg.style.color='#e06060'; }
 }
 
 // 2024年后新建的 COS 桶默认域名无法在浏览器预览，改用 CloudBase CDN 域名
