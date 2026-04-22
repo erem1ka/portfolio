@@ -8,8 +8,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/flickr-justified-layout@2.1.1/dist/justified-layout.min.js"></script>
-  <script src="https://unpkg.com/@cloudbase/js-sdk@2.7.16/dist/cloudbase.full.min.js"></script>
+  <script src="./justified-layout.min.js"></script>
+  <script src="./cloudbase-sdk.min.js"></script>
+  <script>var tcb = window.cloudbaseSDK.default || window.cloudbaseSDK;</script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -536,7 +537,13 @@ let db = null;
 async function initCloudBase() {
   try {
     tcbApp = tcb.init({ env: CLOUD_ENV_ID });
-    await tcbApp.auth().signInAnonymously();
+    const auth = tcbApp.auth();
+    // v1 SDK: signInAnonymously; v2+ SDK: anonymousAuthProvider().signIn()
+    if (auth.signInAnonymously) {
+      await auth.signInAnonymously();
+    } else {
+      await auth.anonymousAuthProvider().signIn();
+    }
     db = tcbApp.database();
     console.log('✓ 云开发初始化成功');
     return true;
@@ -579,11 +586,9 @@ let DATA = {
 let _publishTimer = null;
 function saveData(){
   try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); } catch(e){}
-  // Auto-publish to GitHub with 3s debounce
-  if(ghConfig.user && ghConfig.token){
-    clearTimeout(_publishTimer);
-    _publishTimer = setTimeout(publishDataToGitHub, 3000);
-  }
+  // Auto-publish to cloud with 3s debounce
+  clearTimeout(_publishTimer);
+  _publishTimer = setTimeout(()=>{ if(db) publishDataToCloud(); }, 3000);
 }
 function loadData(){
   try{
@@ -672,13 +677,6 @@ async function loadDataFromCloud() {
 // 兼容旧代码的别名
 async function loadDataFromGitHub() {
   return loadDataFromCloud();
-}
-      });
-    });
-    // save to local for offline
-    try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); }catch(e){}
-    renderAll();
-  }catch(e){}
 }
 
 function toggleTheme(){
@@ -1433,6 +1431,9 @@ async function testGh(){
   }catch(e){ msg.textContent='网络错误'; msg.style.color='#e06060'; }
 }
 
+// 2024年后新建的 COS 桶默认域名无法在浏览器预览，改用 CloudBase CDN 域名直接构造 URL
+const CLOUD_CDN = 'https://my-web-d5gsldm9ha36297d1-1424382234.tcb.qcloud.la';
+
 async function uploadToCloudStorage(file) {
   if (!tcbApp) {
     console.error('云开发未初始化');
@@ -1440,26 +1441,19 @@ async function uploadToCloudStorage(file) {
   }
   
   try {
-    // 生成唯一文件名
-    const ext = file.name.split('.').pop() || 'bin';
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
     const cloudPath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     
-    // 上传到云存储
     const result = await tcbApp.uploadFile({
       cloudPath,
       filePath: file
     });
     
     if (result.fileID) {
-      // 获取临时访问链接
-      const urlResult = await tcbApp.getTempFileURL({
-        fileList: [result.fileID]
-      });
-      
-      if (urlResult.fileList && urlResult.fileList[0] && urlResult.fileList[0].tempFileURL) {
-        console.log('✓ 文件上传成功:', urlResult.fileList[0].tempFileURL);
-        return urlResult.fileList[0].tempFileURL;
-      }
+      // 直接用 CDN 域名拼 cloudPath，绕过 COS 默认域名限制
+      const url = `${CLOUD_CDN}/${cloudPath}`;
+      console.log('✓ 文件上传成功:', url);
+      return url;
     }
     return null;
   } catch (e) {
