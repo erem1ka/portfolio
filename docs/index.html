@@ -513,6 +513,7 @@ async function initCloudBase() {
     const sdk = window.cloudbaseSDK;
     if (!sdk || !sdk.default) {
       console.warn('CloudBase SDK 未加载');
+      showToast('云存储 SDK 加载失败，数据仅保存在本地');
       return false;
     }
     tcbApp = sdk.default.init({ env: CLOUD_ENV_ID });
@@ -527,6 +528,7 @@ async function initCloudBase() {
     return true;
   } catch (e) {
     console.error('云开发初始化失败:', e);
+    showToast('云存储连接失败，数据仅保存在本地');
     return false;
   }
 }
@@ -560,6 +562,7 @@ let DATA = {
 
 let _publishTimer = null;
 function saveData(){
+  DATA._version = Date.now();
   try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); } catch(e){}
   // Auto-publish to cloud with 3s debounce
   clearTimeout(_publishTimer);
@@ -588,36 +591,34 @@ function loadData(){
 // Push DATA.json to GitHub so any visitor can load it
 async function publishDataToCloud() {
   if (!db) {
-    console.error('云数据库未初始化');
+    console.warn('云数据库未初始化，跳过同步');
     return;
   }
   
   try {
     const collection = db.collection('portfolio');
-    // 深拷贝 DATA 避免引用问题，去掉 _id 避免冲突
     const dataToSave = JSON.parse(JSON.stringify(DATA));
+    // 版本号：用时间戳，加载时比较，云端的更大则用云端的
+    const newVersion = Date.now();
+    dataToSave._version = newVersion;
     
-    // 先查是否存在
     let exists = false;
     try {
       const existing = await collection.doc('main').get();
       if (existing.data && existing.data.length > 0) exists = true;
-    } catch(e) {
-      // doc 不存在会抛错，忽略
-      exists = false;
-    }
+    } catch(e) { exists = false; }
     
     if (exists) {
-      // 用 set 覆盖整个文档
       await collection.doc('main').set({ data: dataToSave, updatedAt: new Date() });
     } else {
-      // 新增记录，手动指定 _id
       await collection.add({ _id: 'main', data: dataToSave, updatedAt: new Date() });
     }
     
+    DATA._version = newVersion;
     console.log('✓ 数据已同步到云端');
   } catch (e) {
     console.error('同步失败:', e);
+    showToast('数据同步失败，请检查网络');
   }
 }
 
@@ -632,11 +633,19 @@ async function loadDataFromCloud() {
   
   try {
     const collection = db.collection('portfolio');
-    const result = await collection.where({ _id: 'main' }).get();
+    const result = await collection.doc('main').get();
     
     if (result.data && result.data.length > 0) {
       const cloudData = result.data[0].data;
       if (cloudData) {
+        // 版本比较：云端更新则用云端的，本地更新则保留本地
+        const cloudVersion = cloudData._version || 0;
+        const localVersion = DATA._version || 0;
+        if (cloudVersion <= localVersion && localVersion > 0) {
+          console.log('本地数据更新，跳过云端加载');
+          return;
+        }
+        
         // 清理 blob 链接 + 修复旧 URL
         ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec=>{
           if(!cloudData[sec]) return;
@@ -767,6 +776,62 @@ function setGridCols(gridId, n){
 }
 
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+// Toast 提示
+function showToast(msg, duration=3000){
+  let t = document.getElementById('toast-msg');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'toast-msg';
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9999;padding:8px 20px;border-radius:6px;font-size:.75rem;font-family:sans-serif;pointer-events:none;transition:opacity .3s;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>{ t.style.opacity='0'; }, duration);
+}
+
+// 图片压缩：PNG/JPG 压缩到 500KB 以内
+function compressImage(file, maxKB=500){
+  return new Promise(resolve=>{
+    if(file.type==='image/webp' || file.type==='image/gif'){
+      // webp/gif 不压缩，直接返回
+      resolve(file);
+      return;
+    }
+    const img = new Image();
+    img.onload = ()=>{
+      let w = img.naturalWidth, h = img.naturalHeight;
+      // 限制最大边 1920px
+      const maxDim = 1920;
+      if(w > maxDim || h > maxDim){
+        const scale = maxDim / Math.max(w, h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      let quality = 0.85;
+      const tryCompress = ()=>{
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const sizeKB = Math.round((dataUrl.length - 'data:image/jpeg;base64,'.length) * 3/4 / 1024);
+        if(sizeKB > maxKB && quality > 0.3){
+          quality -= 0.1;
+          return tryCompress();
+        }
+        // 转 Blob
+        fetch(dataUrl).then(r=>r.blob()).then(blob=>{
+          resolve(new File([blob], file.name.replace(/\.\w+$/, '.jpg'), {type:'image/jpeg'}));
+        });
+      };
+      tryCompress();
+    };
+    img.onerror = ()=>resolve(file);
+    img.src = URL.createObjectURL(file);
+  });
+}
 
 function makeMp4Card(item){
   const card = document.createElement('div');
@@ -1260,25 +1325,41 @@ fileInput.addEventListener('change', async ()=>{
   if(isVideo) item.type='mp4';
   else if(isWebpGif) item.type='webp';
   else if(isImg) item.type='img';
-  const blobUrl = URL.createObjectURL(file);
+  
+  // 压缩图片（webp/gif 不压缩）
+  let uploadFile = file;
+  if(isImg) uploadFile = await compressImage(file);
+  
+  const blobUrl = URL.createObjectURL(uploadFile);
   item.media = blobUrl;
   if(isVideo){
     const cover = await extractFirstFrame(file);
     item.cover = cover;
     item.ar = await getVideoAR(file);
-  } else if(isWebpGif){
-    item.ar = await getImageAR(blobUrl);
-  } else if(isImg){
+  } else if(isWebpGif || isImg){
     item.ar = await getImageAR(blobUrl);
   }
   saveData();
   rerenderItemSection(_uploadTarget);
-  const result = await uploadToGitHub(file);
+  
+  // 上传媒体文件到云存储
+  const result = await uploadToGitHub(uploadFile);
   if(result){
     URL.revokeObjectURL(blobUrl);
     item.media = result.url;
     item.fileID = result.fileID;
-    if(item.cover) item.coverFileID = result.fileID; // cover uses same file
+    // 视频封面也上传到云存储
+    if(isVideo && item.cover && item.cover.startsWith('data:')){
+      try{
+        const coverBlob = await fetch(item.cover).then(r=>r.blob());
+        const coverFile = new File([coverBlob], 'cover.jpg', {type:'image/jpeg'});
+        const coverResult = await uploadToCloudStorage(coverFile);
+        if(coverResult){
+          item.cover = coverResult.url;
+          item.coverFileID = coverResult.fileID;
+        }
+      }catch(e){ console.warn('封面上传失败:', e); }
+    }
     saveData();
     rerenderItemSection(_uploadTarget);
   }
