@@ -184,10 +184,30 @@
     @media(max-width:900px){
       .work-grid{grid-template-columns:repeat(var(--cols-sm,3),1fr)!important}
       .masonry-grid{columns:var(--cols-sm,3)!important}
+      /* 手机端：导航文字缩小 */
+      header{gap:4px!important}
+      header .font-mono{font-size:.62rem!important;gap:3px!important}
+      /* 标题缩小 */
+      h2{font-size:1.1rem!important}
+      /* tag-pill 缩小 */
+      .tag-pill{font-size:.38rem;padding:4px 10px}
     }
     @media(max-width:580px){
       .work-grid{grid-template-columns:repeat(2,1fr)!important}
       .masonry-grid{columns:2!important}
+      /* 手机端：导航文字更小，间距更窄 */
+      header{padding-left:8px!important;padding-right:8px!important}
+      header .font-mono{font-size:.5rem!important;gap:2px!important;letter-spacing:.06em!important}
+      /* Hero区缩小 */
+      #hero-name{font-size:1.6rem!important}
+      #hero-sub{font-size:.48rem!important;letter-spacing:.08em!important}
+      .tag-pill{font-size:.34rem;padding:3px 8px}
+      /* 模块标题缩小 */
+      h2{font-size:.9rem!important}
+      .section-title-wrap p{font-size:.44rem!important}
+      /* 卡片标题缩小 */
+      .vcard .font-sans.font-medium{font-size:.6rem!important}
+      .vcard .text-sub.font-light{font-size:.52rem!important}
     }
 
     ::-webkit-scrollbar{width:4px}
@@ -638,14 +658,7 @@ async function loadDataFromCloud() {
     if (result.data && result.data.length > 0) {
       const cloudData = result.data[0].data;
       if (cloudData) {
-        // 版本比较：云端更新则用云端的，本地更新则保留本地
-        const cloudVersion = cloudData._version || 0;
-        const localVersion = DATA._version || 0;
-        if (cloudVersion <= localVersion && localVersion > 0) {
-          console.log('本地数据更新，跳过云端加载');
-          return;
-        }
-        
+        // 云端数据始终覆盖本地（你是唯一编辑者，不存在多设备编辑冲突）
         // 清理 blob 链接 + 修复旧 URL
         ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec=>{
           if(!cloudData[sec]) return;
@@ -959,11 +972,14 @@ function renderSection(sectionKey, gridId, type){
   // Media cards: use flickr justified layout
   const ratios = items.map(item => item.ar || (16/9));
   const containerW = container.offsetWidth || container.parentElement?.offsetWidth || 1000;
+  // 手机端行高更大，一行只放1-2个大卡片
+  const isMobile = window.innerWidth < 580;
+  const rowH = isMobile ? 220 : 160;
   const geometry = justifiedLayout(ratios, {
     containerWidth: containerW,
     containerPadding: 0,
-    boxSpacing: 4,
-    targetRowHeight: 160,
+    boxSpacing: isMobile ? 3 : 4,
+    targetRowHeight: rowH,
     targetRowHeightTolerance: 0.25
   });
 
