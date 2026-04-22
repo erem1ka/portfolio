@@ -781,11 +781,11 @@ function makeMp4Card(item){
     mediaHtml = `<div class="no-thumb">待上传</div>`;
   } else if(isAnim){
     // webp/gif: img tag, auto-loops, no click
-    mediaHtml = `<img src="${mediaSrc}" alt="" style="pointer-events:none">`;
+    mediaHtml = `<img data-src="${mediaSrc}" alt="" style="pointer-events:none" class="lazy">`;
   } else {
     // mp4: show cover, click to play
     mediaHtml = coverSrc
-      ? `<img src="${coverSrc}" alt=""><div class="play-badge"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>`
+      ? `<img data-src="${coverSrc}" alt="" class="lazy"><div class="play-badge"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>`
       : `<div class="no-thumb">待上传</div>`;
   }
   const uploadLabel = '上传视频 / 图片 / GIF';
@@ -818,7 +818,7 @@ function makeImgCard(item){
   card.dataset.type = 'img';
   card.innerHTML = `
     <div class="card-media">
-      ${item.media ? `<img src="${item.media}" alt="">` : `<div class="no-thumb">待上传</div>`}
+      ${item.media ? `<img data-src="${item.media}" alt="" class="lazy">` : `<div class="no-thumb">待上传</div>`}
       <div class="upload-ov">
         <button class="upload-ov-btn" onclick="event.stopPropagation();triggerMediaUpload('${item.id}','img')">上传图片</button>
         <button class="del-ov-btn" onclick="event.stopPropagation();deleteCard('${item.id}')">&#x2715; 删除</button>
@@ -935,6 +935,32 @@ function renderAll(){
   restoreHeroNav();
   renderTags('hero-tags','hero');
   renderTags('contact-tags','contact');
+  initLazyLoad();
+}
+
+// 懒加载：只有图片滚动到可视区域时才加载
+let lazyObserver = null;
+function initLazyLoad(){
+  if(!('IntersectionObserver' in window)) {
+    // 不支持则直接全部加载
+    document.querySelectorAll('img.lazy').forEach(img=>{ img.src=img.dataset.src; img.classList.remove('lazy'); });
+    return;
+  }
+  if(lazyObserver) lazyObserver.disconnect();
+  lazyObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        const img = entry.target;
+        if(img.dataset.src){
+          img.src = img.dataset.src;
+          img.removeAttribute('data-src');
+          img.classList.remove('lazy');
+        }
+        lazyObserver.unobserve(img);
+      }
+    });
+  }, { rootMargin: '200px' });
+  document.querySelectorAll('img.lazy').forEach(img=>lazyObserver.observe(img));
 }
 
 let _resizeTimer = null;
