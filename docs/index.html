@@ -1200,15 +1200,35 @@ function addPromptCard(){
   renderSection('aigc-prompt','aigc-prompt-grid',null,'prompt');
 }
 
-function deleteCard(id){
-  ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec=>{
-    const idx = DATA[sec].findIndex(x=>x.id===id);
+async function deleteCard(id){
+  // Find the item first to get its media/cover URLs
+  let mediaUrl = '', coverUrl = '';
+  let sec = '';
+  ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(s=>{
+    const idx = DATA[s].findIndex(x=>x.id===id);
     if(idx>-1){
-      DATA[sec].splice(idx,1);
-      saveData();
-      renderSection(sec, sec+'-grid');
+      sec = s;
+      mediaUrl = DATA[s][idx].media || '';
+      coverUrl = DATA[s][idx].cover || '';
     }
   });
+  if(sec){
+    const idx = DATA[sec].findIndex(x=>x.id===id);
+    DATA[sec].splice(idx,1);
+    saveData();
+    renderSection(sec, sec+'-grid');
+    // Delete files from cloud storage
+    if(tcbApp){
+      [mediaUrl, coverUrl].forEach(url=>{
+        if(url && url.includes('tcb.qcloud.la')){
+          const cloudPath = url.split('.la/').pop();
+          if(cloudPath){
+            tcbApp.deleteFile({ fileList: [cloudPath.startsWith('portfolio/') ? cloudPath : 'portfolio/' + cloudPath] }).catch(()=>{});
+          }
+        }
+      });
+    }
+  }
 }
 
 let _uploadTarget = null;
