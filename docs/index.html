@@ -596,8 +596,8 @@ function loadData(){
       DATA=Object.assign(DATA,d);
       ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec => {
         DATA[sec].forEach(item => {
-          if(item.media && item.media.startsWith('blob:')) item.media='';
-          if(item.cover && item.cover.startsWith('blob:')) item.cover='';
+          if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) item.media='';
+          if(item.cover && (item.cover.startsWith('blob:') || item.cover.startsWith('data:'))) item.cover='';
           item.media = fixCloudUrl(item.media);
           item.cover = fixCloudUrl(item.cover);
         });
@@ -621,6 +621,19 @@ async function publishDataToCloud() {
     // 版本号：用时间戳，加载时比较，云端的更大则用云端的
     const newVersion = Date.now();
     dataToSave._version = newVersion;
+    
+    // 清理 blob/data 链接（上传可能还在进行中，blob/data URL 不能持久化到云端）
+    ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec => {
+      if(!dataToSave[sec]) return;
+      dataToSave[sec].forEach(item => {
+        if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) delete item.media;
+        if(item.cover && (item.cover.startsWith('blob:') || item.cover.startsWith('data:'))) delete item.cover;
+      });
+    });
+    if(dataToSave.contact){
+      if(dataToSave.contact.wechatQr && dataToSave.contact.wechatQr.startsWith('blob:')) delete dataToSave.contact.wechatQr;
+      if(dataToSave.contact.resumeUrl && dataToSave.contact.resumeUrl.startsWith('blob:')) delete dataToSave.contact.resumeUrl;
+    }
     
     let exists = false;
     try {
@@ -663,8 +676,8 @@ async function loadDataFromCloud() {
         ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec=>{
           if(!cloudData[sec]) return;
           cloudData[sec].forEach(item=>{
-            if(item.media && item.media.startsWith('blob:')) item.media='';
-            if(item.cover && item.cover.startsWith('blob:')) item.cover='';
+            if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) item.media='';
+            if(item.cover && (item.cover.startsWith('blob:') || item.cover.startsWith('data:'))) item.cover='';
             item.media = fixCloudUrl(item.media);
             item.cover = fixCloudUrl(item.cover);
           });
