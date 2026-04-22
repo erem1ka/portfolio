@@ -596,12 +596,16 @@ function loadData(){
     if(s){
       const d=JSON.parse(s);
       DATA=Object.assign(DATA,d);
-      ['practice','mg','aigc-img','aigc-vid','agent'].forEach(sec => {
+      ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec => {
         DATA[sec].forEach(item => {
           if(item.media && item.media.startsWith('blob:')) item.media='';
           if(item.cover && item.cover.startsWith('blob:')) item.cover='';
+          item.media = fixCloudUrl(item.media);
+          item.cover = fixCloudUrl(item.cover);
         });
       });
+      DATA.contact.wechatQr = fixCloudUrl(DATA.contact.wechatQr);
+      DATA.contact.resumeUrl = fixCloudUrl(DATA.contact.resumeUrl);
     }
   } catch(e){}
 }
@@ -654,14 +658,18 @@ async function loadDataFromCloud() {
     if (result.data && result.data.length > 0) {
       const cloudData = result.data[0].data;
       if (cloudData) {
-        // 清理 blob 链接
-        ['practice','mg','aigc-img','aigc-vid','agent'].forEach(sec=>{
+        // 清理 blob 链接 + 修复旧 URL
+        ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec=>{
           if(!cloudData[sec]) return;
           cloudData[sec].forEach(item=>{
             if(item.media && item.media.startsWith('blob:')) item.media='';
             if(item.cover && item.cover.startsWith('blob:')) item.cover='';
+            item.media = fixCloudUrl(item.media);
+            item.cover = fixCloudUrl(item.cover);
           });
         });
+        cloudData.contact && (cloudData.contact.wechatQr = fixCloudUrl(cloudData.contact.wechatQr));
+        cloudData.contact && (cloudData.contact.resumeUrl = fixCloudUrl(cloudData.contact.resumeUrl));
         
         DATA = Object.assign(DATA, cloudData);
         try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); }catch(e){}
@@ -1431,8 +1439,23 @@ async function testGh(){
   }catch(e){ msg.textContent='网络错误'; msg.style.color='#e06060'; }
 }
 
-// 2024年后新建的 COS 桶默认域名无法在浏览器预览，改用 CloudBase CDN 域名直接构造 URL
-const CLOUD_CDN = 'https://my-web-d5gsldm9ha36297d1-1424382234.tcb.qcloud.la';
+// 2024年后新建的 COS 桶默认域名无法在浏览器预览，改用 CloudBase CDN 域名
+const CLOUD_CDN = 'https://6d79-my-web-d5gsldm9ha36297d1-1424382234.tcb.qcloud.la';
+
+// 修复旧数据中无法访问的 URL
+function fixCloudUrl(url) {
+  if (!url) return url;
+  // 修复旧格式的 CDN URL（缺少 6d79 前缀）
+  if (url.includes('tcb.qcloud.la') && !url.includes('6d79-')) {
+    return url.replace('https://', 'https://6d79-');
+  }
+  // 修复 COS 默认域名（无法在浏览器预览）
+  if (url.includes('cos-website') || url.includes('myqcloud.com')) {
+    const cloudPath = url.split('/portfolio/').pop();
+    if (cloudPath) return `${CLOUD_CDN}/portfolio/${cloudPath}`;
+  }
+  return url;
+}
 
 async function uploadToCloudStorage(file) {
   if (!tcbApp) {
@@ -1450,7 +1473,6 @@ async function uploadToCloudStorage(file) {
     });
     
     if (result.fileID) {
-      // 直接用 CDN 域名拼 cloudPath，绕过 COS 默认域名限制
       const url = `${CLOUD_CDN}/${cloudPath}`;
       console.log('✓ 文件上传成功:', url);
       return url;
