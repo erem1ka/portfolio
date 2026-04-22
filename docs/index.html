@@ -1009,6 +1009,8 @@ function renderSection(sectionKey, gridId, type){
     targetRowHeightTolerance: 0.25
   });
 
+  // Reserve space for title/desc below each card
+  const titleH = 40;
   geometry.boxes.forEach((box, i)=>{
     const item = items[i];
     let card;
@@ -1018,16 +1020,16 @@ function renderSection(sectionKey, gridId, type){
     card.style.left = box.left + 'px';
     card.style.top = box.top + 'px';
     card.style.width = box.width + 'px';
-    card.style.height = box.height + 'px';
+    card.style.height = (box.height + titleH) + 'px';
     const mediaEl = card.querySelector('.card-media');
-    if(mediaEl) mediaEl.style.height = '100%';
+    if(mediaEl) mediaEl.style.height = box.height + 'px';
     container.appendChild(card);
     requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*15));
   });
 
-  // Set container height
+  // Set container height (each card is taller by titleH, so max bottom = geometry height + titleH)
   container.style.position = 'relative';
-  container.style.height = geometry.containerHeight + 'px';
+  container.style.height = (geometry.containerHeight + titleH) + 'px';
 }
 
 function renderAll(){
