@@ -671,10 +671,18 @@ async function loadDataFromCloud() {
     if (result.data && result.data.length > 0) {
       const cloudData = result.data[0].data;
       if (cloudData) {
-        // 云端数据始终覆盖本地（你是唯一编辑者，不存在多设备编辑冲突）
-        // 清理 blob 链接 + 修复旧 URL
+        // 版本比较：本地更新则不覆盖（防止本地编辑被旧云端数据冲掉）
+        const cloudVersion = cloudData._version || 0;
+        const localVersion = DATA._version || 0;
+        if (localVersion > cloudVersion) {
+          console.log('本地数据更新，跳过云端加载 (local=' + localVersion + ' cloud=' + cloudVersion + ')');
+          return;
+        }
+        // 云端数据更新，用云端的
+        // 深度合并：确保所有子对象也被覆盖
+        // 清理 blob/data 链接 + 修复旧 URL
         ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec=>{
-          if(!cloudData[sec]) return;
+          if(!cloudData[sec]) cloudData[sec]=[];
           cloudData[sec].forEach(item=>{
             if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) item.media='';
             if(item.cover && (item.cover.startsWith('blob:') || item.cover.startsWith('data:'))) item.cover='';
@@ -684,6 +692,11 @@ async function loadDataFromCloud() {
         });
         cloudData.contact && (cloudData.contact.wechatQr = fixCloudUrl(cloudData.contact.wechatQr));
         cloudData.contact && (cloudData.contact.resumeUrl = fixCloudUrl(cloudData.contact.resumeUrl));
+        // Ensure heroNav/sectionTitles/tags exist even if cloud data is old
+        if(!cloudData.heroNav) cloudData.heroNav = DATA.heroNav || {};
+        if(!cloudData.sectionTitles) cloudData.sectionTitles = DATA.sectionTitles;
+        if(!cloudData.tags) cloudData.tags = DATA.tags;
+        if(!cloudData.cols) cloudData.cols = DATA.cols;
         
         DATA = Object.assign(DATA, cloudData);
         try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); }catch(e){}
@@ -1022,8 +1035,8 @@ function renderSection(sectionKey, gridId, type){
     targetRowHeightTolerance: 0.25
   });
 
-  // Reserve space for title/desc below each card
-  const titleH = 40;
+  // Reserve space for title/desc below each card (title ~16px + desc ~12px + padding ~24px)
+  const titleH = 56;
   geometry.boxes.forEach((box, i)=>{
     const item = items[i];
     let card;
