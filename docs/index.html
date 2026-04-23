@@ -1191,6 +1191,17 @@ function renderSection(sectionKey, gridId, type){
     1280
   );
 
+  // First, calculate the standard row height using a full row's items
+  // This ensures all rows (full and partial) use the same height
+  const standardRatios = items.slice(0, userCols).map(item => item.ar || (16/9));
+  // If fewer items than userCols, pad with average ratio
+  const avgRatio = items.length > 0 ? (items.reduce((s,item)=>s+(item.ar||16/9),0) / items.length) : (16/9);
+  while(standardRatios.length < userCols) standardRatios.push(avgRatio);
+  const totalGapFull = (userCols - 1) * gap;
+  const availableW = containerW - totalGapFull;
+  const sumRatios = standardRatios.reduce((a,b)=>a+b, 0);
+  const rowHeight = Math.max(80, availableW / sumRatios);
+
   // Split items into rows of userCols
   const rows = [];
   for(let i=0; i<items.length; i+=userCols){
@@ -1201,41 +1212,38 @@ function renderSection(sectionKey, gridId, type){
   let totalHeight = 0;
 
   rows.forEach((rowItems, rowIdx)=>{
-    const isLastRow = rowIdx === rows.length - 1;
+    const isFullRow = rowItems.length === userCols;
     const colsInRow = rowItems.length;
-    const isFullRow = colsInRow === userCols;
+    const rowRatios = rowItems.map(item => item.ar || (16/9));
 
-    // Calculate justified widths for this row
-    // Each card keeps its aspect ratio, total width fills containerW for full rows
-    const ratios = rowItems.map(item => item.ar || (16/9));
-    const totalGap = (colsInRow - 1) * gap;
-    const availableW = isFullRow ? containerW - totalGap : containerW - totalGap;
+    // All rows use the same height for visual consistency
+    const cardWidths = rowRatios.map(r => r * rowHeight);
 
-    // Calculate heights that make all cards in row fill available width
-    // Find common height: sum of widths at this height = availableW
-    // width_i = ratio_i * h, so sum(ratio_i * h) = availableW => h = availableW / sum(ratios)
-    const sumRatios = ratios.reduce((a,b)=>a+b, 0);
-    const rowHeight = Math.max(60, availableW / sumRatios);
-    const cardWidths = ratios.map(r => r * rowHeight);
-
-    // For full rows: left = sum of previous cards + gaps
-    // For last incomplete row: center the group
-    let rowStartX;
+    // For full rows: stretch cards to fill container width
+    // For partial rows: use natural widths based on standard height, then center
+    let finalWidths, rowStartX;
     if(isFullRow){
+      // Justify: redistribute widths to fill containerW exactly
+      const totalContentW = cardWidths.reduce((a,b)=>a+b,0) + totalGapFull;
+      const scale = (containerW - totalGapFull) / cardWidths.reduce((a,b)=>a+b,0);
+      finalWidths = cardWidths.map(w => w * scale);
       rowStartX = 0;
     } else {
-      const totalRowContentW = cardWidths.reduce((a,b)=>a+b,0) + totalGap;
-      rowStartX = (containerW - totalRowContentW) / 2;
+      // Partial row: use standard height so cards are same size as full-row cards
+      finalWidths = cardWidths;
+      const totalRowW = finalWidths.reduce((a,b)=>a+b,0) + (colsInRow-1)*gap;
+      rowStartX = (containerW - totalRowW) / 2;
     }
 
     rowItems.forEach((item, colIdx)=>{
       let card;
       if(item.type==='img') card = makeImgCard(item);
       else card = makeMp4Card(item);
-      const cardW = cardWidths[colIdx];
+      const cardW = finalWidths[colIdx];
       const cardH = rowHeight + titleH;
+      const leftX = rowStartX + finalWidths.slice(0, colIdx).reduce((a,b)=>a+b,0) + colIdx * gap;
       card.style.position = 'absolute';
-      card.style.left = (rowStartX + cardWidths.slice(0, colIdx).reduce((a,b)=>a+b,0) + colIdx * gap) + 'px';
+      card.style.left = leftX + 'px';
       card.style.top = totalHeight + 'px';
       card.style.width = cardW + 'px';
       card.style.height = cardH + 'px';
@@ -1253,8 +1261,8 @@ function renderSection(sectionKey, gridId, type){
   container.style.gridTemplateColumns = '';
   container.style.gap = '';
   container.style.overflow = 'hidden';
-  container.style.width = containerW + 'px';
-  container.style.height = (totalHeight - gap) + 'px';
+  container.style.width = '100%';
+  container.style.height = Math.max(0, totalHeight - gap) + 'px';
 }
 
 function renderAll(){
