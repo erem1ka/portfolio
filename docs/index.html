@@ -378,7 +378,7 @@
       </div>
     </div>
 
-    <div class="mb-10 border-t border-sep pt-8">
+    <div class="border-t border-sep pt-8">
       <div class="flex items-center gap-2 mb-4">
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="aigc-vid-label" contenteditable="false">AE 木偶骨骼绑定动效</span>
         <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="aigc-vid-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('aigc-vid-grid',this.value)"></span>
@@ -392,19 +392,7 @@
       </div>
     </div>
 
-    <div class="border-t border-sep pt-8">
-      <div class="flex items-center gap-2 mb-4">
-        <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="aigc-prompt-label" contenteditable="false">Prompt 工程</span>
-        <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="aigc-prompt-cols" type="number" min="1" max="8" value="6" onchange="setGridCols('aigc-prompt-grid',this.value)"></span>
-      </div>
-      <div class="work-grid" data-row-h="160" id="aigc-prompt-grid" style="--cols:8"></div>
-      <div class="add-card mt-2" id="aigc-prompt-add" onclick="addPromptCard()">
-        <div class="add-label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          添加 Prompt
-        </div>
-      </div>
-    </div>
+
   </div>
 </section>
 
