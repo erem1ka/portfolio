@@ -745,6 +745,8 @@ function toggleEdit(){
     if(cleaned){ saveData(); renderAll(); }
   }
   editMode = !editMode;
+  // 进入编辑模式时标记为编辑者设备（只有编辑者才能推送数据到云端）
+  if(editMode) localStorage.setItem('portfolio_editor_token', '1');
   const app = document.getElementById('app');
   app.classList.toggle('editing', editMode);
   const btn = document.getElementById('editMenuBtn');
@@ -1637,13 +1639,16 @@ async function init(){
   renderAll();
   
   if (cloudReady) {
+    // 编辑者标识：只有进入过编辑模式的设备才能推送数据
+    // localStorage 中存有 portfolio_editor_token 的是编辑者设备
+    const isEditor = !!localStorage.getItem('portfolio_editor_token');
     const localVersion = DATA._version || 0;
-    if (localVersion > 0) {
-      // 本地有数据（编辑者设备）：只推送到云端，不从云端加载
-      // 本地就是最新的，不需要再拉云端数据覆盖
+    
+    if (isEditor && localVersion > 0) {
+      // 编辑者设备：推送本地数据到云端
       publishDataToCloud();
     } else {
-      // 本地无数据（其他设备/首次访问）：从云端加载
+      // 访客设备或首次访问：从云端加载
       setTimeout(()=>loadDataFromCloud(false), 500);
     }
   }
