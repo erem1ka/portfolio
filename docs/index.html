@@ -913,6 +913,7 @@ function setGridCols(gridId, n){
   const key = gridId.replace('-grid','');
   DATA.cols[key] = n;
   saveData();
+  renderAll();
 }
 
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -1182,10 +1183,13 @@ function renderSection(sectionKey, gridId, type){
 
   // Desktop: use flickr justified layout with absolute positioning
   const ratios = items.map(item => item.ar || (16/9));
-  const containerW = container.offsetWidth || container.parentElement?.offsetWidth || 1000;
-  const rowH = 160;
+  // Respect user's column count setting from DATA.cols
+  const userCols = DATA.cols[sectionKey] || 4;
+  const realContainerW = container.offsetWidth || container.parentElement?.offsetWidth || 1000;
+  // Adjust row height so that roughly userCols items fill each row
+  const rowH = Math.max(100, realContainerW / userCols * 0.65);
   const geometry = justifiedLayout(ratios, {
-    containerWidth: containerW,
+    containerWidth: realContainerW,
     containerPadding: 0,
     boxSpacing: 4,
     targetRowHeight: rowH,
