@@ -1646,12 +1646,11 @@ async function init(){
   if (cloudReady) {
     const localVersion = DATA._version || 0;
     if (localVersion > 0) {
-      // 本地有数据：先把本地推送到云端（保证云端最新），再加载云端
-      // 注意：push 可能因 blob URL 延迟，所以 pull 不再比较版本，强制执行
-      await publishDataToCloud();
-      setTimeout(()=>loadDataFromCloud(true), 300);
+      // 本地有数据（编辑者设备）：只推送到云端，不从云端加载
+      // 本地就是最新的，不需要再拉云端数据覆盖
+      publishDataToCloud();
     } else {
-      // 本地无数据（其他设备/首次访问）：直接从云端加载
+      // 本地无数据（其他设备/首次访问）：从云端加载
       setTimeout(()=>loadDataFromCloud(false), 500);
     }
   }
