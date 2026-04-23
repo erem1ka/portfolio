@@ -1181,26 +1181,18 @@ function renderSection(sectionKey, gridId, type){
     return;
   }
 
-  // Desktop: row-based justified layout
-  // Each row has exactly userCols cards (except last row which may have fewer and is centered)
+  // Desktop: row-based layout with preserved aspect ratios
+  // Fixed row height, cards sized proportionally, gaps expand to fill container
   const userCols = DATA.cols[sectionKey] || 4;
-  const gap = 4;
+  const minGap = 4;
   const containerW = Math.min(
     container.parentElement?.offsetWidth || 1280,
     container.parentElement?.parentElement?.offsetWidth || 1280,
     1280
   );
-
-  // First, calculate the standard row height using a full row's items
-  // This ensures all rows (full and partial) use the same height
-  const standardRatios = items.slice(0, userCols).map(item => item.ar || (16/9));
-  // If fewer items than userCols, pad with average ratio
-  const avgRatio = items.length > 0 ? (items.reduce((s,item)=>s+(item.ar||16/9),0) / items.length) : (16/9);
-  while(standardRatios.length < userCols) standardRatios.push(avgRatio);
-  const totalGapFull = (userCols - 1) * gap;
-  const availableW = containerW - totalGapFull;
-  const sumRatios = standardRatios.reduce((a,b)=>a+b, 0);
-  const rowHeight = Math.max(40, availableW / sumRatios * 0.5);
+  // Fixed row height — cards are smaller, proportions preserved
+  const rowHeight = 150;
+  const titleH = 40;
 
   // Split items into rows of userCols
   const rows = [];
@@ -1208,7 +1200,6 @@ function renderSection(sectionKey, gridId, type){
     rows.push(items.slice(i, i+userCols));
   }
 
-  const titleH = 40;
   let totalHeight = 0;
 
   rows.forEach((rowItems, rowIdx)=>{
@@ -1216,22 +1207,20 @@ function renderSection(sectionKey, gridId, type){
     const colsInRow = rowItems.length;
     const rowRatios = rowItems.map(item => item.ar || (16/9));
 
-    // All rows use the same height for visual consistency
+    // Card widths from fixed height and aspect ratios — proportions preserved
     const cardWidths = rowRatios.map(r => r * rowHeight);
 
-    // For full rows: stretch cards to fill container width
-    // For partial rows: use natural widths based on standard height, then center
-    let finalWidths, rowStartX;
+    // For full rows: calculate gap to evenly distribute remaining space
+    // For partial rows: use minGap and center the group
+    let rowGap, rowStartX;
     if(isFullRow){
-      // Justify: redistribute widths to fill containerW exactly
-      const totalContentW = cardWidths.reduce((a,b)=>a+b,0) + totalGapFull;
-      const scale = (containerW - totalGapFull) / cardWidths.reduce((a,b)=>a+b,0);
-      finalWidths = cardWidths.map(w => w * scale);
+      const totalCardW = cardWidths.reduce((a,b)=>a+b,0);
+      const remaining = containerW - totalCardW;
+      rowGap = Math.max(minGap, remaining / (colsInRow - 1));
       rowStartX = 0;
     } else {
-      // Partial row: use standard height so cards are same size as full-row cards
-      finalWidths = cardWidths;
-      const totalRowW = finalWidths.reduce((a,b)=>a+b,0) + (colsInRow-1)*gap;
+      rowGap = minGap;
+      const totalRowW = cardWidths.reduce((a,b)=>a+b,0) + (colsInRow-1)*rowGap;
       rowStartX = (containerW - totalRowW) / 2;
     }
 
@@ -1239,9 +1228,9 @@ function renderSection(sectionKey, gridId, type){
       let card;
       if(item.type==='img') card = makeImgCard(item);
       else card = makeMp4Card(item);
-      const cardW = finalWidths[colIdx];
+      const cardW = cardWidths[colIdx];
       const cardH = rowHeight + titleH;
-      const leftX = rowStartX + finalWidths.slice(0, colIdx).reduce((a,b)=>a+b,0) + colIdx * gap;
+      const leftX = rowStartX + cardWidths.slice(0, colIdx).reduce((a,b)=>a+b,0) + colIdx * rowGap;
       card.style.position = 'absolute';
       card.style.left = leftX + 'px';
       card.style.top = totalHeight + 'px';
@@ -1253,7 +1242,7 @@ function renderSection(sectionKey, gridId, type){
       requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), (rowIdx*userCols+colIdx)*15));
     });
 
-    totalHeight += rowHeight + titleH + gap;
+    totalHeight += rowHeight + titleH + rowGap;
   });
 
   container.style.position = 'relative';
@@ -1262,7 +1251,7 @@ function renderSection(sectionKey, gridId, type){
   container.style.gap = '';
   container.style.overflow = 'hidden';
   container.style.width = '100%';
-  container.style.height = Math.max(0, totalHeight - gap) + 'px';
+  container.style.height = Math.max(0, totalHeight - minGap) + 'px';
 }
 
 function renderAll(){
