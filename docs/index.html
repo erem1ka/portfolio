@@ -1181,45 +1181,71 @@ function renderSection(sectionKey, gridId, type){
     return;
   }
 
-  // Desktop: use flickr justified layout with absolute positioning
-  const ratios = items.map(item => item.ar || (16/9));
-  // Respect user's column count setting from DATA.cols
+  // Desktop: row-based justified layout
+  // Each row has exactly userCols cards (except last row which may have fewer and is centered)
   const userCols = DATA.cols[sectionKey] || 4;
-  // Ensure container has correct width: use max-w-screen-xl parent's actual width
-  // First, temporarily reset container to get accurate parent width
-  container.style.position = 'relative';
-  container.style.width = '100%';
-  container.style.display = '';
-  const realContainerW = Math.min(
+  const gap = 4;
+  const containerW = Math.min(
     container.parentElement?.offsetWidth || 1280,
     container.parentElement?.parentElement?.offsetWidth || 1280,
     1280
   );
-  // Adjust row height so that roughly userCols items fill each row
-  const rowH = Math.max(80, realContainerW / userCols * 0.45);
-  const geometry = justifiedLayout(ratios, {
-    containerWidth: realContainerW,
-    containerPadding: 0,
-    boxSpacing: 4,
-    targetRowHeight: rowH,
-    targetRowHeightTolerance: 0.25
-  });
+
+  // Split items into rows of userCols
+  const rows = [];
+  for(let i=0; i<items.length; i+=userCols){
+    rows.push(items.slice(i, i+userCols));
+  }
 
   const titleH = 40;
-  geometry.boxes.forEach((box, i)=>{
-    const item = items[i];
-    let card;
-    if(item.type==='img') card = makeImgCard(item);
-    else card = makeMp4Card(item);
-    card.style.position = 'absolute';
-    card.style.left = box.left + 'px';
-    card.style.top = box.top + 'px';
-    card.style.width = box.width + 'px';
-    card.style.height = (box.height + titleH) + 'px';
-    const mediaEl = card.querySelector('.card-media');
-    if(mediaEl) mediaEl.style.height = box.height + 'px';
-    container.appendChild(card);
-    requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*15));
+  let totalHeight = 0;
+
+  rows.forEach((rowItems, rowIdx)=>{
+    const isLastRow = rowIdx === rows.length - 1;
+    const colsInRow = rowItems.length;
+    const isFullRow = colsInRow === userCols;
+
+    // Calculate justified widths for this row
+    // Each card keeps its aspect ratio, total width fills containerW for full rows
+    const ratios = rowItems.map(item => item.ar || (16/9));
+    const totalGap = (colsInRow - 1) * gap;
+    const availableW = isFullRow ? containerW - totalGap : containerW - totalGap;
+
+    // Calculate heights that make all cards in row fill available width
+    // Find common height: sum of widths at this height = availableW
+    // width_i = ratio_i * h, so sum(ratio_i * h) = availableW => h = availableW / sum(ratios)
+    const sumRatios = ratios.reduce((a,b)=>a+b, 0);
+    const rowHeight = Math.max(60, availableW / sumRatios);
+    const cardWidths = ratios.map(r => r * rowHeight);
+
+    // For full rows: left = sum of previous cards + gaps
+    // For last incomplete row: center the group
+    let rowStartX;
+    if(isFullRow){
+      rowStartX = 0;
+    } else {
+      const totalRowContentW = cardWidths.reduce((a,b)=>a+b,0) + totalGap;
+      rowStartX = (containerW - totalRowContentW) / 2;
+    }
+
+    rowItems.forEach((item, colIdx)=>{
+      let card;
+      if(item.type==='img') card = makeImgCard(item);
+      else card = makeMp4Card(item);
+      const cardW = cardWidths[colIdx];
+      const cardH = rowHeight + titleH;
+      card.style.position = 'absolute';
+      card.style.left = (rowStartX + cardWidths.slice(0, colIdx).reduce((a,b)=>a+b,0) + colIdx * gap) + 'px';
+      card.style.top = totalHeight + 'px';
+      card.style.width = cardW + 'px';
+      card.style.height = cardH + 'px';
+      const mediaEl = card.querySelector('.card-media');
+      if(mediaEl) mediaEl.style.height = rowHeight + 'px';
+      container.appendChild(card);
+      requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), (rowIdx*userCols+colIdx)*15));
+    });
+
+    totalHeight += rowHeight + titleH + gap;
   });
 
   container.style.position = 'relative';
@@ -1227,7 +1253,8 @@ function renderSection(sectionKey, gridId, type){
   container.style.gridTemplateColumns = '';
   container.style.gap = '';
   container.style.overflow = 'hidden';
-  container.style.height = (geometry.containerHeight + titleH) + 'px';
+  container.style.width = containerW + 'px';
+  container.style.height = (totalHeight - gap) + 'px';
 }
 
 function renderAll(){
