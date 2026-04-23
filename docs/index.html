@@ -1589,6 +1589,11 @@ function fixCloudUrl(url) {
   if (url.includes('tcb.qcloud.la') && !url.includes('6d79-')) {
     return url.replace('https://', 'https://6d79-');
   }
+  // 修复缺少 -1424382234 后缀的旧域名（如 6d79-my-web-d5gsldm9ha36297d1.tcb.qcloud.la）
+  if (url.includes('6d79-my-web-d5gsldm9ha36297d1.tcb.qcloud.la') && !url.includes('-1424382234')) {
+    const cloudPath = url.split('/portfolio/').pop();
+    if (cloudPath) return `${CLOUD_CDN}/portfolio/${cloudPath}`;
+  }
   // 修复 COS 默认域名（无法在浏览器预览）
   if (url.includes('cos-website') || url.includes('myqcloud.com')) {
     const cloudPath = url.split('/portfolio/').pop();
