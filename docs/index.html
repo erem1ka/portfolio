@@ -682,7 +682,8 @@ async function loadDataFromCloud() {
     if (result.data && result.data.length > 0) {
       const cloudData = result.data[0].data;
       if (cloudData) {
-        // 版本比较：本地更新则不覆盖（防止本地编辑被旧云端数据冲掉）
+        // 版本比较：如果本地数据比云端新（说明云端推送还未完成），跳过覆盖
+        // 正常情况下 init() 会先 push 再 pull，版本号应该相同或云端更新
         const cloudVersion = cloudData._version || 0;
         const localVersion = DATA._version || 0;
         if (localVersion > cloudVersion) {
@@ -1639,9 +1640,16 @@ async function init(){
   loadData();
   renderAll();
   
-  // 如果云开发初始化成功，从云端加载数据
   if (cloudReady) {
-    setTimeout(loadDataFromCloud, 500);
+    const localVersion = DATA._version || 0;
+    if (localVersion > 0) {
+      // 本地有数据：先把本地推送到云端（保证云端最新），再加载云端
+      await publishDataToCloud();
+      setTimeout(loadDataFromCloud, 300);
+    } else {
+      // 本地无数据（其他设备/首次访问）：直接从云端加载
+      setTimeout(loadDataFromCloud, 500);
+    }
   }
 }
 
