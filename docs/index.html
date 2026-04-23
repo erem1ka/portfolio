@@ -1640,7 +1640,6 @@ async function init(){
   
   if (cloudReady) {
     // 编辑者标识：只有进入过编辑模式的设备才能推送数据
-    // localStorage 中存有 portfolio_editor_token 的是编辑者设备
     const isEditor = !!localStorage.getItem('portfolio_editor_token');
     const localVersion = DATA._version || 0;
     
@@ -1648,8 +1647,8 @@ async function init(){
       // 编辑者设备：推送本地数据到云端
       publishDataToCloud();
     } else {
-      // 访客设备或首次访问：从云端加载
-      setTimeout(()=>loadDataFromCloud(false), 500);
+      // 访客设备：始终从云端加载最新数据，忽略本地缓存
+      setTimeout(()=>loadDataFromCloud(true), 300);
     }
   }
 }
