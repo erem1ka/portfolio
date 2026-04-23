@@ -1185,7 +1185,16 @@ function renderSection(sectionKey, gridId, type){
   const ratios = items.map(item => item.ar || (16/9));
   // Respect user's column count setting from DATA.cols
   const userCols = DATA.cols[sectionKey] || 4;
-  const realContainerW = container.offsetWidth || container.parentElement?.offsetWidth || 1000;
+  // Ensure container has correct width: use max-w-screen-xl parent's actual width
+  // First, temporarily reset container to get accurate parent width
+  container.style.position = 'relative';
+  container.style.width = '100%';
+  container.style.display = '';
+  const realContainerW = Math.min(
+    container.parentElement?.offsetWidth || 1280,
+    container.parentElement?.parentElement?.offsetWidth || 1280,
+    1280
+  );
   // Adjust row height so that roughly userCols items fill each row
   const rowH = Math.max(100, realContainerW / userCols * 0.65);
   const geometry = justifiedLayout(ratios, {
@@ -1217,6 +1226,7 @@ function renderSection(sectionKey, gridId, type){
   container.style.display = '';
   container.style.gridTemplateColumns = '';
   container.style.gap = '';
+  container.style.overflow = 'hidden';
   container.style.height = (geometry.containerHeight + titleH) + 'px';
 }
 
