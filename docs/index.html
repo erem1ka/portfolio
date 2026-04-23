@@ -1182,28 +1182,25 @@ function renderSection(sectionKey, gridId, type){
   }
 
   // Desktop: Pinterest-style masonry layout
-  // Equal-width columns, card heights proportional to image aspect ratio
-  // Cards fill columns from top to bottom, tight gaps
+  // All modules share the same card width, so same-ratio cards look identical across modules
+  // Column count controls how many cards per row, but card size stays consistent
   const numCols = DATA.cols[sectionKey] || 4;
   const gap = 8;
-  const titleH = 40;
-  const containerW = Math.min(
-    container.parentElement?.offsetWidth || 1280,
-    container.parentElement?.parentElement?.offsetWidth || 1280,
-    1280
-  );
-  const colW = (containerW - (numCols - 1) * gap) / numCols;
+  const titleH = 32;
+  // Global card width: 200px ensures small cards, consistent across all modules
+  const CARD_W = 200;
+  // Container width = numCols * CARD_W + gaps
+  const containerContentW = numCols * CARD_W + (numCols - 1) * gap;
 
   // Track the current height of each column
   const colHeights = new Array(numCols).fill(0);
 
   // Distribute cards across columns: always place next card in the shortest column
   items.forEach((item, i)=>{
-    // Find shortest column
     const shortestCol = colHeights.indexOf(Math.min(...colHeights));
 
     const ratio = item.ar || (16/9);
-    const imgH = colW / ratio; // image height based on column width and aspect ratio
+    const imgH = CARD_W / ratio; // image height based on fixed card width and aspect ratio
     const cardH = imgH + titleH;
 
     let card;
@@ -1211,9 +1208,9 @@ function renderSection(sectionKey, gridId, type){
     else card = makeMp4Card(item);
 
     card.style.position = 'absolute';
-    card.style.left = (shortestCol * (colW + gap)) + 'px';
+    card.style.left = (shortestCol * (CARD_W + gap)) + 'px';
     card.style.top = colHeights[shortestCol] + 'px';
-    card.style.width = colW + 'px';
+    card.style.width = CARD_W + 'px';
     card.style.height = cardH + 'px';
 
     const mediaEl = card.querySelector('.card-media');
@@ -1222,16 +1219,19 @@ function renderSection(sectionKey, gridId, type){
     container.appendChild(card);
     requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*15));
 
-    // Update this column's height
     colHeights[shortestCol] += cardH + gap;
   });
 
-  // Set container height to tallest column
+  // Center the grid within the max-w-screen-xl container
+  const maxContainerW = container.parentElement?.offsetWidth || 1280;
+  const centerOffset = Math.max(0, (maxContainerW - containerContentW) / 2);
+
   container.style.position = 'relative';
   container.style.display = '';
   container.style.gridTemplateColumns = '';
   container.style.gap = '';
-  container.style.width = '100%';
+  container.style.width = containerContentW + 'px';
+  container.style.marginLeft = centerOffset + 'px';
   container.style.height = Math.max(...colHeights) + 'px';
 }
 
