@@ -594,16 +594,19 @@ function loadData(){
     if(s){
       const d=JSON.parse(s);
       DATA=Object.assign(DATA,d);
+      let cleaned = false;
       ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec => {
         DATA[sec].forEach(item => {
-          if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) item.media='';
-          if(item.cover && (item.cover.startsWith('blob:') || item.cover.startsWith('data:'))) item.cover='';
+          if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) { item.media=''; cleaned=true; }
+          if(item.cover && (item.cover.startsWith('blob:') || item.cover.startsWith('data:'))) { item.cover=''; cleaned=true; }
           item.media = fixCloudUrl(item.media);
           item.cover = fixCloudUrl(item.cover);
         });
       });
       DATA.contact.wechatQr = fixCloudUrl(DATA.contact.wechatQr);
       DATA.contact.resumeUrl = fixCloudUrl(DATA.contact.resumeUrl);
+      // 清理了 blob URL 则重新写回 localStorage，防止脏数据影响后续发布
+      if(cleaned) try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); }catch(e){}
     }
   } catch(e){}
 }
@@ -672,7 +675,7 @@ async function publishDataToGitHub() {
 }
 
 // 从云端加载数据
-async function loadDataFromCloud() {
+async function loadDataFromCloud(forceLoad) {
   if (!db) return;
   
   try {
@@ -686,7 +689,7 @@ async function loadDataFromCloud() {
         // 正常情况下 init() 会先 push 再 pull，版本号应该相同或云端更新
         const cloudVersion = cloudData._version || 0;
         const localVersion = DATA._version || 0;
-        if (localVersion > cloudVersion) {
+        if (!forceLoad && localVersion > cloudVersion) {
           console.log('本地数据更新，跳过云端加载 (local=' + localVersion + ' cloud=' + cloudVersion + ')');
           return;
         }
@@ -1644,11 +1647,12 @@ async function init(){
     const localVersion = DATA._version || 0;
     if (localVersion > 0) {
       // 本地有数据：先把本地推送到云端（保证云端最新），再加载云端
+      // 注意：push 可能因 blob URL 延迟，所以 pull 不再比较版本，强制执行
       await publishDataToCloud();
-      setTimeout(loadDataFromCloud, 300);
+      setTimeout(()=>loadDataFromCloud(true), 300);
     } else {
       // 本地无数据（其他设备/首次访问）：直接从云端加载
-      setTimeout(loadDataFromCloud, 500);
+      setTimeout(()=>loadDataFromCloud(false), 500);
     }
   }
 }
