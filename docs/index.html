@@ -79,10 +79,14 @@
     .thumb-inner{width:100%;height:100%}
     .no-thumb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:.52rem;letter-spacing:.08em;color:#5a5a5a}
 
-    .play-badge{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s}
+    .play-badge{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:1;transition:opacity .18s}
     .vcard:hover .play-badge{opacity:1}
-    .play-circle{width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(0,0,0,.35)}
+    .play-circle{width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(0,0,0,.35);transition:transform .18s var(--ease),background .18s}
     .play-circle svg{width:18px;height:18px;fill:white;margin-left:2px}
+    .vcard:hover .play-circle{transform:scale(1.08);background:rgba(0,0,0,.7)}
+    /* Card media click hint */
+    .card-media{cursor:pointer}
+    .card-media.empty-card{cursor:default}
 
     .upload-ov{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:5px;z-index:8;border:1.5px dashed rgba(200,196,190,.3)}
     .dark .upload-ov{background:rgba(26,24,22,.85)}
@@ -162,6 +166,10 @@
     #qrZoom{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.85);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s}
     #qrZoom.open{opacity:1;pointer-events:all}
     #qrZoom img{border-radius:12px;max-width:90vw;max-height:90vh;object-fit:contain;box-shadow:0 24px 72px rgba(0,0,0,.5)}
+
+    #imgZoom{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.85);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s;cursor:zoom-out}
+    #imgZoom.open{opacity:1;pointer-events:all}
+    #imgZoom img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px;box-shadow:0 24px 72px rgba(0,0,0,.5)}
 
     #editEntryBtn{cursor:pointer;opacity:.15;transition:opacity .18s;background:none;border:none;padding:0}
     #editEntryBtn:hover{opacity:.4}
@@ -548,6 +556,10 @@
 
 <div id="qrZoom" onclick="closeQrZoom()">
   <img id="qrZoomImg" src="" alt="微信二维码">
+</div>
+
+<div id="imgZoom" onclick="closeImgZoom()">
+  <img id="imgZoomImg" src="" alt="">
 </div>
 
 <div id="playerBackdrop" onclick="closeInlinePlayer()"></div>
@@ -962,17 +974,17 @@ function makeMp4Card(item){
   card.className = 'vcard bg-card border-card card-hover masonry-item';
   card.dataset.id = item.id;
   card.dataset.type = item.type || 'mp4';
-  const isAnim = item.type==='webp';
+  const isAnim = item.type==='webp' || item.type==='gif';
   const coverSrc = item.cover || '';
   const mediaSrc = item.media || '';
   let mediaHtml;
   if(!mediaSrc){
     mediaHtml = `<div class="no-thumb">待上传</div>`;
   } else if(isAnim){
-    // webp/gif: img tag, auto-loops, no click
+    // webp/gif: img tag, auto-loops, click to zoom
     mediaHtml = `<img src="${mediaSrc}" alt="" style="pointer-events:none">`;
   } else {
-    // mp4: show cover, click to play
+    // mp4: show cover with always-visible play badge
     mediaHtml = coverSrc
       ? `<img src="${coverSrc}" alt=""><div class="play-badge"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>`
       : `<div class="no-thumb">待上传</div>`;
@@ -990,10 +1002,16 @@ function makeMp4Card(item){
       <p class="font-sans font-medium text-main text-[.78rem] leading-snug mb-0.5" data-field="title">${escHtml(item.title||'作品标题')}</p>
       <p class="text-sub font-light text-[.68rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
-  if(mediaSrc && !isAnim){
+  if(mediaSrc){
     card.querySelector('.card-media').addEventListener('click', e=>{
       if(e.target.closest('.upload-ov') || editMode) return;
-      openInlinePlayer(item.media, card);
+      if(isAnim){
+        // webp/gif: open image zoom (shows animation looping)
+        openImgZoom(mediaSrc);
+      } else {
+        // mp4: open inline video player
+        openInlinePlayer(item.media, card);
+      }
     });
   }
   setupEditableFields(card, item);
@@ -1006,8 +1024,8 @@ function makeImgCard(item){
   card.dataset.id = item.id;
   card.dataset.type = 'img';
   card.innerHTML = `
-    <div class="card-media">
-      ${item.media ? `<img src="${item.media}" alt="">` : `<div class="no-thumb">待上传</div>`}
+    <div class="card-media${!item.media?' empty-card':''}">
+      ${item.media ? `<img src="${item.media}" alt="" style="pointer-events:none">` : `<div class="no-thumb">待上传</div>`}
       <div class="upload-ov">
         <button class="upload-ov-btn" onclick="event.stopPropagation();triggerMediaUpload('${item.id}','img')">上传图片</button>
         <button class="del-ov-btn" onclick="event.stopPropagation();deleteCard('${item.id}')">&#x2715; 删除</button>
@@ -1017,6 +1035,12 @@ function makeImgCard(item){
       <p class="font-sans font-medium text-main text-[.78rem] leading-snug mb-0.5" data-field="title">${escHtml(item.title||'作品标题')}</p>
       <p class="text-sub font-light text-[.68rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
+  if(item.media){
+    card.querySelector('.card-media').addEventListener('click', e=>{
+      if(e.target.closest('.upload-ov') || editMode) return;
+      openImgZoom(item.media);
+    });
+  }
   setupEditableFields(card, item);
   return card;
 }
@@ -1320,6 +1344,17 @@ function openQrZoom(src){
   document.getElementById('qrZoom').classList.add('open');
 }
 function closeQrZoom(){ document.getElementById('qrZoom').classList.remove('open'); }
+
+function openImgZoom(src){
+  if(!src) return;
+  const img = document.getElementById('imgZoomImg');
+  img.src = src;
+  document.getElementById('imgZoom').classList.add('open');
+}
+function closeImgZoom(){
+  document.getElementById('imgZoom').classList.remove('open');
+  document.getElementById('imgZoomImg').src = '';
+}
 
 function deleteQR(){
   DATA.contact.wechatQr = '';
@@ -1672,7 +1707,7 @@ function closeInlinePlayer(){
   document.getElementById('playerBackdrop').classList.remove('open');
 }
 
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeInlinePlayer(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeInlinePlayer(); closeImgZoom(); closeQrZoom(); } });
 
 function triggerQRUpload(){
   const inp=document.createElement('input');
