@@ -4,6 +4,15 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>张峻烨 · 效果创意设计作品集</title>
+  <meta name="description" content="张峻烨 — 效果创意设计 × AIGC 全链路创作者。短视频特效素材设计、MG 动画、Seedream 生图、骨骼木偶动效、AI 智能体工具基建"/>
+  <meta name="keywords" content="张峻烨,作品集,效果创意设计,AIGC,AE,Seedream,MG动画,短视频特效"/>
+  <meta property="og:title" content="张峻烨 · 效果创意设计作品集"/>
+  <meta property="og:description" content="效果创意设计 × AIGC 全链路创作者作品集"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://erem1ka.github.io/portfolio/"/>
+  <meta name="twitter:card" content="summary"/>
+  <meta name="twitter:title" content="张峻烨 · 效果创意设计作品集"/>
+  <meta name="twitter:description" content="效果创意设计 × AIGC 全链路创作者作品集"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
@@ -34,7 +43,7 @@
     .dark .border-card{border-color:rgba(255,255,255,.06)}
     .dark .text-main{color:#ffffff}
     .dark .text-sub{color:#999999}
-    .dark .text-dim{color:#5a5a5a}
+    .dark .text-dim{color:#7a7a7a}
     .dark .border-sep{border-color:rgba(255,255,255,.08)}
     .dark .card-hover:hover{border-color:rgba(255,255,255,.14);box-shadow:0 8px 28px rgba(0,0,0,.35)}
     .dark .accent{color:#25f4ee}
@@ -132,8 +141,6 @@
     .card-media{overflow:hidden;position:relative;flex:none}
     .card-media img,.card-media video{width:100%;height:100%;display:block;object-fit:cover}
     .card-media .no-thumb{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:.52rem;color:#4a4540;background:rgba(255,255,255,.03);position:relative}
-    /* upload-ov must be inside a relative container */
-    .upload-ov{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:5px;z-index:8;border:1.5px dashed rgba(200,196,190,.3)}
 
     .mod-header-divider{border-bottom-width:2px !important}
     .dark .mod-header-divider{border-color:rgba(255,255,255,.15) !important}
@@ -160,6 +167,11 @@
     #editEntryBtn:hover{opacity:.4}
     .editing #editEntryBtn{opacity:.7;color:#25f4ee}
 
+    #hamburgerBtn{transition:border-color .18s}
+    .dark #hamburgerBtn{border-color:rgba(255,255,255,.08);color:#8f95a5;background:#23252c}
+    .light #hamburgerBtn{border-color:rgba(0,0,0,.06);color:#646b80;background:#fff}
+    #hamburgerBtn:hover{border-color:rgba(254,44,85,.3)}
+
     #editMenu{position:fixed;inset:0;z-index:880;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
     #editMenu.open{opacity:1;pointer-events:all}
 
@@ -168,7 +180,7 @@
     .light .hero-glow{opacity:.65}
 
     .tag-pill{display:inline-block;font-family:'Space Mono',monospace;font-size:.48rem;letter-spacing:.1em;padding:6px 14px;border-radius:100px;margin:4px 6px 4px 0;font-weight:500}
-    .dark .tag-pill{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#999999}
+    .dark .tag-pill{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);color:#aaaaaa}
     .light .tag-pill{background:rgba(0,0,0,.02);border:1px solid rgba(0,0,0,.05);color:#666666}
 
     .tool-card{border:1px solid;border-radius:12px;padding:24px;transition:transform .22s var(--ease),border-color .18s,box-shadow .18s}
@@ -208,12 +220,47 @@
       /* 卡片标题缩小 */
       .vcard .font-sans.font-medium{font-size:.6rem!important}
       .vcard .text-sub.font-light{font-size:.52rem!important}
+      /* Contact area: stack vertically */
+      #contact .grid.grid-cols-2{grid-template-columns:1fr!important}
     }
 
     ::-webkit-scrollbar{width:4px}
     ::-webkit-scrollbar-track{background:transparent}
     .dark ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1)}
     .light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12)}
+
+    :focus-visible{outline:2px solid #25f4ee;outline-offset:2px;border-radius:2px}
+    .dark :focus-visible{outline-color:#25f4ee}
+    .light :focus-visible{outline-color:#0077ff}
+    [contenteditable]:focus-visible{outline:1px dashed rgba(160,156,150,.25);outline-offset:0}
+    .inline-player-close:focus-visible,.upload-ov-btn:focus-visible,.del-ov-btn:focus-visible{outline-offset:1px}
+
+    /* ── Mobile hamburger nav ── */
+    @media(max-width:900px){
+      #hamburgerBtn{display:flex!important}
+      #navLinks{display:none!important;position:fixed;top:52px;left:0;right:0;z-index:60;padding:12px 16px;flex-direction:column;gap:10px;border-bottom:1px solid rgba(160,156,150,.15)}
+      .dark #navLinks{background:#0f0f0f}
+      .light #navLinks{background:#f6f6f6}
+      #navLinks.mobile-open{display:flex!important}
+      #navLinks a,#navLinks button{font-size:.78rem;padding:8px 0}
+      /* Mobile card grid layout override */
+      .masonry-grid,.work-grid{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:6px!important}
+      .masonry-grid .vcard,.work-grid .vcard{position:static!important;left:auto!important;top:auto!important;width:100%!important;height:auto!important}
+      .masonry-grid .vcard .card-media,.work-grid .vcard .card-media{height:0;padding-top:56.25%!important;position:relative}
+      .masonry-grid .vcard .card-media>*,.work-grid .vcard .card-media>*{position:absolute!important;inset:0!important}
+      .masonry-grid .vcard .card-media .no-thumb,.work-grid .vcard .card-media .no-thumb{position:absolute!important;inset:0!important}
+      /* Prompt cards: full width on mobile */
+      .work-grid .vcard[data-type="prompt"]{width:100%!important;max-width:100%!important}
+      /* Contact grid: single column on mobile */
+      #contact .grid.grid-cols-2{grid-template-columns:1fr!important}
+      /* AIGC sub-labels: full width */
+      #mod-aigc .flex.items-center.gap-2{flex-wrap:wrap}
+    }
+    @media(min-width:901px){
+      #hamburgerBtn{display:none!important}
+      #navLinks{display:flex!important}
+      /* Desktop: keep justified layout via JS (absolute positioning) */
+    }
   </style>
 </head>
 <body>
@@ -230,11 +277,15 @@
     <!-- Edit mode: upload/replace -->
     <div class="nav-resume-edit" style="display:none;gap:6px;align-items:center">
       <button onclick="triggerResumeUpload()" class="font-mono text-[.52rem] tracking-wider text-sub hover:text-main border border-sep rounded px-2.5 py-1 transition-colors">上传简历</button>
-      <button onclick="deleteResume()" id="nav-resume-del" style="display:none" class="font-mono text-[.52rem] text-sub hover:text-main border border-sep rounded px-2.5 py-1 transition-colors" style="color:rgba(200,80,80,.8)">删除</button>
+      <button onclick="deleteResume()" id="nav-resume-del" style="display:none;color:rgba(200,80,80,.8)" class="font-mono text-[.52rem] text-sub hover:text-main border border-sep rounded px-2.5 py-1 transition-colors">删除</button>
     </div>
   </div>
-  <!-- Right: nav links -->
-  <div class="flex items-center gap-6 font-mono text-[.88rem] tracking-wider uppercase text-sub">
+  <!-- Mobile hamburger button -->
+  <button id="hamburgerBtn" onclick="toggleMobileNav()" style="display:none;width:32px;height:32px;background:none;border:1px solid;border-radius:50%;cursor:pointer" class="flex items-center justify-center">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <!-- Right: nav links (desktop inline, mobile dropdown) -->
+  <div id="navLinks" class="flex items-center gap-6 font-mono text-[.88rem] tracking-wider uppercase text-sub">
     <a href="#mod-practice" class="hover:text-main transition-colors no-underline" id="nav-practice" contenteditable="false">业务作品</a>
     <a href="#mod-mg" class="hover:text-main transition-colors no-underline" id="nav-mg" contenteditable="false">MG</a>
     <a href="#mod-aigc" class="hover:text-main transition-colors no-underline" id="nav-aigc" contenteditable="false">AIGC</a>
@@ -344,7 +395,7 @@
     <div class="border-t border-sep pt-8">
       <div class="flex items-center gap-2 mb-4">
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="aigc-prompt-label" contenteditable="false">Prompt 工程</span>
-        <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="aigc-prompt-cols" type="number" min="1" max="6" value="8" onchange="setGridCols('aigc-prompt-grid',this.value)"></span>
+        <span class="cols-ctrl"><span class="text-dim">每行:</span><input class="cols-input" id="aigc-prompt-cols" type="number" min="1" max="8" value="6" onchange="setGridCols('aigc-prompt-grid',this.value)"></span>
       </div>
       <div class="work-grid" data-row-h="160" id="aigc-prompt-grid" style="--cols:8"></div>
       <div class="add-card mt-2" id="aigc-prompt-add" onclick="addPromptCard()">
@@ -593,7 +644,17 @@ function loadData(){
     const s = localStorage.getItem(APP_KEY);
     if(s){
       const d=JSON.parse(s);
-      DATA=Object.assign(DATA,d);
+      // 深度替换：用本地缓存完全替换各数组，防止浅合并残留旧数据
+      const SECTIONS = ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+      SECTIONS.forEach(sec=>{ DATA[sec] = d[sec] || []; });
+      if(d.contact) DATA.contact = Object.assign(DATA.contact, d.contact);
+      if(d.sectionTitles) DATA.sectionTitles = d.sectionTitles;
+      if(d.heroNav) DATA.heroNav = d.heroNav;
+      if(d.tags) DATA.tags = d.tags;
+      if(d.cols) DATA.cols = d.cols;
+      if(d.skills) DATA.skills = d.skills;
+      if(d.toolCards) DATA.toolCards = d.toolCards;
+      DATA._version = d._version;
       let cleaned = false;
       ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec => {
         DATA[sec].forEach(item => {
@@ -646,7 +707,10 @@ async function publishDataToCloud() {
     } catch(e) { exists = false; }
     
     if (exists) {
-      await collection.doc('main').set({ data: dataToSave, updatedAt: new Date() });
+      // 全量覆盖：先删除旧文档再写入新文档，确保云端数据完全替换
+      // set() 可能是合并而非替换，remove+add 确保万无一失
+      try { await collection.doc('main').remove(); } catch(e) {}
+      await collection.add({ _id: 'main', data: dataToSave, updatedAt: new Date() });
     } else {
       await collection.add({ _id: 'main', data: dataToSave, updatedAt: new Date() });
     }
@@ -703,7 +767,21 @@ async function loadDataFromCloud(forceLoad) {
         if(!cloudData.tags) cloudData.tags = DATA.tags;
         if(!cloudData.cols) cloudData.cols = DATA.cols;
         
-        DATA = Object.assign(DATA, cloudData);
+        // 深度替换：用云端数据完全替换本地数据，而不是浅合并
+        // 确保数组字段被完全替换（不会保留本地旧数组）
+        const SECTIONS = ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+        SECTIONS.forEach(sec=>{
+          DATA[sec] = cloudData[sec] || [];
+        });
+        // 替换 contact、sectionTitles、heroNav、tags、cols 等对象
+        if(cloudData.contact) DATA.contact = Object.assign(DATA.contact, cloudData.contact);
+        if(cloudData.sectionTitles) DATA.sectionTitles = cloudData.sectionTitles;
+        if(cloudData.heroNav) DATA.heroNav = cloudData.heroNav;
+        if(cloudData.tags) DATA.tags = cloudData.tags;
+        if(cloudData.cols) DATA.cols = cloudData.cols;
+        if(cloudData.skills) DATA.skills = cloudData.skills;
+        if(cloudData.toolCards) DATA.toolCards = cloudData.toolCards;
+        DATA._version = cloudData._version;
         try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); }catch(e){}
         renderAll();
         console.log('✓ 从云端加载数据成功');
@@ -776,6 +854,18 @@ function toggleEdit(){
 
 function openEditMenu(){ document.getElementById('editMenu').classList.add('open'); }
 function closeEditMenu(){ document.getElementById('editMenu').classList.remove('open'); }
+
+function toggleMobileNav(){
+  const nav = document.getElementById('navLinks');
+  nav.classList.toggle('mobile-open');
+}
+// Close mobile nav when clicking a link
+document.addEventListener('click', e=>{
+  if(e.target.closest('#navLinks a') || e.target.closest('#themeBtn')){
+    const nav = document.getElementById('navLinks');
+    if(nav) nav.classList.remove('mobile-open');
+  }
+});
 
 function exportData(){
   const data = {
@@ -909,8 +999,8 @@ function makeMp4Card(item){
       </div>
     </div>
     <div class="p-2.5 pb-2">
-      <p class="font-sans font-medium text-main text-[.78rem] leading-snug mb-0.5" data-field="title">${item.title||'作品标题'}</p>
-      <p class="text-sub font-light text-[.68rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${item.desc||''}</p>
+      <p class="font-sans font-medium text-main text-[.78rem] leading-snug mb-0.5" data-field="title">${escHtml(item.title||'作品标题')}</p>
+      <p class="text-sub font-light text-[.68rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
   if(mediaSrc && !isAnim){
     card.querySelector('.card-media').addEventListener('click', e=>{
@@ -936,8 +1026,8 @@ function makeImgCard(item){
       </div>
     </div>
     <div class="p-2.5 pb-2">
-      <p class="font-sans font-medium text-main text-[.78rem] leading-snug mb-0.5" data-field="title">${item.title||'作品标题'}</p>
-      <p class="text-sub font-light text-[.68rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${item.desc||''}</p>
+      <p class="font-sans font-medium text-main text-[.78rem] leading-snug mb-0.5" data-field="title">${escHtml(item.title||'作品标题')}</p>
+      <p class="text-sub font-light text-[.68rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
   setupEditableFields(card, item);
   return card;
@@ -969,7 +1059,7 @@ function makePromptCard(item){
   card.innerHTML = `
     <div class="p-3 pb-3.5 relative">
       <div class="flex items-start justify-between gap-2 mb-2">
-        <p class="font-sans font-semibold text-main text-[.82rem] leading-snug flex-1" data-field="title">${item.title||'Prompt 标题'}</p>
+        <p class="font-sans font-semibold text-main text-[.82rem] leading-snug flex-1" data-field="title">${escHtml(item.title||'Prompt 标题')}</p>
         <div class="upload-ov" style="position:static;background:none;border:none;display:none;flex-direction:row;gap:4px;align-items:center;padding:0">
           <button class="upload-ov-btn" onclick="event.stopPropagation();triggerMediaUpload('${item.id}','prompt')" style="font-size:.55rem;padding:3px 8px;border-radius:4px">上传媒体</button>
           <button class="del-ov-btn" onclick="deleteCard('${item.id}')">✕</button>
@@ -1017,32 +1107,75 @@ function renderSection(sectionKey, gridId, type){
   if(!container) return;
   container.innerHTML = '';
 
-  // Prompt cards: simple flex wrap, fixed width
+  const isMobile = window.innerWidth <= 900;
+
+  // Prompt cards: flex wrap, responsive width
   if(items.length && items[0].type==='prompt'){
     items.forEach((item,i)=>{
       const card = makePromptCard(item);
-      card.style.width = '280px';
+      card.style.width = isMobile ? '100%' : '280px';
       container.appendChild(card);
       requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*25));
     });
+    // On mobile, use flex-wrap; on desktop, also flex-wrap
+    container.style.display = 'flex';
+    container.style.flexWrap = 'wrap';
+    container.style.gap = '6px';
+    container.style.position = 'static';
+    container.style.height = 'auto';
     return;
   }
 
-  // Media cards: use flickr justified layout
+  // Media cards: mobile uses CSS grid, desktop uses justified layout
+  if(isMobile){
+    // Mobile: CSS grid layout (2 columns), no absolute positioning
+    items.forEach((item,i)=>{
+      let card;
+      if(item.type==='img') card = makeImgCard(item);
+      else card = makeMp4Card(item);
+      card.style.position = 'static';
+      card.style.width = '100%';
+      card.style.height = 'auto';
+      // Card-media uses padding-top:56.25% for aspect ratio (handled by CSS)
+      const mediaEl = card.querySelector('.card-media');
+      if(mediaEl){
+        mediaEl.style.position = 'relative';
+        mediaEl.style.height = '0';
+        mediaEl.style.paddingTop = '56.25%';
+        mediaEl.style.overflow = 'hidden';
+        // Make inner content fill the padded area
+        mediaEl.querySelectorAll('img,video,.no-thumb,.play-badge,.thumb-inner').forEach(el=>{
+          if(el.classList.contains('play-badge') || el.classList.contains('thumb-inner')) return;
+          el.style.position = 'absolute';
+          el.style.inset = '0';
+          el.style.width = '100%';
+          el.style.height = '100%';
+          el.style.objectFit = 'cover';
+        });
+      }
+      container.appendChild(card);
+      requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*25));
+    });
+    container.style.display = 'grid';
+    container.style.gridTemplateColumns = 'repeat(2, 1fr)';
+    container.style.gap = '6px';
+    container.style.position = 'static';
+    container.style.height = 'auto';
+    return;
+  }
+
+  // Desktop: use flickr justified layout with absolute positioning
   const ratios = items.map(item => item.ar || (16/9));
   const containerW = container.offsetWidth || container.parentElement?.offsetWidth || 1000;
-  // 手机端行高更大，一行只放1-2个大卡片
-  const isMobile = window.innerWidth < 580;
-  const rowH = isMobile ? 220 : 160;
+  const rowH = 160;
   const geometry = justifiedLayout(ratios, {
     containerWidth: containerW,
     containerPadding: 0,
-    boxSpacing: isMobile ? 3 : 4,
+    boxSpacing: 4,
     targetRowHeight: rowH,
     targetRowHeightTolerance: 0.25
   });
 
-  // Reserve space for title/desc below each card (title ~16px + desc ~12px + padding ~24px)
   const titleH = 56;
   geometry.boxes.forEach((box, i)=>{
     const item = items[i];
@@ -1060,8 +1193,10 @@ function renderSection(sectionKey, gridId, type){
     requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*15));
   });
 
-  // Set container height (each card is taller by titleH, so max bottom = geometry height + titleH)
   container.style.position = 'relative';
+  container.style.display = '';
+  container.style.gridTemplateColumns = '';
+  container.style.gap = '';
   container.style.height = (geometry.containerHeight + titleH) + 'px';
 }
 
@@ -1194,7 +1329,7 @@ function openQrZoom(src){
   if(!src) return;
   const img = document.getElementById('qrZoomImg');
   img.src = src;
-  z.classList.add('open');
+  document.getElementById('qrZoom').classList.add('open');
 }
 function closeQrZoom(){ document.getElementById('qrZoom').classList.remove('open'); }
 
