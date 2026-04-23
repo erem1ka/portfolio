@@ -625,28 +625,18 @@ async function publishDataToCloud() {
     const newVersion = Date.now();
     dataToSave._version = newVersion;
     
-    // 如果还有 blob/data 链接说明上传还没完成，延迟发布
-    let hasPendingUpload = false;
+    // 清理 blob/data URL（刷新后无效），直接置空而不是推迟发布
+    // 上传进行中的文件：用 fileID 还原云端 URL；无 fileID 则清空，等用户重新上传
     ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec => {
       if(!dataToSave[sec]) return;
       dataToSave[sec].forEach(item => {
-        if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) hasPendingUpload = true;
-        if(item.cover && (item.cover.startsWith('blob:') || item.cover.startsWith('data:'))) hasPendingUpload = true;
+        if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) item.media = '';
+        if(item.cover && (item.cover.startsWith('blob:') || item.cover.startsWith('data:'))) item.cover = '';
       });
     });
     if(dataToSave.contact){
-      if(dataToSave.contact.wechatQr && (dataToSave.contact.wechatQr.startsWith('blob:') || dataToSave.contact.wechatQr.startsWith('data:'))) hasPendingUpload = true;
-      if(dataToSave.contact.resumeUrl && (dataToSave.contact.resumeUrl.startsWith('blob:') || dataToSave.contact.resumeUrl.startsWith('data:'))) hasPendingUpload = true;
-    }
-    if(hasPendingUpload){
-      console.log('上传未完成，3秒后重试同步');
-      clearTimeout(_publishTimer);
-      _publishTimer = setTimeout(()=>{ if(db) publishDataToCloud(); }, 3000);
-      return;
-    }
-    if(dataToSave.contact){
-      if(dataToSave.contact.wechatQr && dataToSave.contact.wechatQr.startsWith('blob:')) delete dataToSave.contact.wechatQr;
-      if(dataToSave.contact.resumeUrl && dataToSave.contact.resumeUrl.startsWith('blob:')) delete dataToSave.contact.resumeUrl;
+      if(dataToSave.contact.wechatQr && (dataToSave.contact.wechatQr.startsWith('blob:') || dataToSave.contact.wechatQr.startsWith('data:'))) dataToSave.contact.wechatQr = '';
+      if(dataToSave.contact.resumeUrl && (dataToSave.contact.resumeUrl.startsWith('blob:') || dataToSave.contact.resumeUrl.startsWith('data:'))) dataToSave.contact.resumeUrl = '';
     }
     
     let exists = false;
@@ -1456,6 +1446,9 @@ fileInput.addEventListener('change', async ()=>{
     }
     saveData();
     rerenderItemSection(_uploadTarget);
+    // 上传完成后立刻发布到云端（取消防抖，确保云端拿到真实URL而不是blob）
+    clearTimeout(_publishTimer);
+    if(db) publishDataToCloud();
   }
 });
 
