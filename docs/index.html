@@ -1200,7 +1200,7 @@ function renderSection(sectionKey, gridId, type){
   const totalGapFull = (userCols - 1) * gap;
   const availableW = containerW - totalGapFull;
   const sumRatios = standardRatios.reduce((a,b)=>a+b, 0);
-  const rowHeight = Math.max(80, availableW / sumRatios);
+  const rowHeight = Math.max(40, availableW / sumRatios * 0.5);
 
   // Split items into rows of userCols
   const rows = [];
