@@ -324,7 +324,7 @@
       <div class="flex-1">
         <div class="section-title-wrap">
           <h2 class="font-sans font-bold text-main text-[1.4rem] tracking-tight" id="practice-title" contenteditable="false">短视频平台 · 业务作品</h2>
-          <span class="cols-ctrl"><span class="text-dim">列数:</span><input class="cols-input" id="practice-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('practice-grid',this.value)"></span>
+          <span class="cols-ctrl"><span class="text-dim">行高:</span><input class="cols-input" id="practice-cols" type="number" min="60" max="300" value="100" onchange="setGridCols('practice-grid',this.value)"></span>
         </div>
         <p class="font-mono text-[.55rem] text-sub mt-1.5" id="practice-desc" contenteditable="false">参与短视频平台全链路特效素材设计，独立完成动态特效、画面转场、轻量化动画素材的 AE 全流程制作与方案输出</p>
       </div>
@@ -350,7 +350,7 @@
       <div class="flex-1">
         <div class="section-title-wrap">
           <h2 class="font-sans font-bold text-main text-[1.4rem] tracking-tight" id="mg-title" contenteditable="false">无畏契约 LOGO · 原创 MG 动画</h2>
-          <span class="cols-ctrl"><span class="text-dim">列数:</span><input class="cols-input" id="mg-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('mg-grid',this.value)"></span>
+          <span class="cols-ctrl"><span class="text-dim">行高:</span><input class="cols-input" id="mg-cols" type="number" min="60" max="300" value="100" onchange="setGridCols('mg-grid',this.value)"></span>
         </div>
         <p class="font-mono text-[.55rem] text-sub mt-1.5" id="mg-desc" contenteditable="false">基于 IP 原生视觉体系，全程 AE 矢量形状图层原创手搓制作，独立完成 LOGO 图形拆解、形变动画、版式动态延展、节奏卡点与氛围光效设计</p>
       </div>
@@ -379,7 +379,7 @@
     <div class="mb-10">
       <div class="flex items-center gap-2 mb-4">
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="aigc-img-label" contenteditable="false">AI 生成原画素材</span>
-        <span class="cols-ctrl"><span class="text-dim">列数:</span><input class="cols-input" id="aigc-img-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('aigc-img-grid',this.value)"></span>
+        <span class="cols-ctrl"><span class="text-dim">行高:</span><input class="cols-input" id="aigc-img-cols" type="number" min="60" max="300" value="100" onchange="setGridCols('aigc-img-grid',this.value)"></span>
       </div>
       <div class="work-grid" data-row-h="160" id="aigc-img-grid" style="--cols:8"></div>
       <div class="add-card mt-2" id="aigc-img-add" onclick="addWorkCard('aigc-img','auto')">
@@ -393,7 +393,7 @@
     <div class="border-t border-sep pt-8">
       <div class="flex items-center gap-2 mb-4">
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="aigc-vid-label" contenteditable="false">AE 木偶骨骼绑定动效</span>
-        <span class="cols-ctrl"><span class="text-dim">列数:</span><input class="cols-input" id="aigc-vid-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('aigc-vid-grid',this.value)"></span>
+        <span class="cols-ctrl"><span class="text-dim">行高:</span><input class="cols-input" id="aigc-vid-cols" type="number" min="60" max="300" value="100" onchange="setGridCols('aigc-vid-grid',this.value)"></span>
       </div>
       <div class="masonry-grid" data-row-h="160" id="aigc-vid-grid" style="--cols:8"></div>
       <div class="add-card mt-2" id="aigc-vid-add" onclick="addWorkCard('aigc-vid','auto')">
@@ -446,7 +446,7 @@
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-4">
         <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="agent-vid-label" contenteditable="false">工具演示</span>
-        <span class="cols-ctrl"><span class="text-dim">列数:</span><input class="cols-input" id="agent-cols" type="number" min="1" max="8" value="8" onchange="setGridCols('agent-grid',this.value)"></span>
+        <span class="cols-ctrl"><span class="text-dim">行高:</span><input class="cols-input" id="agent-cols" type="number" min="60" max="300" value="100" onchange="setGridCols('agent-grid',this.value)"></span>
       </div>
       <div class="masonry-grid" data-row-h="160" id="agent-grid" style="--cols:8"></div>
       <div class="add-card mt-2" id="agent-add" onclick="addWorkCard('agent','auto')">
@@ -655,7 +655,16 @@ function loadData(){
       if(d.sectionTitles) DATA.sectionTitles = d.sectionTitles;
       if(d.heroNav) DATA.heroNav = d.heroNav;
       if(d.tags) DATA.tags = d.tags;
-      if(d.cols) DATA.cols = d.cols;
+      if(d.cols) {
+        DATA.cols = d.cols;
+        // Migrate old col-count values (1-8) to row-height values (60-300)
+        const SECTIONS = ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+        SECTIONS.forEach(sec=>{
+          if(DATA.cols[sec] !== undefined && DATA.cols[sec] <= 8){
+            DATA.cols[sec] = 100; // reset to default row height
+          }
+        });
+      }
       if(d.skills) DATA.skills = d.skills;
       if(d.toolCards) DATA.toolCards = d.toolCards;
       DATA._version = d._version;
@@ -782,7 +791,13 @@ async function loadDataFromCloud(forceLoad) {
         if(cloudData.sectionTitles) DATA.sectionTitles = cloudData.sectionTitles;
         if(cloudData.heroNav) DATA.heroNav = cloudData.heroNav;
         if(cloudData.tags) DATA.tags = cloudData.tags;
-        if(cloudData.cols) DATA.cols = cloudData.cols;
+        if(cloudData.cols) {
+          DATA.cols = cloudData.cols;
+          const SECTIONS2 = ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+          SECTIONS2.forEach(sec=>{
+            if(DATA.cols[sec] !== undefined && DATA.cols[sec] <= 8) DATA.cols[sec] = 100;
+          });
+        }
         if(cloudData.skills) DATA.skills = cloudData.skills;
         if(cloudData.toolCards) DATA.toolCards = cloudData.toolCards;
         DATA._version = cloudData._version;
@@ -907,13 +922,12 @@ function importData(file){
 }
 
 function setGridCols(gridId, n){
-  n = Math.max(1, Math.min(8, parseInt(n)||4));
-  const g = document.getElementById(gridId);
-  if(g){ g.style.setProperty('--cols', n); g.style.columns = n; }
+  // n here is row height in px
+  n = Math.max(60, Math.min(300, parseInt(n)||100));
   const key = gridId.replace('-grid','');
   DATA.cols[key] = n;
   saveData();
-  renderAll();
+  renderSection(key, gridId);
 }
 
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -1125,6 +1139,7 @@ function renderSection(sectionKey, gridId, type){
   container.innerHTML = '';
 
   const isMobile = window.innerWidth <= 900;
+  const gap = 10;
 
   // Prompt cards: flex wrap, responsive width
   if(items.length && items[0].type==='prompt'){
@@ -1134,105 +1149,60 @@ function renderSection(sectionKey, gridId, type){
       container.appendChild(card);
       requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*25));
     });
-    // On mobile, use flex-wrap; on desktop, also flex-wrap
-    container.style.display = 'flex';
-    container.style.flexWrap = 'wrap';
-    container.style.gap = '6px';
-    container.style.position = 'static';
-    container.style.height = 'auto';
+    container.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;position:static;height:auto;width:auto;margin-left:0';
     return;
   }
 
-  // Media cards: mobile uses CSS grid, desktop uses justified layout
+  // Mobile: 2-column CSS grid
   if(isMobile){
-    // Mobile: CSS grid layout (2 columns), no absolute positioning
     items.forEach((item,i)=>{
-      let card;
-      if(item.type==='img') card = makeImgCard(item);
-      else card = makeMp4Card(item);
+      let card = item.type==='img' ? makeImgCard(item) : makeMp4Card(item);
       card.style.position = 'static';
       card.style.width = '100%';
       card.style.height = 'auto';
-      // Card-media uses padding-top:56.25% for aspect ratio (handled by CSS)
       const mediaEl = card.querySelector('.card-media');
       if(mediaEl){
-        mediaEl.style.position = 'relative';
-        mediaEl.style.height = '0';
-        mediaEl.style.paddingTop = '56.25%';
-        mediaEl.style.overflow = 'hidden';
-        // Make inner content fill the padded area
-        mediaEl.querySelectorAll('img,video,.no-thumb,.play-badge,.thumb-inner').forEach(el=>{
-          if(el.classList.contains('play-badge') || el.classList.contains('thumb-inner')) return;
-          el.style.position = 'absolute';
-          el.style.inset = '0';
-          el.style.width = '100%';
-          el.style.height = '100%';
-          el.style.objectFit = 'cover';
+        mediaEl.style.cssText = 'position:relative;height:0;padding-top:56.25%;overflow:hidden';
+        mediaEl.querySelectorAll('img,video,.no-thumb').forEach(el=>{
+          el.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
         });
       }
       container.appendChild(card);
       requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*25));
     });
-    container.style.display = 'grid';
-    container.style.gridTemplateColumns = 'repeat(2, 1fr)';
-    container.style.gap = '6px';
-    container.style.position = 'static';
-    container.style.height = 'auto';
+    container.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:6px;position:static;height:auto;width:auto;margin-left:0';
     return;
   }
 
-  // Desktop: Pinterest-style masonry layout
-  // All modules share the same card width, so same-ratio cards look identical across modules
-  // Column count controls how many cards per row, but card size stays consistent
-  const numCols = DATA.cols[sectionKey] || 4;
-  const gap = 8;
-  const titleH = 32;
-  // Global card width: 200px ensures small cards, consistent across all modules
-  const CARD_W = 200;
-  // Container width = numCols * CARD_W + gaps
-  const containerContentW = numCols * CARD_W + (numCols - 1) * gap;
+  // Desktop: Flex-wrap justified row layout
+  // Fixed image row height, card width = rowH * aspect ratio, last row centered
+  const rowH = DATA.cols[sectionKey] || 100; // stored value is row height in px
 
-  // Track the current height of each column
-  const colHeights = new Array(numCols).fill(0);
-
-  // Distribute cards across columns: always place next card in the shortest column
-  items.forEach((item, i)=>{
-    const shortestCol = colHeights.indexOf(Math.min(...colHeights));
-
+  items.forEach((item,i)=>{
+    let card = item.type==='img' ? makeImgCard(item) : makeMp4Card(item);
     const ratio = item.ar || (16/9);
-    const imgH = CARD_W / ratio; // image height based on fixed card width and aspect ratio
-    const cardH = imgH + titleH;
+    const cardW = Math.round(rowH * ratio);
 
-    let card;
-    if(item.type==='img') card = makeImgCard(item);
-    else card = makeMp4Card(item);
-
-    card.style.position = 'absolute';
-    card.style.left = (shortestCol * (CARD_W + gap)) + 'px';
-    card.style.top = colHeights[shortestCol] + 'px';
-    card.style.width = CARD_W + 'px';
-    card.style.height = cardH + 'px';
+    card.style.position = 'static';
+    card.style.width = cardW + 'px';
+    card.style.height = 'auto';
+    card.style.flexShrink = '0';
+    card.style.flexGrow = '0';
 
     const mediaEl = card.querySelector('.card-media');
-    if(mediaEl) mediaEl.style.height = imgH + 'px';
+    if(mediaEl){
+      mediaEl.style.height = rowH + 'px';
+      mediaEl.style.overflow = 'hidden';
+      mediaEl.querySelectorAll('img,video,.no-thumb').forEach(el=>{
+        el.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
+      });
+    }
 
     container.appendChild(card);
     requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*15));
-
-    colHeights[shortestCol] += cardH + gap;
   });
 
-  // Center the grid within the max-w-screen-xl container
-  const maxContainerW = container.parentElement?.offsetWidth || 1280;
-  const centerOffset = Math.max(0, (maxContainerW - containerContentW) / 2);
-
-  container.style.position = 'relative';
-  container.style.display = '';
-  container.style.gridTemplateColumns = '';
-  container.style.gap = '';
-  container.style.width = containerContentW + 'px';
-  container.style.marginLeft = centerOffset + 'px';
-  container.style.height = Math.max(...colHeights) + 'px';
+  container.style.cssText = `display:flex;flex-wrap:wrap;gap:${gap}px;justify-content:center;align-items:flex-start;position:static;height:auto;width:auto;margin-left:0`;
 }
 
 function renderAll(){
@@ -1263,7 +1233,7 @@ function restoreCols(){
   };
   Object.entries(map).forEach(([inputId, key])=>{
     const inp = document.getElementById(inputId);
-    const n = DATA.cols[key] || 4;
+    const n = DATA.cols[key] || 100; // now stores row height
     if(inp) inp.value = n;
   });
 }
@@ -1818,14 +1788,22 @@ async function init(){
   // 初始化云开发
   const cloudReady = await initCloudBase();
   
-  // 先用本地缓存快速渲染（避免白屏）
+  // 先从本地加载数据
   loadData();
   renderAll();
   
   if (cloudReady) {
-    // 所有设备启动时都从云端加载最新数据
-    // 编辑内容时 saveData() 会自动触发 publishDataToCloud()，无需在启动时推送
-    loadDataFromCloud(true);
+    // 编辑者标识：只有进入过编辑模式的设备才能推送数据
+    const isEditor = !!localStorage.getItem('portfolio_editor_token');
+    const localVersion = DATA._version || 0;
+    
+    if (isEditor && localVersion > 0) {
+      // 编辑者设备：推送本地数据到云端
+      publishDataToCloud();
+    } else {
+      // 访客设备：始终从云端加载最新数据，忽略本地缓存
+      setTimeout(()=>loadDataFromCloud(true), 300);
+    }
   }
 }
 
