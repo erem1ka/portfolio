@@ -1,4 +1,18 @@
-portfolio/令牌.rtf
-portfolio/portfolio media upload.rtf
-docs/*.rtf
+# macOS
+.DS_Store
+
+# RTF files
 *.rtf
+*.rtfd/
+
+# Local asset folders (uploaded to cloud storage, no need in git)
+作品/
+岗位详情/
+简历/
+
+# Node
+node_modules/
+package-lock.json
+
+# CodeFlicker internal
+.codeflicker/
