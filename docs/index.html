@@ -46,13 +46,7 @@ section[id]{scroll-margin-top:50px}
     :focus-visible{outline:3px solid #25f4ee;outline-offset:3px;border-radius:3px}
     .dark :focus-visible{outline-color:#25f4ee}
     .light :focus-visible{outline-color:#0077ff}
-    /* 5. Back to top button */
-    .back-to-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s var(--ease);z-index:90;border:1px solid rgba(37,244,238,.3);background:rgba(22,24,35,.85);backdrop-filter:blur(8px)}
-    .light .back-to-top{background:rgba(248,248,248,.85);border-color:rgba(0,0,0,.1)}
-    .back-to-top.show{opacity:1;pointer-events:all}
-    .back-to-top:hover{transform:scale(1.1)}
-    .back-to-top svg{width:18px;height:18px;stroke:#25f4ee}
-    .light .back-to-top svg{stroke:#0077ff}
+
     /* 6. Section title accent bar */
     .section-title-wrap::before{content:'';display:inline-block;width:3px;height:1.1em;background:#25f4ee;border-radius:2px;margin-right:10px;vertical-align:middle}
     .light .section-title-wrap::before{background:#0077ff}
@@ -622,9 +616,6 @@ section[id]{scroll-margin-top:50px}
   <p class="font-mono text-[.52rem] tracking-wider text-dim" style="text-align:right">© 2027 张峻烨</p>
 </footer>
 
-<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
-</button>
 
 <div id="editMenu" onclick="if(event.target===this)closeEditMenu()">
   <div class="bg-card border border-card rounded p-5 w-64 space-y-2">
@@ -2062,11 +2053,6 @@ const revealObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.15 });
 document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-// 5. Back to top button visibility
-const backToTopBtn = document.getElementById('backToTop');
-window.addEventListener('scroll', () => {
-  if(backToTopBtn) backToTopBtn.classList.toggle('show', window.scrollY > 400);
-});
 
 // Desktop: hide mobile nav links, show sidebar
 function applyLayoutByScreen() {
