@@ -47,12 +47,6 @@ section[id]{scroll-margin-top:50px}
     .dark :focus-visible{outline-color:#25f4ee}
     .light :focus-visible{outline-color:#0077ff}
 
-    /* prefers-reduced-motion: disable all animations for accessibility */
-    @media(prefers-reduced-motion:reduce){
-      *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
-      .reveal{opacity:1;transform:none;transition:none}
-    }
-
     /* 6. Section title accent bar */
     .section-title-wrap::before{content:'';display:inline-block;width:3px;height:1.1em;background:#25f4ee;border-radius:2px;margin-right:10px;vertical-align:middle}
     .light .section-title-wrap::before{background:#0077ff}
