@@ -708,7 +708,7 @@ let DATA = {
     aigc: { title:'Seedream 生图 + AE 木偶骨骼动效', desc:'AI 生成原画素材 → 透明抠图 → AE 骨骼点位绑定 → 循环动态打磨 → 抖音特效模板适配，完整「AI 素材生成→后期动态设计」全链路工作流' },
     agent: { title:'AI 智能体创意工作流工具集', desc:'基于 AIGC 开放 API 与智能体调度逻辑，自主搭建网页端设计辅助工具，整合素材生成、Prompt 管理、设计流程自动化能力' }
   },
-  cols: { practice:4, mg:3, 'aigc-img':4, 'aigc-vid':4, 'aigc-prompt':3, agent:3 }
+  cols: { practice:180, mg:180, 'aigc-img':180, 'aigc-vid':180, 'aigc-prompt':180, agent:180 }
 };
 
 let _publishTimer = null;
@@ -733,11 +733,11 @@ function loadData(){
       if(d.tags) DATA.tags = d.tags;
       if(d.cols) {
         DATA.cols = d.cols;
-        // Migrate old col-count values (1-8) to row-height values (60-300)
+        // Migrate old col-count values (1-8) or old default 100 to new default 180
         const SECTIONS = ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
         SECTIONS.forEach(sec=>{
-          if(DATA.cols[sec] !== undefined && DATA.cols[sec] <= 8){
-            DATA.cols[sec] = 100; // reset to default row height
+          if(DATA.cols[sec] !== undefined && (DATA.cols[sec] <= 8 || DATA.cols[sec] === 100)){
+            DATA.cols[sec] = 180;
           }
         });
       }
@@ -871,7 +871,7 @@ async function loadDataFromCloud(forceLoad) {
           DATA.cols = cloudData.cols;
           const SECTIONS2 = ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
           SECTIONS2.forEach(sec=>{
-            if(DATA.cols[sec] !== undefined && DATA.cols[sec] <= 8) DATA.cols[sec] = 100;
+            if(DATA.cols[sec] !== undefined && (DATA.cols[sec] <= 8 || DATA.cols[sec] === 100)) DATA.cols[sec] = 180;
           });
         }
         if(cloudData.skills) DATA.skills = cloudData.skills;
@@ -1270,7 +1270,7 @@ function renderSection(sectionKey, gridId, type){
 
   // Desktop: Flex-wrap justified row layout
   // Fixed image row height, card width = rowH * aspect ratio, last row centered
-  const rowH = DATA.cols[sectionKey] || 100; // stored value is row height in px
+  const rowH = DATA.cols[sectionKey] || 180; // stored value is row height in px
 
   items.forEach((item,i)=>{
     let card = item.type==='img' ? makeImgCard(item) : makeMp4Card(item);
@@ -1330,7 +1330,7 @@ function restoreCols(){
   };
   Object.entries(map).forEach(([inputId, key])=>{
     const inp = document.getElementById(inputId);
-    const n = DATA.cols[key] || 100; // now stores row height
+    const n = DATA.cols[key] || 180; // now stores row height
     if(inp) inp.value = n;
   });
 }
