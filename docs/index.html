@@ -367,17 +367,26 @@
 
 <div class="hero-glow" style="position:fixed;top:0;left:50%;transform:translateX(-50%);width:1400px"></div>
 
-<header class="bg-page sticky top-0 z-50 px-5 py-3 flex items-center justify-between" style="backdrop-filter:blur(14px)">
+<header class="bg-page sticky top-0 z-50 px-5 py-3 flex items-center justify-end gap-3" style="backdrop-filter:blur(14px)">
   <!-- Left: empty on desktop (sidebar handles nav), mobile shows hamburger -->
   <div class="flex items-center gap-2 md-hide" id="hamburgerBtn" onclick="toggleMobileNav()" style="display:none">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </div>
-  <!-- Right: name+role identity + resume -->
-  <div class="flex items-center gap-4">
+  <!-- Right: social links + name+role + resume -->
+  <div class="flex items-center gap-3">
+    <!-- Social links: Douyin & Bilibili -->
+    <a id="header-douyin" href="#" target="_blank" rel="noopener" class="sidebar-btn" title="抖音主页" style="display:none">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.6-.29-1.16-.65-1.67-1.08v8.97c.07 1.53-.17 3.08-.73 4.49-.82 1.96-2.31 3.62-4.17 4.6-1.62.85-3.51 1.17-5.33.94-1.75-.22-3.41-.91-4.76-2.04-1.56-1.33-2.68-3.18-3.06-5.22-.37-2.02-.02-4.18 1.02-5.95 1.03-1.77 2.76-3.12 4.73-3.71 1.43-.43 2.96-.46 4.41-.12v4.13c-1.35-.37-2.87-.19-4.04.69-1 .76-1.67 1.92-1.76 3.16-.09 1.34.46 2.66 1.5 3.5 1 .84 2.38 1.08 3.58.63 1.15-.44 2.04-1.5 2.31-2.7.18-.73.11-1.49.12-2.23V.02h-1.41z"/></svg>
+    </a>
+    <a id="header-bilibili" href="#" target="_blank" rel="noopener" class="sidebar-btn" title="Bilibili主页" style="display:none">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.813 4.653h.854c1.51.054 2.769.786 3.685 1.892.898 1.084 1.375 2.51 1.332 3.927v7.587a7.069 7.069 0 01-1.754 4.643 5.348 5.348 0 01-3.498 1.58h-11.56a5.348 5.348 0 01-3.498-1.58A7.069 7.069 0 01.79 18.06V10.47c-.043-1.417.434-2.843 1.332-3.927.916-1.106 2.175-1.838 3.685-1.892h.854L3.458 2.49a.749.749 0 01.243-1.028.749.749 0 011.028.243L6.21 4.653h3.088l1.516-2.948a.749.749 0 011.028-.243.749.749 0 01.243 1.028l-1.516 2.948h4.478l1.516-2.948a.749.749 0 011.028-.243.749.749 0 01.243 1.028l-1.516 2.948zM5.744 9.398a.749.749 0 00-.749.749v4.252a.749.749 0 00.749.749.749.749 0 00.749-.749V10.147a.749.749 0 00-.749-.749zm12.626 0a.749.749 0 00-.749.749v4.252a.749.749 0 00.749.749.749.749 0 00.749-.749V10.147a.749.749 0 00-.749-.749z"/></svg>
+    </a>
+    <!-- Name + role identity -->
     <div class="flex items-baseline gap-2">
       <p class="font-sans font-bold text-main text-[.92rem] leading-tight" id="header-name" contenteditable="false">张峻烨</p>
       <p class="font-mono text-[.68rem] tracking-[.08em] text-sub uppercase" id="header-role" contenteditable="false">效果创意设计 · AIGC</p>
     </div>
+    <!-- Resume -->
     <div id="nav-resume-wrap">
       <a id="nav-resume-btn" href="#" download style="display:none"
         class="font-mono text-[.62rem] tracking-wider uppercase text-sub hover:text-main no-underline transition-colors flex items-center gap-1.5 border border-sep rounded px-3 py-1.5">
@@ -565,28 +574,6 @@
       <div class="flex flex-wrap" id="contact-tags"></div>
     </div>
 
-    <div class="border-t border-sep pt-6 mb-8">
-      <p class="font-mono text-[.68rem] tracking-[.15em] uppercase text-dim mb-4">技能栈</p>
-      <div class="space-y-3">
-        <div>
-          <p class="font-sans font-medium text-main text-[.82rem] mb-1" id="skill-motion-title" contenteditable="false">动态设计</p>
-          <p class="text-sub font-light text-[.76rem] leading-relaxed" id="skill-motion-desc" contenteditable="false">熟练使用 AE 完成关键帧动画、粒子特效、动态合成、图形 MG 动效、骨骼木偶动画制作，具备成熟的动态效果打磨与节奏把控能力</p>
-        </div>
-        <div>
-          <p class="font-sans font-medium text-main text-[.82rem] mb-1" id="skill-aigc-title" contenteditable="false">AIGC 应用</p>
-          <p class="text-sub font-light text-[.76rem] leading-relaxed" id="skill-aigc-desc" contenteditable="false">精通 Seedream 图像生成模型，熟练运用各类 AIGC 设计工具，搭建「AI 素材生成→后期动态设计」全流程工作流；了解 Seedance 视频生成模型在抖音创作生态的业务应用场景</p>
-        </div>
-        <div>
-          <p class="font-sans font-medium text-main text-[.82rem] mb-1" id="skill-aesthetics-title" contenteditable="false">审美与创意</p>
-          <p class="text-sub font-light text-[.76rem] leading-relaxed" id="skill-aesthetics-desc" contenteditable="false">具备优秀潮流审美，可自主挖掘短视频平台视觉趋势，完成创意方案输出与全流程落地</p>
-        </div>
-        <div>
-          <p class="font-sans font-medium text-main text-[.82rem] mb-1" id="skill-collab-title" contenteditable="false">项目协作</p>
-          <p class="text-sub font-light text-[.76rem] leading-relaxed" id="skill-collab-desc" contenteditable="false">熟悉跨团队对接流程，可高效联动产品、研发团队推进项目落地，具备良好的沟通能力与需求推进意识</p>
-        </div>
-      </div>
-    </div>
-
     <div class="border-t border-sep pt-6">
       <p class="font-mono text-[.72rem] tracking-[.15em] uppercase text-sub mb-4">联系方式</p>
 
@@ -621,16 +608,6 @@
           <div>
             <p class="font-mono text-[.72rem] text-sub mb-0.5">电话</p>
             <span class="text-sub text-[.78rem] select-all" id="contact-phone" contenteditable="false">{{PHONE}}</span>
-          </div>
-          <div class="pt-1 space-y-1.5">
-            <div>
-              <p class="font-mono text-[.72rem] text-sub mb-0.5">抖音</p>
-              <a id="contact-douyin" href="#" target="_blank" class="font-mono text-[.62rem] text-sub hover:text-main transition-colors no-underline truncate block max-w-[180px]">粘贴链接…</a>
-            </div>
-            <div>
-              <p class="font-mono text-[.72rem] text-sub mb-0.5">Bilibili</p>
-              <a id="contact-bilibili" href="#" target="_blank" class="font-mono text-[.62rem] text-sub hover:text-main transition-colors no-underline truncate block max-w-[180px]">粘贴链接…</a>
-            </div>
           </div>
         </div>
       </div>
@@ -968,6 +945,13 @@ function toggleEdit(){
     const el=document.getElementById(id);
     if(el) el.contentEditable = editMode;
   });
+  // Edit mode: show edit fields for header social links
+  const headerDouyin = document.getElementById('header-douyin');
+  const headerBilibili = document.getElementById('header-bilibili');
+  if(editMode){
+    if(headerDouyin) headerDouyin.style.display = 'flex';
+    if(headerBilibili) headerBilibili.style.display = 'flex';
+  }
   // Enable/disable drag-sort
   if(editMode) {
     // Re-render all sections so draggable attr is set correctly
@@ -1393,6 +1377,17 @@ function restoreContact(){
     douyinEl.href = c.douyin;
     douyinEl.textContent = c.douyin;
   }
+  // Social links: update header icons
+  const headerDouyin = document.getElementById('header-douyin');
+  const headerBilibili = document.getElementById('header-bilibili');
+  if(headerDouyin && c.douyin && c.douyin!=='{{DOUYIN_ID}}' && c.douyin!==''){
+    headerDouyin.href = c.douyin;
+    headerDouyin.style.display = 'flex';
+  }
+  if(headerBilibili && c.bilibili && c.bilibili!=='{{BILIBILI_UID}}' && c.bilibili!==''){
+    headerBilibili.href = c.bilibili;
+    headerBilibili.style.display = 'flex';
+  }
   if(c.email && c.email!=='{{EMAIL}}'){
     const a=document.querySelector('a[href^="mailto"]');
     if(a){ a.href=`mailto:${c.email}`; a.textContent=c.email; }
@@ -1402,16 +1397,6 @@ function restoreContact(){
     if(el) el.addEventListener('blur',()=>{ DATA.contact[id.replace('contact-','')]=el.textContent.trim(); saveData(); });
   });
 
-  // ── Skill stack fields ──
-  const SKILL_FIELDS = ['skill-motion-title','skill-motion-desc','skill-aigc-title','skill-aigc-desc',
-    'skill-aesthetics-title','skill-aesthetics-desc','skill-collab-title','skill-collab-desc'];
-  if(!DATA.skills) DATA.skills = {};
-  SKILL_FIELDS.forEach(id=>{
-    const el = document.getElementById(id);
-    if(!el) return;
-    if(DATA.skills[id]) el.textContent = DATA.skills[id];
-    el.addEventListener('blur',()=>{ DATA.skills[id]=el.textContent.trim(); saveData(); });
-  });
 
   // ── Tool card fields ──
   const TOOL_FIELDS = ['tool1-title','tool1-desc','tool2-title','tool2-desc','tool3-title','tool3-desc'];
