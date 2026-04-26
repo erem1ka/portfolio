@@ -128,7 +128,7 @@
     #playerBackdrop{display:none;position:fixed;inset:0;z-index:499;background:rgba(0,0,0,.72);backdrop-filter:blur(6px)}
     #playerBackdrop.open{display:block}
 
-    .prompt-body{font-size:.72rem;line-height:1.7;word-break:break-all;white-space:pre-wrap;overflow:hidden}
+    .prompt-body{font-size:.76rem;line-height:1.75;word-break:break-all;white-space:pre-wrap;overflow:hidden}
     .prompt-body.collapsed{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
     .expand-btn{font-family:'Space Mono',monospace;font-size:.48rem;letter-spacing:.08em;cursor:pointer;padding:3px 0;text-transform:uppercase;color:#7a7570;background:none;border:none;transition:color .15s}
     .expand-btn:hover{color:#a8a3a0}
@@ -193,7 +193,7 @@
     .dark .hero-glow{opacity:1}
     .light .hero-glow{opacity:.45}
 
-    .tag-pill{display:inline-block;font-family:'Space Mono',monospace;font-size:.48rem;letter-spacing:.1em;padding:6px 14px;border-radius:100px;margin:4px 6px 4px 0;font-weight:500}
+    .tag-pill{display:inline-block;font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.08em;padding:6px 14px;border-radius:100px;margin:4px 6px 4px 0;font-weight:500}
     .dark .tag-pill{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.13);color:#cccccc}
     .light .tag-pill{background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.09);color:#444444}
 
@@ -216,7 +216,7 @@
       /* 标题缩小 */
       h2{font-size:1.1rem!important}
       /* tag-pill 缩小 */
-      .tag-pill{font-size:.38rem;padding:4px 10px}
+      .tag-pill{font-size:.56rem;padding:4px 10px}
     }
     @media(max-width:580px){
       .work-grid{grid-template-columns:repeat(2,1fr)!important}
@@ -226,14 +226,14 @@
       header .font-mono{font-size:.5rem!important;gap:2px!important;letter-spacing:.06em!important}
       /* Hero区缩小 */
       #hero-name{font-size:1.6rem!important}
-      #hero-sub{font-size:.48rem!important;letter-spacing:.08em!important}
-      .tag-pill{font-size:.34rem;padding:3px 8px}
+      #hero-sub{font-size:.62rem!important;letter-spacing:.08em!important}
+      .tag-pill{font-size:.5rem;padding:3px 8px}
       /* 模块标题缩小 */
       h2{font-size:.9rem!important}
       .section-title-wrap p{font-size:.44rem!important}
       /* 卡片标题缩小 */
-      .vcard .font-sans.font-medium{font-size:.6rem!important}
-      .vcard .text-sub.font-light{font-size:.52rem!important}
+      .vcard .font-sans.font-medium{font-size:.72rem!important}
+      .vcard .text-sub.font-light{font-size:.68rem!important}
       /* Contact area: stack vertically */
       #contact .grid.grid-cols-2{grid-template-columns:1fr!important}
     }
@@ -331,7 +331,7 @@
     <h1 class="font-sans font-bold text-main" id="hero-name" contenteditable="false" style="font-size:clamp(1.8rem,4.2vw,3.4rem);letter-spacing:-.03em;line-height:1">张峻烨</h1>
     <p class="font-mono tracking-[.18em] uppercase text-sub mt-3" id="hero-sub" contenteditable="false" style="font-size:clamp(.58rem,.75vw,.78rem)">效果创意设计 · 短视频特效素材 · AIGC 全链路工作流 · AI 智能体工具基建</p>
     <div class="mt-4 flex flex-wrap" id="hero-tags"></div>
-    <p class="font-mono text-[.78rem] tracking-[.08em] text-sub mt-3.5 flex items-center gap-1.5">
+    <p class="font-mono text-[.82rem] tracking-[.06em] text-sub mt-3.5 flex items-center gap-1.5">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
       图片 / 动图 / 视频均可点击放大观看
     </p>
@@ -346,12 +346,12 @@
           <h2 class="font-sans font-bold text-main text-[1.4rem] tracking-tight" id="practice-title" contenteditable="false">短视频平台 · 业务作品</h2>
           <span class="cols-ctrl"><span class="text-dim">行高:</span><input class="cols-input" id="practice-cols" type="number" min="60" max="300" value="100" onchange="setGridCols('practice-grid',this.value)"></span>
         </div>
-        <p class="font-mono text-[.55rem] text-sub mt-1.5" id="practice-desc" contenteditable="false">参与短视频平台全链路特效素材设计，独立完成动态特效、画面转场、轻量化动画素材的 AE 全流程制作与方案输出</p>
+        <p class="font-mono text-[.72rem] text-sub mt-1.5" id="practice-desc" contenteditable="false">参与短视频平台全链路特效素材设计，独立完成动态特效、画面转场、轻量化动画素材的 AE 全流程制作与方案输出</p>
       </div>
     </div>
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-4">
-        <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="practice-vid-label" contenteditable="false">特效 / 转场 / 模板</span>
+        <span class="font-mono text-[.72rem] tracking-wider uppercase text-sub" id="practice-vid-label" contenteditable="false">特效 / 转场 / 模板</span>
       </div>
       <div class="masonry-grid" data-row-h="160" id="practice-grid" style="--cols:8"></div>
       <div class="add-card mt-2" id="practice-add" onclick="addWorkCard('practice','auto')">
@@ -372,7 +372,7 @@
           <h2 class="font-sans font-bold text-main text-[1.4rem] tracking-tight" id="mg-title" contenteditable="false">无畏契约 LOGO · 原创 MG 动画</h2>
           <span class="cols-ctrl"><span class="text-dim">行高:</span><input class="cols-input" id="mg-cols" type="number" min="60" max="300" value="100" onchange="setGridCols('mg-grid',this.value)"></span>
         </div>
-        <p class="font-mono text-[.55rem] text-sub mt-1.5" id="mg-desc" contenteditable="false">基于 IP 原生视觉体系，全程 AE 矢量形状图层原创手搓制作，独立完成 LOGO 图形拆解、形变动画、版式动态延展、节奏卡点与氛围光效设计</p>
+        <p class="font-mono text-[.72rem] text-sub mt-1.5" id="mg-desc" contenteditable="false">基于 IP 原生视觉体系，全程 AE 矢量形状图层原创手搓制作，独立完成 LOGO 图形拆解、形变动画、版式动态延展、节奏卡点与氛围光效设计</p>
       </div>
     </div>
     <div class="masonry-grid" data-row-h="160" id="mg-grid" style="--cols:8"></div>
@@ -392,13 +392,13 @@
         <div class="section-title-wrap">
           <h2 class="font-sans font-bold text-main text-[1.4rem] tracking-tight" id="aigc-title" contenteditable="false">Seedream 生图 + AE 木偶骨骼动效</h2>
         </div>
-        <p class="font-mono text-[.55rem] text-sub mt-1.5" id="aigc-desc" contenteditable="false">AI 生成原画素材 → 透明抠图 → AE 骨骼点位绑定 → 循环动态打磨 → 抖音特效模板适配，完整「AI 素材生成→后期动态设计」全链路工作流</p>
+        <p class="font-mono text-[.72rem] text-sub mt-1.5" id="aigc-desc" contenteditable="false">AI 生成原画素材 → 透明抠图 → AE 骨骼点位绑定 → 循环动态打磨 → 抖音特效模板适配，完整「AI 素材生成→后期动态设计」全链路工作流</p>
       </div>
     </div>
 
     <div class="mb-10">
       <div class="flex items-center gap-2 mb-4">
-        <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="aigc-img-label" contenteditable="false">AI 生成原画素材</span>
+        <span class="font-mono text-[.72rem] tracking-wider uppercase text-sub" id="aigc-img-label" contenteditable="false">AI 生成原画素材</span>
         <span class="cols-ctrl"><span class="text-dim">行高:</span><input class="cols-input" id="aigc-img-cols" type="number" min="60" max="300" value="100" onchange="setGridCols('aigc-img-grid',this.value)"></span>
       </div>
       <div class="work-grid" data-row-h="160" id="aigc-img-grid" style="--cols:8"></div>
@@ -412,7 +412,7 @@
 
     <div class="border-t border-sep pt-8">
       <div class="flex items-center gap-2 mb-4">
-        <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="aigc-vid-label" contenteditable="false">AE 木偶骨骼绑定动效</span>
+        <span class="font-mono text-[.72rem] tracking-wider uppercase text-sub" id="aigc-vid-label" contenteditable="false">AE 木偶骨骼绑定动效</span>
         <span class="cols-ctrl"><span class="text-dim">行高:</span><input class="cols-input" id="aigc-vid-cols" type="number" min="60" max="300" value="100" onchange="setGridCols('aigc-vid-grid',this.value)"></span>
       </div>
       <div class="masonry-grid" data-row-h="160" id="aigc-vid-grid" style="--cols:8"></div>
@@ -435,7 +435,7 @@
         <div class="section-title-wrap">
           <h2 class="font-sans font-bold text-main text-[1.4rem] tracking-tight" id="agent-title" contenteditable="false">AI 智能体创意工作流工具集</h2>
         </div>
-        <p class="font-mono text-[.55rem] text-sub mt-1.5" id="agent-desc" contenteditable="false">基于 AIGC 开放 API 与智能体调度逻辑，自主搭建网页端设计辅助工具，整合素材生成、Prompt 管理、设计流程自动化能力</p>
+        <p class="font-mono text-[.72rem] text-sub mt-1.5" id="agent-desc" contenteditable="false">基于 AIGC 开放 API 与智能体调度逻辑，自主搭建网页端设计辅助工具，整合素材生成、Prompt 管理、设计流程自动化能力</p>
       </div>
     </div>
 
@@ -443,29 +443,29 @@
       <div class="tool-card">
         <div class="flex items-center gap-2 mb-3">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-sub"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          <h3 class="font-sans font-semibold text-main text-[.88rem]" id="tool1-title" contenteditable="false">AIGC 素材生成</h3>
+          <h3 class="font-sans font-semibold text-main text-[.92rem]" id="tool1-title" contenteditable="false">AIGC 素材生成</h3>
         </div>
-        <p class="text-sub font-light text-[.72rem] leading-relaxed" id="tool1-desc" contenteditable="false">接入 Seedream 等生图 API，定制化生成特效原画、人物素材、氛围底图，适配 AE 后期动效制作需求</p>
+        <p class="text-sub font-light text-[.76rem] leading-relaxed" id="tool1-desc" contenteditable="false">接入 Seedream 等生图 API，定制化生成特效原画、人物素材、氛围底图，适配 AE 后期动效制作需求</p>
       </div>
       <div class="tool-card">
         <div class="flex items-center gap-2 mb-3">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-sub"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          <h3 class="font-sans font-semibold text-main text-[.88rem]" id="tool2-title" contenteditable="false">Prompt 管理</h3>
+          <h3 class="font-sans font-semibold text-main text-[.92rem]" id="tool2-title" contenteditable="false">Prompt 管理</h3>
         </div>
-        <p class="text-sub font-light text-[.72rem] leading-relaxed" id="tool2-desc" contenteditable="false">标准化提示词模板库，正向/负向 Prompt 分离管理，支持画风锁死、人物骨骼优化、抖音特效适配素材快速生成</p>
+        <p class="text-sub font-light text-[.76rem] leading-relaxed" id="tool2-desc" contenteditable="false">标准化提示词模板库，正向/负向 Prompt 分离管理，支持画风锁死、人物骨骼优化、抖音特效适配素材快速生成</p>
       </div>
       <div class="tool-card">
         <div class="flex items-center gap-2 mb-3">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-sub"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          <h3 class="font-sans font-semibold text-main text-[.88rem]" id="tool3-title" contenteditable="false">工作流自动化</h3>
+          <h3 class="font-sans font-semibold text-main text-[.92rem]" id="tool3-title" contenteditable="false">工作流自动化</h3>
         </div>
-        <p class="text-sub font-light text-[.72rem] leading-relaxed" id="tool3-desc" contenteditable="false">搭建标准化创意工作流，简化设计重复操作，从素材生成到动效输出的全链路提效，减少机械操作释放创意精力</p>
+        <p class="text-sub font-light text-[.76rem] leading-relaxed" id="tool3-desc" contenteditable="false">搭建标准化创意工作流，简化设计重复操作，从素材生成到动效输出的全链路提效，减少机械操作释放创意精力</p>
       </div>
     </div>
 
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-4">
-        <span class="font-mono text-[.6rem] tracking-widest uppercase text-sub" id="agent-vid-label" contenteditable="false">工具演示</span>
+        <span class="font-mono text-[.72rem] tracking-wider uppercase text-sub" id="agent-vid-label" contenteditable="false">工具演示</span>
         <span class="cols-ctrl"><span class="text-dim">行高:</span><input class="cols-input" id="agent-cols" type="number" min="60" max="300" value="100" onchange="setGridCols('agent-grid',this.value)"></span>
       </div>
       <div class="masonry-grid" data-row-h="160" id="agent-grid" style="--cols:8"></div>
@@ -482,36 +482,36 @@
 <section id="contact" class="bg-page py-14 px-5 border-t border-sep">
   <div class="max-w-screen-xl mx-auto" style="max-width:720px">
     <div class="mb-10">
-      <p class="font-mono text-[.52rem] tracking-[.2em] uppercase text-dim mb-3">关于我</p>
+      <p class="font-mono text-[.68rem] tracking-[.15em] uppercase text-dim mb-3">关于我</p>
       <h3 class="font-sans font-bold text-main text-[1.1rem] mb-3" id="contact-name" contenteditable="false">张峻烨</h3>
-      <p class="text-sub font-light text-[.82rem] leading-relaxed mb-4" id="contact-bio" contenteditable="false">效果创意设计 × AIGC 全链路创作者。实习期间参与短视频平台全链路特效素材设计，熟练掌握 AE 动态设计、Seedream 生图、骨骼木偶动画。持续探索 AI 工具与视觉创作的融合边界，自主搭建创意工作流工具集，具备 AI Agent 应用思维与全链路创意基建能力。</p>
+      <p class="text-sub font-light text-[.88rem] leading-relaxed mb-4" id="contact-bio" contenteditable="false">效果创意设计 × AIGC 全链路创作者。实习期间参与短视频平台全链路特效素材设计，熟练掌握 AE 动态设计、Seedream 生图、骨骼木偶动画。持续探索 AI 工具与视觉创作的融合边界，自主搭建创意工作流工具集，具备 AI Agent 应用思维与全链路创意基建能力。</p>
       <div class="flex flex-wrap" id="contact-tags"></div>
     </div>
 
     <div class="border-t border-sep pt-6 mb-8">
-      <p class="font-mono text-[.52rem] tracking-[.2em] uppercase text-dim mb-4">技能栈</p>
+      <p class="font-mono text-[.68rem] tracking-[.15em] uppercase text-dim mb-4">技能栈</p>
       <div class="space-y-3">
         <div>
-          <p class="font-sans font-medium text-main text-[.78rem] mb-1" id="skill-motion-title" contenteditable="false">动态设计</p>
-          <p class="text-sub font-light text-[.7rem] leading-relaxed" id="skill-motion-desc" contenteditable="false">熟练使用 AE 完成关键帧动画、粒子特效、动态合成、图形 MG 动效、骨骼木偶动画制作，具备成熟的动态效果打磨与节奏把控能力</p>
+          <p class="font-sans font-medium text-main text-[.82rem] mb-1" id="skill-motion-title" contenteditable="false">动态设计</p>
+          <p class="text-sub font-light text-[.76rem] leading-relaxed" id="skill-motion-desc" contenteditable="false">熟练使用 AE 完成关键帧动画、粒子特效、动态合成、图形 MG 动效、骨骼木偶动画制作，具备成熟的动态效果打磨与节奏把控能力</p>
         </div>
         <div>
-          <p class="font-sans font-medium text-main text-[.78rem] mb-1" id="skill-aigc-title" contenteditable="false">AIGC 应用</p>
-          <p class="text-sub font-light text-[.7rem] leading-relaxed" id="skill-aigc-desc" contenteditable="false">精通 Seedream 图像生成模型，熟练运用各类 AIGC 设计工具，搭建「AI 素材生成→后期动态设计」全流程工作流；了解 Seedance 视频生成模型在抖音创作生态的业务应用场景</p>
+          <p class="font-sans font-medium text-main text-[.82rem] mb-1" id="skill-aigc-title" contenteditable="false">AIGC 应用</p>
+          <p class="text-sub font-light text-[.76rem] leading-relaxed" id="skill-aigc-desc" contenteditable="false">精通 Seedream 图像生成模型，熟练运用各类 AIGC 设计工具，搭建「AI 素材生成→后期动态设计」全流程工作流；了解 Seedance 视频生成模型在抖音创作生态的业务应用场景</p>
         </div>
         <div>
-          <p class="font-sans font-medium text-main text-[.78rem] mb-1" id="skill-aesthetics-title" contenteditable="false">审美与创意</p>
-          <p class="text-sub font-light text-[.7rem] leading-relaxed" id="skill-aesthetics-desc" contenteditable="false">具备优秀潮流审美，可自主挖掘短视频平台视觉趋势，完成创意方案输出与全流程落地</p>
+          <p class="font-sans font-medium text-main text-[.82rem] mb-1" id="skill-aesthetics-title" contenteditable="false">审美与创意</p>
+          <p class="text-sub font-light text-[.76rem] leading-relaxed" id="skill-aesthetics-desc" contenteditable="false">具备优秀潮流审美，可自主挖掘短视频平台视觉趋势，完成创意方案输出与全流程落地</p>
         </div>
         <div>
-          <p class="font-sans font-medium text-main text-[.78rem] mb-1" id="skill-collab-title" contenteditable="false">项目协作</p>
-          <p class="text-sub font-light text-[.7rem] leading-relaxed" id="skill-collab-desc" contenteditable="false">熟悉跨团队对接流程，可高效联动产品、研发团队推进项目落地，具备良好的沟通能力与需求推进意识</p>
+          <p class="font-sans font-medium text-main text-[.82rem] mb-1" id="skill-collab-title" contenteditable="false">项目协作</p>
+          <p class="text-sub font-light text-[.76rem] leading-relaxed" id="skill-collab-desc" contenteditable="false">熟悉跨团队对接流程，可高效联动产品、研发团队推进项目落地，具备良好的沟通能力与需求推进意识</p>
         </div>
       </div>
     </div>
 
     <div class="border-t border-sep pt-6">
-      <p class="font-mono text-[.68rem] tracking-[.2em] uppercase text-sub mb-4">联系方式</p>
+      <p class="font-mono text-[.72rem] tracking-[.15em] uppercase text-sub mb-4">联系方式</p>
 
       <div class="grid grid-cols-2 gap-4 items-start">
         <div>
@@ -534,24 +534,24 @@
         </div>
         <div class="space-y-2.5">
           <div>
-            <p class="font-mono text-[.6rem] text-sub mb-0.5">邮箱</p>
+            <p class="font-mono text-[.72rem] text-sub mb-0.5">邮箱</p>
             <span class="text-sub text-[.78rem] select-all" id="contact-email" contenteditable="false">{{EMAIL}}</span>
           </div>
           <div>
-            <p class="font-mono text-[.6rem] text-sub mb-0.5">QQ</p>
+            <p class="font-mono text-[.72rem] text-sub mb-0.5">QQ</p>
             <span class="text-sub text-[.78rem] select-all" id="contact-qq" contenteditable="false">{{QQ}}</span>
           </div>
           <div>
-            <p class="font-mono text-[.6rem] text-sub mb-0.5">电话</p>
+            <p class="font-mono text-[.72rem] text-sub mb-0.5">电话</p>
             <span class="text-sub text-[.78rem] select-all" id="contact-phone" contenteditable="false">{{PHONE}}</span>
           </div>
           <div class="pt-1 space-y-1.5">
             <div>
-              <p class="font-mono text-[.6rem] text-sub mb-0.5">抖音</p>
+              <p class="font-mono text-[.72rem] text-sub mb-0.5">抖音</p>
               <a id="contact-douyin" href="#" target="_blank" class="font-mono text-[.62rem] text-sub hover:text-main transition-colors no-underline truncate block max-w-[180px]">粘贴链接…</a>
             </div>
             <div>
-              <p class="font-mono text-[.6rem] text-sub mb-0.5">Bilibili</p>
+              <p class="font-mono text-[.72rem] text-sub mb-0.5">Bilibili</p>
               <a id="contact-bilibili" href="#" target="_blank" class="font-mono text-[.62rem] text-sub hover:text-main transition-colors no-underline truncate block max-w-[180px]">粘贴链接…</a>
             </div>
           </div>
@@ -1045,8 +1045,8 @@ function makeMp4Card(item){
       </div>
     </div>
     <div class="p-2.5 pb-2">
-      <p class="font-sans font-medium text-main text-[.78rem] leading-snug mb-0.5" data-field="title">${escHtml(item.title||'作品标题')}</p>
-      <p class="text-sub font-light text-[.68rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
+      <p class="font-sans font-medium text-main text-[.82rem] leading-snug mb-0.5" data-field="title">${escHtml(item.title||'作品标题')}</p>
+      <p class="text-sub font-light text-[.72rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
   if(mediaSrc){
     card.querySelector('.card-media').addEventListener('click', e=>{
@@ -1078,8 +1078,8 @@ function makeImgCard(item){
       </div>
     </div>
     <div class="p-2.5 pb-2">
-      <p class="font-sans font-medium text-main text-[.78rem] leading-snug mb-0.5" data-field="title">${escHtml(item.title||'作品标题')}</p>
-      <p class="text-sub font-light text-[.68rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
+      <p class="font-sans font-medium text-main text-[.82rem] leading-snug mb-0.5" data-field="title">${escHtml(item.title||'作品标题')}</p>
+      <p class="text-sub font-light text-[.72rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
   if(item.media){
     card.querySelector('.card-media').addEventListener('click', e=>{
@@ -1117,7 +1117,7 @@ function makePromptCard(item){
   card.innerHTML = `
     <div class="p-3 pb-3.5 relative">
       <div class="flex items-start justify-between gap-2 mb-2">
-        <p class="font-sans font-semibold text-main text-[.82rem] leading-snug flex-1" data-field="title">${escHtml(item.title||'Prompt 标题')}</p>
+        <p class="font-sans font-semibold text-main text-[.88rem] leading-snug flex-1" data-field="title">${escHtml(item.title||'Prompt 标题')}</p>
         <div class="upload-ov" style="position:static;background:none;border:none;display:none;flex-direction:row;gap:4px;align-items:center;padding:0">
           <button class="upload-ov-btn" onclick="event.stopPropagation();triggerMediaUpload('${item.id}','prompt')" style="font-size:.55rem;padding:3px 8px;border-radius:4px">上传媒体</button>
           <button class="del-ov-btn" onclick="deleteCard('${item.id}')">✕</button>
