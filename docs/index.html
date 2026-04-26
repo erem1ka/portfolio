@@ -191,13 +191,10 @@
     #editMenu{position:fixed;inset:0;z-index:880;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
     #editMenu.open{opacity:1;pointer-events:all}
 
-    .hero-glow{width:1200px;height:520px;background:radial-gradient(ellipse at 50% 0%,rgba(37,244,238,.18) 0%,rgba(37,244,238,.06) 45%,transparent 68%);pointer-events:none;z-index:0}
+    .hero-glow{width:1400px;height:520px;background:radial-gradient(ellipse at 50% 0%,rgba(37,244,238,.18) 0%,rgba(37,244,238,.06) 45%,transparent 68%);pointer-events:none;z-index:0}
     .dark .hero-glow{opacity:1}
     .light .hero-glow{opacity:.45}
-    /* Desktop: shift glow to center on content area (accounting for 72px sidebar) */
-    @media(min-width:901px){
-      .hero-glow{left:calc(50% + 36px)!important}
-    }
+    /* Hero glow centers on full viewport (no sidebar offset, to avoid center gap) */
 
     .tag-pill{display:inline-block;font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.08em;padding:6px 14px;border-radius:100px;margin:4px 6px 4px 0;font-weight:500}
     .dark .tag-pill{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.13);color:#cccccc}
@@ -368,18 +365,19 @@
   </div>
 </aside>
 
-<div class="hero-glow content-offset" style="position:fixed;top:0;left:50%;transform:translateX(-50%)"></div>
+<div class="hero-glow" style="position:fixed;top:0;left:50%;transform:translateX(-50%);width:1400px"></div>
 
 <header class="bg-page sticky top-0 z-50 px-5 py-3 flex items-center justify-between" style="backdrop-filter:blur(14px)">
-  <!-- Left: name + role identity -->
-  <div class="flex items-center gap-3">
-    <div>
-      <p class="font-sans font-bold text-main text-[.92rem] leading-tight" id="header-name">张峻烨</p>
-      <p class="font-mono text-[.68rem] tracking-[.08em] text-sub uppercase" id="header-role">效果创意设计 · AIGC</p>
-    </div>
+  <!-- Left: empty on desktop (sidebar handles nav), mobile shows hamburger -->
+  <div class="flex items-center gap-2 md-hide" id="hamburgerBtn" onclick="toggleMobileNav()" style="display:none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
   </div>
-  <!-- Right: resume + theme btn (mobile only, desktop uses sidebar) -->
-  <div class="flex items-center gap-3">
+  <!-- Right: name+role identity + resume -->
+  <div class="flex items-center gap-4">
+    <div class="flex items-baseline gap-2">
+      <p class="font-sans font-bold text-main text-[.92rem] leading-tight" id="header-name" contenteditable="false">张峻烨</p>
+      <p class="font-mono text-[.68rem] tracking-[.08em] text-sub uppercase" id="header-role" contenteditable="false">效果创意设计 · AIGC</p>
+    </div>
     <div id="nav-resume-wrap">
       <a id="nav-resume-btn" href="#" download style="display:none"
         class="font-mono text-[.62rem] tracking-wider uppercase text-sub hover:text-main no-underline transition-colors flex items-center gap-1.5 border border-sep rounded px-3 py-1.5">
@@ -391,15 +389,12 @@
         <button onclick="deleteResume()" id="nav-resume-del" style="display:none;color:rgba(200,80,80,.8)" class="font-mono text-[.52rem] text-sub hover:text-main border border-sep rounded px-2.5 py-1 transition-colors">删除</button>
       </div>
     </div>
-    <!-- Mobile hamburger + theme btn (hidden on desktop) -->
-    <button id="hamburgerBtn" onclick="toggleMobileNav()" style="display:none;width:32px;height:32px;background:none;border:1px solid;border-radius:50%;cursor:pointer" class="flex items-center justify-center md-hide">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-    <button id="themeBtnMobile" onclick="toggleTheme()" title="切换深浅色" style="width:30px;height:30px" class="md-hide">
+    <!-- Mobile theme btn -->
+    <button id="themeBtnMobile" onclick="toggleTheme()" title="切换深浅色" style="width:30px;height:30px;display:none" class="md-hide sidebar-btn">
       <svg id="themeIconMobile" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
     </button>
   </div>
-  <!-- Mobile nav links (hidden on desktop) -->
+  <!-- Mobile nav links (hidden on desktop, toggled by hamburger) -->
   <div id="navLinks" class="flex items-center gap-6 font-mono text-[.92rem] tracking-[.12em] uppercase text-sub">
     <a href="#mod-practice" class="hover:text-main transition-colors no-underline" id="nav-practice" contenteditable="false">业务作品</a>
     <a href="#mod-mg" class="hover:text-main transition-colors no-underline" id="nav-mg" contenteditable="false">MG</a>
@@ -409,10 +404,9 @@
   </div>
 </header>
 
-<section class="bg-page px-5 pt-20 pb-14 relative content-offset" style="overflow:visible">
+<section class="bg-page px-5 pt-12 pb-14 relative content-offset" style="overflow:visible">
   <div class="max-w-screen-xl mx-auto relative">
-    <h1 class="font-sans font-bold text-main" id="hero-name" contenteditable="false" style="font-size:clamp(1.8rem,4.2vw,3.4rem);letter-spacing:-.03em;line-height:1">张峻烨</h1>
-    <p class="font-mono tracking-[.18em] uppercase text-sub mt-3" id="hero-sub" contenteditable="false" style="font-size:clamp(.58rem,.75vw,.78rem)">效果创意设计 · 短视频特效素材 · AIGC 全链路工作流 · AI 智能体工具基建</p>
+    <p class="font-mono tracking-[.18em] uppercase text-sub" id="hero-sub" contenteditable="false" style="font-size:clamp(.72rem,.85vw,.9rem)">效果创意设计 · 短视频特效素材 · AIGC 全链路工作流 · AI 智能体工具基建</p>
     <div class="mt-4 flex flex-wrap" id="hero-tags"></div>
     <p class="font-mono text-[.82rem] tracking-[.06em] text-sub mt-3.5 flex items-center gap-1.5">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
@@ -1578,8 +1572,9 @@ function rerenderAllTags(){
 function restoreHeroNav(){
   if(!DATA.heroNav) DATA.heroNav = {};
   const fields = {
-    'hero-name': '张峻烨',
     'hero-sub': '效果创意设计 · 短视频特效素材 · AIGC 全链路工作流 · AI 智能体工具基建',
+    'header-name': '张峻烨',
+    'header-role': '效果创意设计 · AIGC',
     'nav-practice': '业务作品',
     'nav-mg': 'MG',
     'nav-aigc': 'AIGC',
