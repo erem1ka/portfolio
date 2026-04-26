@@ -73,7 +73,7 @@ section[id]{scroll-margin-top:50px}
     .dark .vcard{border-color:rgba(255,255,255,.1)}
     .light .vcard{border-color:rgba(0,0,0,.08)}
     .card-hover{transition:transform .22s var(--ease),border-color .18s,box-shadow .18s}
-    .card-hover:hover{transform:translateY(-4px)}
+    .card-hover:hover{transform:translateY(-4px) scale(1.03)}
 
     .thumb-wrap{position:relative;width:100%;overflow:hidden}
     .thumb-wrap.natural{position:static}
@@ -279,9 +279,11 @@ section[id]{scroll-margin-top:50px}
     .dark .sidebar-item{color:#7a7a8a}
     .light .sidebar-item{color:#888}
     .sidebar-item:hover{background:rgba(37,244,238,.06)}
-    .sidebar-item.active{border-left-color:#25f4ee;color:#25f4ee}
+    .sidebar-item.active{border-left-color:#25f4ee;color:#25f4ee;background:rgba(37,244,238,.08)}
     .light .sidebar-item.active{border-left-color:#0077ff;color:#0077ff}
-    .sidebar-item svg{width:20px;height:20px;flex-shrink:0}
+    .sidebar-item.active svg{stroke:#25f4ee}
+.light .sidebar-item.active svg{stroke:#0077ff}
+.sidebar-item svg{width:20px;height:20px;flex-shrink:0;transition:stroke .18s}
     .sidebar-item span{font-size:.62rem;font-weight:500;letter-spacing:.04em;text-align:center;white-space:nowrap}
     .sidebar-bottom{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;margin-top:auto}
     .sidebar-btn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid;transition:background .18s,border-color .18s;flex-shrink:0}
