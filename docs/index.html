@@ -593,11 +593,11 @@
       <div class="flex flex-wrap" id="contact-tags"></div>
     </div>
 
-    <div class="border-t border-sep py-6">
-      <p class="font-mono text-[.72rem] tracking-[.15em] uppercase text-sub mb-5">联系方式</p>
+    <div class="border-t border-sep" style="padding-top:28px;padding-bottom:28px">
+      <p class="font-mono text-[.72rem] tracking-[.15em] uppercase text-sub" style="margin-bottom:18px">联系方式</p>
 
       <div class="grid grid-cols-2 gap-6">
-        <!-- Left: WeChat QR (larger, no "click to zoom" hint) -->
+        <!-- Left: WeChat QR -->
         <div>
           <p class="font-mono text-[.72rem] text-sub mb-2">微信</p>
           <div id="wechat-qr-wrap" class="relative inline-block group">
@@ -615,8 +615,8 @@
             </div>
           </div>
         </div>
-        <!-- Right: Email/QQ/Phone (aligned bottom with QR image) -->
-        <div class="flex flex-col justify-between h-[155px]">
+        <!-- Right: Email/QQ/Phone - flex justify-between to align bottom with QR -->
+        <div class="flex flex-col justify-between" style="height:164px">
           <div>
             <p class="font-mono text-[.72rem] text-sub mb-0.5">邮箱</p>
             <span class="text-sub text-[.78rem]" id="contact-email" contenteditable="false">{{EMAIL}}</span>
