@@ -593,18 +593,18 @@
       <div class="flex flex-wrap" id="contact-tags"></div>
     </div>
 
-    <div class="border-t border-sep pt-6">
-      <p class="font-mono text-[.72rem] tracking-[.15em] uppercase text-sub mb-4">联系方式</p>
+    <div class="border-t border-sep py-6">
+      <p class="font-mono text-[.72rem] tracking-[.15em] uppercase text-sub mb-5">联系方式</p>
 
       <div class="grid grid-cols-2 gap-6">
-        <!-- Left: WeChat QR -->
+        <!-- Left: WeChat QR (larger, no "click to zoom" hint) -->
         <div>
-          <p class="font-mono text-[.72rem] text-sub mb-1.5">微信</p>
+          <p class="font-mono text-[.72rem] text-sub mb-2">微信</p>
           <div id="wechat-qr-wrap" class="relative inline-block group">
             <img id="wechat-qr-img" src="" alt="微信二维码" onerror="this.style.display='none'"
               onclick="!editMode&&openQrZoom(this.src)"
-              style="max-width:110px;width:auto;height:auto;display:none;border-radius:3px;border:1px solid rgba(160,156,150,.2);cursor:zoom-in" title="点击放大">
-            <div id="wechat-qr-placeholder" onclick="editMode&&triggerQRUpload()" class="border border-sep rounded flex items-center justify-center text-dim font-mono text-[.48rem] tracking-wide" style="cursor:default;width:110px;height:110px">
+              style="max-width:140px;width:auto;height:auto;display:none;border-radius:3px;border:1px solid rgba(160,156,150,.2);cursor:zoom-in" title="点击放大">
+            <div id="wechat-qr-placeholder" onclick="editMode&&triggerQRUpload()" class="border border-sep rounded flex items-center justify-center text-dim font-mono text-[.48rem] tracking-wide" style="cursor:default;width:140px;height:140px">
               上传二维码
             </div>
             <!-- replace/delete buttons shown in edit mode when QR uploaded -->
@@ -614,21 +614,20 @@
               <button class="font-mono text-[.44rem] text-sub hover:text-main transition-colors" onclick="deleteQR()">删除</button>
             </div>
           </div>
-          <p class="font-mono text-[.44rem] text-dim mt-1" id="wechat-qr-hint" style="display:none">点击放大</p>
         </div>
-        <!-- Right: Email/QQ/Phone -->
-        <div class="space-y-4">
+        <!-- Right: Email/QQ/Phone (aligned bottom with QR image) -->
+        <div class="flex flex-col justify-between h-[155px]">
           <div>
             <p class="font-mono text-[.72rem] text-sub mb-0.5">邮箱</p>
-            <span class="text-sub text-[.78rem] select-all" id="contact-email" contenteditable="false">{{EMAIL}}</span>
+            <span class="text-sub text-[.78rem]" id="contact-email" contenteditable="false">{{EMAIL}}</span>
           </div>
           <div>
             <p class="font-mono text-[.72rem] text-sub mb-0.5">QQ</p>
-            <span class="text-sub text-[.78rem] select-all" id="contact-qq" contenteditable="false">{{QQ}}</span>
+            <span class="text-sub text-[.78rem]" id="contact-qq" contenteditable="false">{{QQ}}</span>
           </div>
           <div>
             <p class="font-mono text-[.72rem] text-sub mb-0.5">电话</p>
-            <span class="text-sub text-[.78rem] select-all" id="contact-phone" contenteditable="false">{{PHONE}}</span>
+            <span class="text-sub text-[.78rem]" id="contact-phone" contenteditable="false">{{PHONE}}</span>
           </div>
         </div>
       </div>
