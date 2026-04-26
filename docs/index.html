@@ -245,6 +245,20 @@
     [contenteditable]:focus-visible{outline:1px dashed rgba(160,156,150,.25);outline-offset:0}
     .inline-player-close:focus-visible,.upload-ov-btn:focus-visible,.del-ov-btn:focus-visible{outline-offset:1px}
 
+    /* ── Drag & Drop Sort ── */
+    .editing .vcard[draggable="true"]{cursor:grab}
+    .editing .vcard[draggable="true"]:active{cursor:grabbing}
+    .vcard.drag-src{opacity:.4;transform:scale(.96)!important;transition:opacity .15s,transform .15s}
+    .drag-insert-before{box-shadow:-3px 0 0 0 #25f4ee,0 0 0 1px rgba(37,244,238,.2)!important}
+    .drag-insert-after{box-shadow:3px 0 0 0 #25f4ee,0 0 0 1px rgba(37,244,238,.2)!important}
+    /* drag handle hint in edit mode */
+    .editing .vcard[draggable="true"]::after{
+      content:'⠿';position:absolute;top:4px;left:6px;font-size:10px;color:rgba(255,255,255,.25);
+      line-height:1;pointer-events:none;z-index:5;
+      opacity:0;transition:opacity .18s
+    }
+    .editing .vcard[draggable="true"]:hover::after{opacity:1}
+
     /* ── Mobile hamburger nav ── */
     @media(max-width:900px){
       #hamburgerBtn{display:flex!important}
@@ -871,6 +885,13 @@ function toggleEdit(){
     const el=document.getElementById(id);
     if(el) el.contentEditable = editMode;
   });
+  // Enable/disable drag-sort
+  if(editMode) {
+    // Re-render all sections so draggable attr is set correctly
+    enableDragSort();
+  } else {
+    disableDragSort();
+  }
 }
 
 function openEditMenu(){ document.getElementById('editMenu').classList.add('open'); }
@@ -1152,6 +1173,7 @@ function renderSection(sectionKey, gridId, type){
       requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*25));
     });
     container.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;position:static;height:auto;width:auto;margin-left:0';
+    if (editMode) initDragSort(container, sectionKey);
     return;
   }
 
@@ -1173,6 +1195,7 @@ function renderSection(sectionKey, gridId, type){
       requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*25));
     });
     container.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:6px;position:static;height:auto;width:auto;margin-left:0';
+    if (editMode) initDragSort(container, sectionKey);
     return;
   }
 
@@ -1205,6 +1228,9 @@ function renderSection(sectionKey, gridId, type){
   });
 
   container.style.cssText = `display:flex;flex-wrap:wrap;gap:${gap}px;justify-content:center;align-items:flex-start;position:static;height:auto;width:auto;margin-left:0`;
+
+  // Initialize drag-sort if in edit mode
+  if (editMode) initDragSort(container, sectionKey);
 }
 
 function renderAll(){
@@ -1784,6 +1810,111 @@ async function uploadToCloudStorage(file) {
 // 兼容旧代码的别名
 async function uploadToGitHub(file) {
   return uploadToCloudStorage(file);
+}
+
+/* ════════════════════════════════════════════
+   DRAG & DROP SORT (edit mode only)
+════════════════════════════════════════════ */
+let _dragSrcId = null;
+let _dragSrcSection = null;
+
+function initDragSort(container, sectionKey) {
+  const cards = container.querySelectorAll('.vcard');
+  cards.forEach(card => {
+    card.setAttribute('draggable', 'true');
+    card.style.position = 'relative'; // needed for ::after pseudo
+
+    card.addEventListener('dragstart', e => {
+      _dragSrcId = card.dataset.id;
+      _dragSrcSection = sectionKey;
+      // slight delay so the ghost image renders before opacity change
+      setTimeout(() => card.classList.add('drag-src'), 0);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.dataset.id);
+    });
+
+    card.addEventListener('dragend', () => {
+      card.classList.remove('drag-src');
+      _clearDragIndicators(container);
+    });
+
+    card.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (!_dragSrcId || card.dataset.id === _dragSrcId) return;
+      _clearDragIndicators(container);
+      const rect = card.getBoundingClientRect();
+      const midX = rect.left + rect.width / 2;
+      if (e.clientX < midX) {
+        card.classList.add('drag-insert-before');
+      } else {
+        card.classList.add('drag-insert-after');
+      }
+    });
+
+    card.addEventListener('dragleave', () => {
+      card.classList.remove('drag-insert-before', 'drag-insert-after');
+    });
+
+    card.addEventListener('drop', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!_dragSrcId || card.dataset.id === _dragSrcId) return;
+      if (_dragSrcSection !== sectionKey) return; // no cross-section drag
+
+      const arr = DATA[sectionKey];
+      const fromIdx = arr.findIndex(x => x.id === _dragSrcId);
+      let toIdx = arr.findIndex(x => x.id === card.dataset.id);
+      if (fromIdx < 0 || toIdx < 0) return;
+
+      // determine insert position (before or after target)
+      const rect = card.getBoundingClientRect();
+      const insertAfter = e.clientX >= rect.left + rect.width / 2;
+      if (insertAfter) toIdx = toIdx + (fromIdx < toIdx ? 0 : 1);
+      else toIdx = toIdx + (fromIdx > toIdx ? 0 : -1);
+      toIdx = Math.max(0, Math.min(arr.length - 1, toIdx));
+
+      // splice
+      const [item] = arr.splice(fromIdx, 1);
+      arr.splice(toIdx, 0, item);
+
+      saveData();
+      renderSection(sectionKey, sectionKey + '-grid');
+    });
+  });
+
+  // also make the container itself a drop zone for dropping after last card
+  container.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  });
+}
+
+function _clearDragIndicators(container) {
+  container.querySelectorAll('.drag-insert-before,.drag-insert-after').forEach(el => {
+    el.classList.remove('drag-insert-before', 'drag-insert-after');
+  });
+}
+
+function enableDragSort() {
+  const GRIDS = [
+    ['practice-grid', 'practice'],
+    ['mg-grid', 'mg'],
+    ['aigc-img-grid', 'aigc-img'],
+    ['aigc-vid-grid', 'aigc-vid'],
+    ['aigc-prompt-grid', 'aigc-prompt'],
+    ['agent-grid', 'agent'],
+  ];
+  GRIDS.forEach(([gridId, key]) => {
+    const el = document.getElementById(gridId);
+    if (el) initDragSort(el, key);
+  });
+}
+
+function disableDragSort() {
+  document.querySelectorAll('.vcard[draggable="true"]').forEach(card => {
+    card.setAttribute('draggable', 'false');
+  });
 }
 
 async function init(){
