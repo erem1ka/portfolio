@@ -596,7 +596,7 @@
     <div class="border-t border-sep" style="padding-top:28px;padding-bottom:28px">
       <p class="font-mono text-[.72rem] tracking-[.15em] uppercase text-sub" style="margin-bottom:18px">联系方式</p>
 
-      <div class="grid grid-cols-2 gap-6">
+      <div class="grid grid-cols-2 gap-6 items-end">
         <!-- Left: WeChat QR -->
         <div>
           <p class="font-mono text-[.72rem] text-sub mb-2">微信</p>
@@ -616,7 +616,7 @@
           </div>
         </div>
         <!-- Right: Email/QQ/Phone - flex justify-between to align bottom with QR -->
-        <div class="flex flex-col justify-between" style="height:164px">
+        <div class="flex flex-col justify-between" id="contact-right-col">
           <div>
             <p class="font-mono text-[.72rem] text-sub mb-0.5">邮箱</p>
             <span class="text-sub text-[.78rem]" id="contact-email" contenteditable="false">{{EMAIL}}</span>
@@ -1387,6 +1387,14 @@ function restoreContact(){
     const actions = document.getElementById('wechat-qr-actions');
     if(actions && editMode) actions.style.display='flex';
   }
+  // Align right column bottom with left column
+  requestAnimationFrame(()=>{
+    const leftCol = document.querySelector('#contact .grid-cols-2 > div:first-child');
+    const rightCol = document.getElementById('contact-right-col');
+    if(leftCol && rightCol){
+      rightCol.style.height = leftCol.offsetHeight + 'px';
+    }
+  });
   const biliEl = document.getElementById('contact-bilibili');
   const douyinEl = document.getElementById('contact-douyin');
   if(biliEl && c.bilibili && c.bilibili!=='{{BILIBILI_UID}}'){
