@@ -189,7 +189,7 @@
     #editMenu{position:fixed;inset:0;z-index:880;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
     #editMenu.open{opacity:1;pointer-events:all}
 
-    .hero-glow{position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:1200px;height:480px;background:radial-gradient(ellipse at 50% 0%,rgba(37,244,238,.18) 0%,rgba(37,244,238,.06) 45%,transparent 68%);pointer-events:none}
+    .hero-glow{width:1200px;height:520px;background:radial-gradient(ellipse at 50% 0%,rgba(37,244,238,.18) 0%,rgba(37,244,238,.06) 45%,transparent 68%);pointer-events:none;z-index:0}
     .dark .hero-glow{opacity:1}
     .light .hero-glow{opacity:.45}
 
@@ -294,6 +294,8 @@
 <body>
 <div id="app" class="dark">
 
+<div class="hero-glow" style="position:fixed;top:0;left:50%;transform:translateX(-50%)"></div>
+
 <header class="bg-page sticky top-0 z-50 px-5 py-3 flex items-center justify-between" style="backdrop-filter:blur(14px)">
   <!-- Left: resume download -->
   <div id="nav-resume-wrap">
@@ -326,7 +328,6 @@
 </header>
 
 <section class="bg-page px-5 pt-20 pb-14 relative" style="overflow:visible">
-  <div class="hero-glow"></div>
   <div class="max-w-screen-xl mx-auto relative">
     <h1 class="font-sans font-bold text-main" id="hero-name" contenteditable="false" style="font-size:clamp(1.8rem,4.2vw,3.4rem);letter-spacing:-.03em;line-height:1">张峻烨</h1>
     <p class="font-mono tracking-[.18em] uppercase text-sub mt-3" id="hero-sub" contenteditable="false" style="font-size:clamp(.58rem,.75vw,.78rem)">效果创意设计 · 短视频特效素材 · AIGC 全链路工作流 · AI 智能体工具基建</p>
