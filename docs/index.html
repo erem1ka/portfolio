@@ -581,12 +581,12 @@
       <div class="flex flex-wrap" id="contact-tags"></div>
     </div>
 
-    <div class="border-t border-sep" style="padding-top:28px;padding-bottom:28px">
-      <p class="font-mono text-[.72rem] tracking-[.15em] uppercase text-sub" style="margin-bottom:18px">联系方式</p>
+    <div class="border-t border-sep" style="padding:28px 0">
+      <p class="font-mono text-[.72rem] tracking-[.15em] uppercase text-sub" style="margin-bottom:20px">联系方式</p>
 
-      <div class="grid grid-cols-2 gap-6 items-end">
+      <div class="flex gap-6" id="contact-grid">
         <!-- Left: WeChat QR -->
-        <div>
+        <div id="contact-left-col" style="width:140px">
           <p class="font-mono text-[.72rem] text-sub mb-2">微信</p>
           <div id="wechat-qr-wrap" class="relative inline-block group">
             <img id="wechat-qr-img" src="" alt="微信二维码" onerror="this.style.display='none'"
@@ -603,8 +603,8 @@
             </div>
           </div>
         </div>
-        <!-- Right: Email/QQ/Phone - flex justify-between to align bottom with QR -->
-        <div class="flex flex-col justify-between" id="contact-right-col">
+        <!-- Right: Email/QQ/Phone - stretches to same height as left, items evenly distributed -->
+        <div class="flex flex-col justify-between flex-1" id="contact-right-col">
           <div>
             <p class="font-mono text-[.72rem] text-sub mb-0.5">邮箱</p>
             <span class="text-sub text-[.78rem]" id="contact-email" contenteditable="false">{{EMAIL}}</span>
@@ -1371,12 +1371,15 @@ function restoreContact(){
     const actions = document.getElementById('wechat-qr-actions');
     if(actions && editMode) actions.style.display='flex';
   }
-  // Align right column bottom with left column
+  // Sync right column height with left column for bottom-aligned contact info
   requestAnimationFrame(()=>{
-    const leftCol = document.querySelector('#contact .grid-cols-2 > div:first-child');
+    const leftCol = document.getElementById('contact-left-col');
     const rightCol = document.getElementById('contact-right-col');
     if(leftCol && rightCol){
-      rightCol.style.height = leftCol.offsetHeight + 'px';
+      // flex stretch: right col auto-matches left col height
+      // But we need to set explicit height so justify-between works
+      const h = leftCol.offsetHeight;
+      if(h > 0) rightCol.style.minHeight = h + 'px';
     }
   });
   const biliEl = document.getElementById('contact-bilibili');
