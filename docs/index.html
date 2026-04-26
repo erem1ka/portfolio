@@ -1473,6 +1473,28 @@ function deleteResume(){
   updateResumeUI();
 }
 
+async function downloadResume(e){
+  e.preventDefault();
+  const url = e.currentTarget.href;
+  const fn = e.currentTarget.dataset.filename || '张峻烨简历';
+  // Try to get the extension from the original filename
+  const origName = DATA.contact.resumeName || '';
+  const ext = origName.split('.').pop() || 'pdf';
+  const fullFn = fn + '.' + ext;
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fullFn;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch(err) {
+    // Fallback: open in new tab
+    window.open(url, '_blank');
+  }
+}
+
 function updateResumeUI(){
   const name = DATA.contact.resumeName || '';
   const url = DATA.contact.resumeUrl || '';
@@ -1482,7 +1504,7 @@ function updateResumeUI(){
   const delBtn = document.getElementById('resume-del-btn');
   if(fnEl) fnEl.textContent = name || '未上传';
   if(dlEl){
-    if(url){ dlEl.href=url; dlEl.download=name||'resume.pdf'; dlEl.style.display='flex'; }
+    if(url){ dlEl.href=url; dlEl.dataset.filename='张峻烨简历'; dlEl.style.display='flex'; dlEl.onclick=downloadResume; }
     else dlEl.style.display='none';
   }
   if(delBtn) delBtn.style.display = url ? '' : 'none';
@@ -1490,7 +1512,7 @@ function updateResumeUI(){
   const navBtn = document.getElementById('nav-resume-btn');
   const navDel = document.getElementById('nav-resume-del');
   if(navBtn){
-    if(url){ navBtn.href=url; navBtn.download=name||'resume.pdf'; navBtn.style.display='flex'; }
+    if(url){ navBtn.href=url; navBtn.dataset.filename='张峻烨简历'; navBtn.style.display='flex'; navBtn.onclick=downloadResume; }
     else navBtn.style.display='none';
   }
   if(navDel) navDel.style.display = url ? '' : 'none';
