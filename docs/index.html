@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>张峻烨 · 效果创意设计作品集</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
   <meta name="description" content="张峻烨 — 效果创意设计 × AIGC 全链路创作者。短视频特效素材设计、MG 动画、Seedream 生图、骨骼木偶动效、AI 智能体工具基建"/>
   <meta name="keywords" content="张峻烨,作品集,效果创意设计,AIGC,AE,Seedream,MG动画,短视频特效"/>
   <meta property="og:title" content="张峻烨 · 效果创意设计作品集"/>
@@ -33,6 +34,28 @@
     html{scroll-behavior:smooth}
 section[id]{scroll-margin-top:50px}
     body{font-family:'Noto Sans SC',sans-serif;overflow-x:hidden;transition:background .25s,color .25s}
+    /* 1. Page load fade-in */
+    body{animation:fadeIn .6s var(--ease)}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    /* 2. Scroll reveal */
+    .reveal{opacity:0;transform:translateY(20px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+    .reveal.visible{opacity:1;transform:translateY(0)}
+    /* 3. Card cursor */
+    .vcard:not(.drag-src){cursor:pointer}
+    /* 4. Focus-visible stronger */
+    :focus-visible{outline:3px solid #25f4ee;outline-offset:3px;border-radius:3px}
+    .dark :focus-visible{outline-color:#25f4ee}
+    .light :focus-visible{outline-color:#0077ff}
+    /* 5. Back to top button */
+    .back-to-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s var(--ease);z-index:90;border:1px solid rgba(37,244,238,.3);background:rgba(22,24,35,.85);backdrop-filter:blur(8px)}
+    .light .back-to-top{background:rgba(248,248,248,.85);border-color:rgba(0,0,0,.1)}
+    .back-to-top.show{opacity:1;pointer-events:all}
+    .back-to-top:hover{transform:scale(1.1)}
+    .back-to-top svg{width:18px;height:18px;stroke:#25f4ee}
+    .light .back-to-top svg{stroke:#0077ff}
+    /* 6. Section title accent bar */
+    .section-title-wrap::before{content:'';display:inline-block;width:3px;height:1.1em;background:#25f4ee;border-radius:2px;margin-right:10px;vertical-align:middle}
+    .light .section-title-wrap::before{background:#0077ff}
 
     .dark body,.dark{background:#161823;color:#ffffff}
     .dark .bg-page{background:#161823}
@@ -247,9 +270,6 @@ section[id]{scroll-margin-top:50px}
     .dark ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1)}
     .light ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.12)}
 
-    :focus-visible{outline:2px solid #25f4ee;outline-offset:2px;border-radius:2px}
-    .dark :focus-visible{outline-color:#25f4ee}
-    .light :focus-visible{outline-color:#0077ff}
     [contenteditable]:focus-visible{outline:1px dashed rgba(160,156,150,.25);outline-offset:0}
     .inline-player-close:focus-visible,.upload-ov-btn:focus-visible,.del-ov-btn:focus-visible{outline-offset:1px}
 
@@ -433,7 +453,7 @@ section[id]{scroll-margin-top:50px}
   </div>
 </section>
 
-<section id="mod-practice" class="bg-mod1 py-14 px-5 content-offset">
+<section id="mod-practice" class="bg-mod1 py-14 px-5 content-offset reveal">
   <div class="max-w-screen-xl mx-auto">
     <div class="mod-header-divider flex items-center border-b border-sep pb-4 mb-8">
       <div class="flex-1">
@@ -456,7 +476,7 @@ section[id]{scroll-margin-top:50px}
   </div>
 </section>
 
-<section id="mod-mg" class="bg-mod2 py-14 px-5 content-offset">
+<section id="mod-mg" class="bg-mod2 py-14 px-5 content-offset reveal">
   <div class="max-w-screen-xl mx-auto">
     <div class="mod-header-divider flex items-center border-b border-sep pb-4 mb-8">
       <div class="flex-1">
@@ -477,7 +497,7 @@ section[id]{scroll-margin-top:50px}
   </div>
 </section>
 
-<section id="mod-aigc" class="bg-mod3 py-14 px-5 content-offset">
+<section id="mod-aigc" class="bg-mod3 py-14 px-5 content-offset reveal">
   <div class="max-w-screen-xl mx-auto">
     <div class="mod-header-divider flex items-center border-b border-sep pb-4 mb-8">
       <div class="flex-1">
@@ -520,7 +540,7 @@ section[id]{scroll-margin-top:50px}
   </div>
 </section>
 
-<section id="mod-agent" class="bg-mod4 py-14 px-5 content-offset">
+<section id="mod-agent" class="bg-mod4 py-14 px-5 content-offset reveal">
   <div class="max-w-screen-xl mx-auto">
     <div class="mod-header-divider flex items-center border-b border-sep pb-4 mb-8">
       <div class="flex-1">
@@ -548,7 +568,7 @@ section[id]{scroll-margin-top:50px}
   </div>
 </section>
 
-<section id="contact" class="bg-page px-5 border-t border-sep content-offset">
+<section id="contact" class="bg-page px-5 border-t border-sep content-offset reveal">
   <div class="max-w-screen-xl mx-auto" style="max-width:720px">
     <div style="padding:56px 0">
       <div class="mb-10">
@@ -599,7 +619,12 @@ section[id]{scroll-margin-top:50px}
 </section>
 
 <footer class="bg-page border-t border-sep px-5 py-4 content-offset">
+  <p class="font-mono text-[.52rem] tracking-wider text-dim" style="text-align:right">© 2027 张峻烨</p>
 </footer>
+
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+</button>
 
 <div id="editMenu" onclick="if(event.target===this)closeEditMenu()">
   <div class="bg-card border border-card rounded p-5 w-64 space-y-2">
@@ -2001,6 +2026,9 @@ function sidebarNavClick(e, sectionKey) {
   // close mobile nav if open
   const nav = document.getElementById('navLinks');
   if(nav) nav.classList.remove('mobile-open');
+  // 9. close mobile sidebar after clicking nav
+  const sidebar = document.getElementById('sidebar');
+  if(sidebar && window.innerWidth <= 900) sidebar.style.display = 'none';
   // highlight active item
   document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
   const item = document.querySelector(`.sidebar-item[data-section="${sectionKey}"]`);
@@ -2022,6 +2050,23 @@ function updateSidebarActive() {
 
 // Scroll listener for sidebar active state
 window.addEventListener('scroll', updateSidebarActive);
+
+// 2. Scroll reveal - IntersectionObserver
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+// 5. Back to top button visibility
+const backToTopBtn = document.getElementById('backToTop');
+window.addEventListener('scroll', () => {
+  if(backToTopBtn) backToTopBtn.classList.toggle('show', window.scrollY > 400);
+});
 
 // Desktop: hide mobile nav links, show sidebar
 function applyLayoutByScreen() {
