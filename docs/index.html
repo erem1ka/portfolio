@@ -165,6 +165,10 @@
     .light #themeBtn{background:#fff;border-color:rgba(0,0,0,.08);color:#646b80}
     #themeBtn:hover{border-color:rgba(254,44,85,.35)}
 
+    /* header semi-transparent overlay */
+    .dark header{background:rgba(22,24,35,.88)!important}
+    .light header{background:rgba(248,248,248,.9)!important}
+
     #qrZoom{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.85);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s}
     #qrZoom.open{opacity:1;pointer-events:all}
     #qrZoom img{border-radius:12px;max-width:90vw;max-height:90vh;object-fit:contain;box-shadow:0 24px 72px rgba(0,0,0,.5)}
@@ -290,7 +294,7 @@
 <body>
 <div id="app" class="dark">
 
-<header class="bg-page sticky top-0 z-50 px-5 py-3 flex items-center justify-between" style="backdrop-filter:blur(14px);background:rgba(22,24,35,.88)">
+<header class="bg-page sticky top-0 z-50 px-5 py-3 flex items-center justify-between" style="backdrop-filter:blur(14px)">
   <!-- Left: resume download -->
   <div id="nav-resume-wrap">
     <a id="nav-resume-btn" href="#" download style="display:none"
