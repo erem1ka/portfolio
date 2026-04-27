@@ -37,7 +37,7 @@ body::before {
   position: fixed; inset: 0;
   pointer-events: none;
   background: radial-gradient(circle 600px at var(--mx) var(--my), rgba(255,255,255,0.04), transparent 80%);
-  z-index: 1;
+  z-index: 150;
 }
 @media (max-width: 767px) { body::before { display: none; } }
 
@@ -98,7 +98,7 @@ body::before {
   position: fixed; left: 0; top: 0;
   width: 2px; height: 0%;
   background: var(--accent);
-  z-index: 990;
+  z-index: 250;
   transition: height 0.05s linear;
 }
 
@@ -113,6 +113,7 @@ body::before {
   display: flex; flex-direction: column; justify-content: space-between;
   border-right: 1px solid var(--divider);
   z-index: 200; overflow: hidden;
+  background: var(--bg);
 }
 
 .s-name {
@@ -188,6 +189,7 @@ body::before {
 #content {
   margin-left: var(--sidebar-w);
   flex: 1; min-height: 100vh;
+  position: relative; z-index: 10;
 }
 
 /* ── Section base ── */
