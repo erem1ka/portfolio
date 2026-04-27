@@ -318,16 +318,16 @@ body::before {
 .gallery-track {
   display: flex;
   align-items: center;
-  gap: 48px;
-  padding: 0 80px;
+  gap: 24px;
+  padding: 0 40px;
   will-change: transform;
 }
 
 /* Horizontal card 480×640 */
 .gallery-card, .gallery-card-clone {
   flex-shrink: 0;
-  width: 480px;
-  height: 640px;
+  width: 280px;
+  height: 380px;
   background: var(--bg2);
   border: 1px solid var(--divider);
   border-radius: 4px;
@@ -336,7 +336,6 @@ body::before {
   position: relative;
   transition: border-color 0.3s, box-shadow 0.3s;
   display: flex; flex-direction: column;
-  /* Scale animation via JS */
 }
 .gallery-card:hover {
   border-color: var(--accent);

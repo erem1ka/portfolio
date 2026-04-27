@@ -474,8 +474,8 @@ function initHorizontalScroll() {
   const cards = Array.from(track.querySelectorAll('.gallery-card'));
   if (!cards.length) return;
 
-  const CARD_W = 480 + 48; // width + gap
-  const PADDING = 80;
+  const CARD_W = 280 + 24; // width + gap
+  const PADDING = 40;
   const totalW = cards.length * CARD_W + PADDING * 2;
 
   // ── Seamless loop: duplicate cards ──
@@ -511,17 +511,21 @@ function initHorizontalScroll() {
   sticky.style.top = '0';
 
   // ── Wheel event: boost speed ──
+  let _galWheelActive = false;
   const onWheel = (e) => {
-    e.preventDefault();
+    _galWheelActive = true;
     const delta = e.deltaY || e.deltaX;
-    // Accumulate boost, cap at 20px/frame
-    _galBoost = Math.max(-20, Math.min(20, _galBoost + delta * 0.06));
+    _galBoost = Math.max(-25, Math.min(25, _galBoost + delta * 0.08));
+    // Prevent page scroll while hovering gallery
+    e.preventDefault();
   };
   outer.addEventListener('wheel', onWheel, { passive: false });
+  // When mouse leaves gallery area, wheel no longer captured
+  outer.addEventListener('mouseleave', () => { _galWheelActive = false; });
 
   // ── Pause on hover ──
-  track.addEventListener('mouseenter', () => { _galPaused = true; });
-  track.addEventListener('mouseleave', () => { _galPaused = false; });
+  track.addEventListener('mouseenter', () => { /* don't pause — auto-scroll continues */ });
+  track.addEventListener('mouseleave', () => { });
 
   // ── RAF loop ──
   let lastT = null;
@@ -531,8 +535,11 @@ function initHorizontalScroll() {
     lastT = t;
 
     if (!_galPaused) {
-      // Total speed = base + boost
-      const speed = (_galBaseSpeed + Math.abs(_galBoost)) * _galDir;
+      // If user is actively wheeling inside gallery, don't auto-scroll (they control)
+      const speed = _galWheelActive
+        ? _galBoost * _galDir  // manual wheel: user controls directly
+        : (_galBaseSpeed + Math.abs(_galBoost)) * _galDir;  // idle: auto-scroll + residual boost
+
       _galPos -= speed * dt;
 
       // Boost decay
