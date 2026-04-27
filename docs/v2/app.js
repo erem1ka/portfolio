@@ -143,39 +143,112 @@ async function uploadFile(file) {
    3. CUSTOM CURSOR
 ──────────────────────────────────────────────── */
 const $cursor = document.getElementById('cursor');
+const $cursorRing = document.getElementById('cursor-ring');
 const $cursorLbl = document.getElementById('cursor-label');
-let _mx = 0, _my = 0, _cx = 0, _cy = 0;
+let _mx = 0, _my = 0, _cx = 0, _cy = 0, _rx = 0, _ry = 0;
 
-document.addEventListener('mousemove', e => { _mx = e.clientX; _my = e.clientY; });
+// Update CSS variables for ambient lighting
+function updateLightPos() {
+  document.body.style.setProperty('--mx', _mx + 'px');
+  document.body.style.setProperty('--my', _my + 'px');
+}
+
+document.addEventListener('mousemove', e => { _mx = e.clientX; _my = e.clientY; updateLightPos(); });
 
 (function animCursor() {
+  // Inner dot: lerp 0.18 (fast follow)
   _cx += (_mx - _cx) * 0.18;
   _cy += (_my - _cy) * 0.18;
   if ($cursor) { $cursor.style.left = _cx + 'px'; $cursor.style.top = _cy + 'px'; }
+  // Outer ring: lerp 0.08 (slow follow, creates trail)
+  _rx += (_mx - _rx) * 0.08;
+  _ry += (_my - _ry) * 0.08;
+  if ($cursorRing) { $cursorRing.style.left = _rx + 'px'; $cursorRing.style.top = _ry + 'px'; }
   if ($cursorLbl) { $cursorLbl.style.left = _mx + 'px'; $cursorLbl.style.top = (_my + 28) + 'px'; }
   requestAnimationFrame(animCursor);
 })();
 
+// Contextual cursor morph
+const CURSOR_RESET = ['hover','play','link','btn','text-cursor'];
+function resetCursor() { $cursor?.classList.remove(...CURSOR_RESET); $cursorRing?.classList.remove(...CURSOR_RESET); $cursorLbl?.classList.remove('show'); }
+
 document.addEventListener('mouseenter', e => {
   const t = e.target;
-  if (t.closest('.gallery-card, .arc-card')) { $cursor?.classList.add('play'); $cursorLbl?.classList.add('show'); if ($cursorLbl) $cursorLbl.textContent = 'PLAY'; return; }
-  if (t.closest('a,button,.resume-btn,.filter-btn,.modal-nav-btn,.modal-close,.hero-dot,.load-more-btn')) $cursor?.classList.add('hover');
+  resetCursor();
+  if (t.closest('.gallery-card, .arc-card')) {
+    $cursor?.classList.add('play'); $cursorRing?.classList.add('play');
+    $cursorLbl?.classList.add('show'); if ($cursorLbl) $cursorLbl.textContent = 'PLAY';
+    return;
+  }
+  if (t.closest('a')) { $cursor?.classList.add('link'); return; }
+  if (t.closest('button, .resume-btn, .filter-btn, .modal-nav-btn, .modal-close, .hero-dot, .load-more-btn')) {
+    $cursor?.classList.add('btn'); $cursorLbl?.classList.add('show'); if ($cursorLbl) $cursorLbl.textContent = 'CLICK'; return;
+  }
+  if (t.closest('.s-bio, .ab-text, .tl-desc, .philosophy-block, .modal-desc, p')) {
+    $cursor?.classList.add('text-cursor'); return;
+  }
 }, true);
 document.addEventListener('mouseleave', e => {
   const t = e.target;
-  if (t.closest('.gallery-card, .arc-card')) { $cursor?.classList.remove('play'); $cursorLbl?.classList.remove('show'); return; }
-  if (t.closest('a,button,.resume-btn,.filter-btn,.modal-nav-btn,.modal-close,.hero-dot,.load-more-btn')) $cursor?.classList.remove('hover');
+  if (t.closest('.gallery-card, .arc-card, a, button, .s-bio, .ab-text, p')) resetCursor();
 }, true);
 
 /* ────────────────────────────────────────────────
    4. SCROLL PROGRESS
 ──────────────────────────────────────────────── */
 const $scrollBar = document.getElementById('scroll-bar');
+
+// ── Scroll Velocity Sensitivity ──
+let _scrollVel = 0, _lastScrollY = 0, _scrollVelTimer = null;
+const $speedLines = document.querySelectorAll('.speed-line');
+
 window.addEventListener('scroll', () => {
   const pct = (window.scrollY / (document.documentElement.scrollHeight - innerHeight)) * 100;
   if ($scrollBar) $scrollBar.style.height = Math.min(100, pct) + '%';
   updateNavActive();
+
+  // Velocity
+  const now = Date.now();
+  const dt = now - (_lastScrollTime || now);
+  _lastScrollTime = now;
+  const dy = window.scrollY - _lastScrollY;
+  _lastScrollY = window.scrollY;
+  _scrollVel = Math.abs(dy / Math.max(dt, 1)) * 1000; // px/s
+
+  applyVelocityEffects();
 }, { passive: true });
+
+let _lastScrollTime = 0;
+
+function applyVelocityEffects() {
+  const cards = document.querySelectorAll('.gallery-card, .arc-card');
+  const v = _scrollVel;
+  let skew = 0, scale = 1, blur = 0, hue = 0;
+
+  if (v > 100 && v <= 500) {
+    skew = -2; scale = 0.98;
+  } else if (v > 500 && v <= 1500) {
+    skew = -4; blur = 0.5;
+  } else if (v > 1500) {
+    blur = 1; hue = 3;
+    document.body.classList.add('speed-lines-visible');
+  } else {
+    document.body.classList.remove('speed-lines-visible');
+  }
+
+  cards.forEach(c => {
+    c.style.transform = `skewY(${skew}deg) scale(${scale})`;
+    c.style.filter = blur ? `blur(${blur}px) hue-rotate(${hue}deg)` : 'none';
+  });
+
+  // Recovery timer: reset after scroll stops
+  clearTimeout(_scrollVelTimer);
+  _scrollVelTimer = setTimeout(() => {
+    _scrollVel = 0;
+    cards.forEach(c => { c.style.transform = ''; c.style.filter = ''; });
+    document.body.classList.remove('speed-lines-visible');
+  }, 300);
+}
 
 function updateNavActive() {
   const ids = ['hero','gallery-section','archive','about','contact'];
@@ -825,22 +898,27 @@ function renderAll() {
 }
 
 async function init() {
+  // ── Loading Sequence ──
+  if (!sessionStorage.getItem('_loader_done')) {
+    await runLoader();
+    sessionStorage.setItem('_loader_done', '1');
+  }
+  const loader = document.getElementById('loader');
+  if (loader) { loader.classList.add('done'); setTimeout(() => loader.remove(), 500); }
+
   loadLocal();
   renderAll();
   initMarquee();
   startHeroAuto();
 
-  // Wait for GSAP to be available, then re-init gallery scroll
+  // Wait for GSAP
   if (!window.gsap || !window.ScrollTrigger) {
     const waitGSAP = setInterval(() => {
       if (window.gsap && window.ScrollTrigger) {
         clearInterval(waitGSAP);
         initHorizontalScroll();
-        // Init easter egg
         const track = document.getElementById('gallery-track');
-        if (window.initTimeCapsule && _galleryTrigger && track) {
-          window.initTimeCapsule(_galleryTrigger, track);
-        }
+        if (window.initTimeCapsule && _galleryTrigger && track) window.initTimeCapsule(_galleryTrigger, track);
       }
     }, 200);
   } else {
@@ -849,6 +927,75 @@ async function init() {
 
   const cloudOk = await initCloud();
   if (cloudOk) await loadCloud();
+}
+
+// ── Loader Animation ──
+function runLoader() {
+  return new Promise(resolve => {
+    const gsap = window.gsap;
+    if (!gsap) { resolve(); return; }
+
+    const svg = document.getElementById('loader-svg');
+    const pctEl = document.getElementById('loader-pct');
+    if (!svg) { resolve(); return; }
+
+    // Build SVG elements
+    svg.innerHTML = '';
+    const ns = 'http://www.w3.org/2000/svg';
+
+    // Pixel
+    const pixel = document.createElementNS(ns, 'rect');
+    pixel.setAttribute('x', '196'); pixel.setAttribute('y', '196');
+    pixel.setAttribute('width', '4'); pixel.setAttribute('height', '4');
+    pixel.setAttribute('fill', '#FF3B5C');
+    svg.appendChild(pixel);
+
+    // Line
+    const line = document.createElementNS(ns, 'rect');
+    line.setAttribute('x', '0'); line.setAttribute('y', '198');
+    line.setAttribute('width', '400'); line.setAttribute('height', '2');
+    line.setAttribute('fill', '#FF3B5C');
+    line.style.opacity = '0';
+    svg.appendChild(line);
+
+    // Rect
+    const rect = document.createElementNS(ns, 'rect');
+    rect.setAttribute('x', '100'); rect.setAttribute('y', '140');
+    rect.setAttribute('width', '200'); rect.setAttribute('height', '120');
+    rect.setAttribute('fill', 'none'); rect.setAttribute('stroke', '#FF3B5C'); rect.setAttribute('stroke-width', '2');
+    rect.style.opacity = '0';
+    svg.appendChild(rect);
+
+    // Cube (3D-flip approximation)
+    const cube = document.createElementNS(ns, 'rect');
+    cube.setAttribute('x', '100'); cube.setAttribute('y', '140');
+    cube.setAttribute('width', '200'); cube.setAttribute('height', '120');
+    cube.setAttribute('fill', '#141414'); cube.setAttribute('stroke', '#FF3B5C'); cube.setAttribute('stroke-width', '1');
+    cube.style.opacity = '0';
+    svg.appendChild(cube);
+
+    const tl = gsap.timeline({ onComplete: resolve });
+
+    // Stage 1: pixel breathing (0-450ms)
+    tl.fromTo(pixel, { opacity: 0 }, { opacity: 1, duration: 0.2, ease: 'power3.inOut' })
+      .to(pixel, { scaleX: 1.5, scaleY: 1.5, duration: 0.25, ease: 'power3.inOut', yoyo: true, repeat: 1 })
+      // Stage 2: pixel → line (450-900ms)
+      .to(pixel, { attr: { width: 400, x: 0, height: 2, y: 198 }, duration: 0.45, ease: 'power3.inOut' })
+      // Stage 3: line → rect (900-1350ms)
+      .to(pixel, { attr: { width: 200, x: 100, height: 120, y: 140 }, duration: 0.45, ease: 'power3.inOut' })
+      .set(pixel, { attr: { fill: 'none' }, strokeWidth: 2, stroke: '#FF3B5C' })
+      // Stage 4: rect → cube → fade (1350-1800ms)
+      .to(pixel, { scaleX: 1.05, scaleY: 1.05, duration: 0.15, ease: 'power3.inOut' })
+      .to(pixel, { opacity: 0, duration: 0.3, ease: 'power2.in' });
+
+    // Counter: 00 → 100
+    if (pctEl) {
+      tl.fromTo(pctEl, { textContent: '0' }, {
+        textContent: 100, duration: 1.8, ease: 'power3.inOut', snap: { textContent: 1 },
+        onUpdate() { pctEl.textContent = String(Math.round(parseFloat(pctEl.textContent))).padStart(2, '0'); }
+      }, 0);
+    }
+  });
 }
 
 document.addEventListener('DOMContentLoaded', init);

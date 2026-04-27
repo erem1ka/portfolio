@@ -22,9 +22,20 @@
 </head>
 <body>
 
-  <!-- Cursor -->
+  <!-- Cursor system: dot + ring trail -->
   <div id="cursor"></div>
+  <div id="cursor-ring"></div>
   <div id="cursor-label"></div>
+
+  <!-- Speed lines (scroll velocity effect) -->
+  <div class="speed-line left" style="height:100%"></div>
+  <div class="speed-line right" style="height:100%"></div>
+
+  <!-- Loading Sequence -->
+  <div id="loader">
+    <svg id="loader-svg" viewBox="0 0 400 400"></svg>
+    <div id="loader-pct">00</div>
+  </div>
 
   <!-- Scroll Progress (left edge) -->
   <div id="scroll-bar"></div>
