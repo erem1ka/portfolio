@@ -304,7 +304,7 @@ function renderHero() {
     if (editMode) {
       const ov = document.createElement('div');
       ov.style.cssText = 'position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center';
-      ov.innerHTML = `<button class="gc-upload-btn" onclick="event.stopPropagation();triggerHeroUpload(${i})">上传 Hero ${i+1}</button>`;
+      ov.innerHTML = `<button class="work-upload-btn" onclick="event.stopPropagation();triggerHeroUpload(${i})">上传 Hero ${i+1}</button>`;
       slide.appendChild(ov);
     }
     wrap.appendChild(slide);
@@ -396,16 +396,16 @@ function makeGalleryCard(w, idx) {
     <div class="gc-index">${String(idx+1).padStart(2,'0')}</div>
     <div class="gc-media">
       ${mediaHtml}
-      <span class="gc-badge ${catInfo.cls}">${catInfo.label}</span>
-      <div class="gc-upload-overlay">
-        <button class="gc-upload-btn" onclick="event.stopPropagation();triggerWorkUpload('${w.id}')">上传媒体</button>
-        <button class="gc-del-btn" onclick="event.stopPropagation();deleteWork('${w.id}')">删除</button>
+      <span class="work-badge ${catInfo.cls}">${catInfo.label}</span>
+      <div class="work-upload-overlay">
+        <button class="work-upload-btn" onclick="event.stopPropagation();triggerWorkUpload('${w.id}')">上传媒体</button>
+        <button class="work-del-btn" onclick="event.stopPropagation();deleteWork('${w.id}')">删除</button>
       </div>
     </div>
     <div class="gc-info">
       <div class="gc-title" data-field="title">${escHtml(w.title||'作品标题')}</div>
       <div class="gc-meta">
-        <div class="gc-tags">${(w.tools||[]).map(t=>`<span class="gc-tag">${t}</span>`).join('')}</div>
+        <div class="gc-tags">${(w.tools||[]).map(t=>`<span class="work-tag">${t}</span>`).join('')}</div>
         <span class="gc-year">${w.year||'2024'}</span>
       </div>
     </div>`;
@@ -421,7 +421,7 @@ function makeGalleryCard(w, idx) {
 
   // Click → modal
   card.addEventListener('click', e => {
-    if (e.target.closest('.gc-upload-overlay') || editMode) return;
+    if (e.target.closest('.work-upload-overlay') || editMode) return;
     openModal(w.id, 'works');
   });
 
@@ -671,15 +671,14 @@ function makeArchiveCard(w) {
 
   card.innerHTML = `
     ${mediaHtml}
-    <span class="arc-badge ${catInfo.cls}">${catInfo.label}</span>
-    ${isAnim && w.media ? '<span class="arc-anim-label">悬停播放</span>' : ''}
+    <span class="work-badge ${catInfo.cls}">${catInfo.label}</span>
     <div class="arc-overlay">
       <div class="arc-title">${escHtml(w.title||'作品')}</div>
       <div class="arc-tag">${(w.tools||[]).join(' · ')}</div>
     </div>
-    <div class="arc-upload-overlay">
-      <button class="gc-upload-btn" onclick="event.stopPropagation();triggerArchiveUpload('${w.id}')">上传</button>
-      <button class="gc-del-btn" onclick="event.stopPropagation();deleteArchive('${w.id}')">删除</button>
+    <div class="work-upload-overlay">
+      <button class="work-upload-btn" onclick="event.stopPropagation();triggerArchiveUpload('${w.id}')">上传</button>
+      <button class="work-del-btn" onclick="event.stopPropagation();deleteArchive('${w.id}')">删除</button>
     </div>`;
 
   // Anim hover
@@ -692,7 +691,7 @@ function makeArchiveCard(w) {
 
   // Click → modal
   card.addEventListener('click', e => {
-    if (e.target.closest('.arc-upload-overlay') || editMode) return;
+    if (e.target.closest('.work-upload-overlay') || editMode) return;
     openModal(w.id, 'archive');
   });
 
