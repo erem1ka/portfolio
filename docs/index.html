@@ -267,6 +267,16 @@ section[id]{scroll-margin-top:50px}
     [contenteditable]:focus-visible{outline:1px dashed rgba(160,156,150,.25);outline-offset:0}
     .inline-player-close:focus-visible,.upload-ov-btn:focus-visible,.del-ov-btn:focus-visible{outline-offset:1px}
 
+    /* ── Anim card: hover-to-play ── */
+    .anim-card-wrap{position:absolute;inset:0}
+    .anim-badge{position:absolute;bottom:5px;right:6px;z-index:4;font-family:'Space Mono',monospace;font-size:.42rem;letter-spacing:.08em;padding:2px 6px;border-radius:3px;background:rgba(0,0,0,.55);color:rgba(255,255,255,.85);pointer-events:none;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.15)}
+    .anim-hover-hint{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s;pointer-events:none}
+    .card-media:hover .anim-hover-hint{opacity:1}
+    .anim-hover-icon{width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center}
+    .anim-hover-icon svg{width:14px;height:14px;fill:white}
+    /* When anim is playing (hover), hide the play hint */
+    .card-media.anim-playing .anim-hover-hint{opacity:0}
+
     /* ── Drag & Drop Sort ── */
     .editing .vcard[draggable="true"]{cursor:grab}
     .editing .vcard[draggable="true"]:active{cursor:grabbing}
@@ -1107,8 +1117,14 @@ function makeMp4Card(item){
   if(!mediaSrc){
     mediaHtml = `<div class="no-thumb">待上传</div>`;
   } else if(isAnim){
-    // webp/gif: img tag, auto-loops, click to zoom
-    mediaHtml = `<img src="${mediaSrc}" alt="" style="pointer-events:none">`;
+    // webp/gif: frozen by default, play on hover; mobile tap opens zoom
+    const BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+    const badgeLabel = item.type === 'gif' ? 'GIF' : 'GIF';
+    mediaHtml = `<div class="anim-card-wrap">
+      <img class="anim-img" src="${BLANK}" data-anim-src="${mediaSrc}" alt="" style="width:100%;height:100%;object-fit:cover;pointer-events:none;display:block">
+      <div class="anim-hover-hint"><div class="anim-hover-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+      <span class="anim-badge">${badgeLabel}</span>
+    </div>`;
   } else {
     // mp4: show cover with always-visible play badge
     mediaHtml = coverSrc
@@ -1129,6 +1145,22 @@ function makeMp4Card(item){
       <p class="text-sub font-light text-[.72rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
   if(mediaSrc){
+    const mediaEl = card.querySelector('.card-media');
+    // Hover-to-play for anim cards (desktop only)
+    if(isAnim){
+      const animImg = card.querySelector('.anim-img');
+      const BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+      if(animImg && mediaEl){
+        mediaEl.addEventListener('mouseenter', ()=>{
+          animImg.src = animImg.dataset.animSrc;
+          mediaEl.classList.add('anim-playing');
+        });
+        mediaEl.addEventListener('mouseleave', ()=>{
+          animImg.src = BLANK;
+          mediaEl.classList.remove('anim-playing');
+        });
+      }
+    }
     card.querySelector('.card-media').addEventListener('click', e=>{
       if(e.target.closest('.upload-ov') || editMode) return;
       if(isAnim){
