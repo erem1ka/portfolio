@@ -926,16 +926,17 @@ function toggleEdit() {
   showToast(editMode ? '已进入编辑模式' : '已退出编辑模式');
 }
 
-// Triple-click on copyright
-document.getElementById('s-copy')?.addEventListener('click', (() => {
-  let clicks = 0, t;
-  return () => {
-    clicks++;
-    clearTimeout(t);
-    t = setTimeout(() => { clicks = 0; }, 500);
-    if (clicks >= 3) { clicks = 0; toggleEdit(); }
-  };
-})());
+// Double-press 'e' key to toggle edit mode
+let _ePresses = 0, _eTimer = null;
+document.addEventListener('keydown', e => {
+  if (e.key === 'e' || e.key === 'E') {
+    if (e.target.closest('[contenteditable="true"], input, textarea')) return;
+    _ePresses++;
+    clearTimeout(_eTimer);
+    _eTimer = setTimeout(() => { _ePresses = 0; }, 400);
+    if (_ePresses >= 2) { _ePresses = 0; clearTimeout(_eTimer); toggleEdit(); }
+  }
+});
 
 // Work upload (gallery)
 function triggerWorkUpload(id) {
