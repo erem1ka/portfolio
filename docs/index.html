@@ -269,13 +269,27 @@ section[id]{scroll-margin-top:50px}
 
     /* ── Anim card: hover-to-play ── */
     .anim-card-wrap{position:absolute;inset:0}
-    .anim-badge{position:absolute;bottom:5px;right:6px;z-index:4;font-family:'Space Mono',monospace;font-size:.42rem;letter-spacing:.08em;padding:2px 6px;border-radius:3px;background:rgba(0,0,0,.55);color:rgba(255,255,255,.85);pointer-events:none;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.15)}
-    .anim-hover-hint{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s;pointer-events:none}
-    .card-media:hover .anim-hover-hint{opacity:1}
-    .anim-hover-icon{width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.45);backdrop-filter:blur(8px);border:1.5px solid rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center}
-    .anim-hover-icon svg{width:14px;height:14px;fill:white}
-    /* When anim is playing (hover), hide the play hint */
-    .card-media.anim-playing .anim-hover-hint{opacity:0}
+    /* Subtle shimmer border on hover to indicate interactivity */
+    .card-media:has(.anim-img):hover{outline:1.5px solid rgba(37,244,238,.45);outline-offset:-1px}
+    .light .card-media:has(.anim-img):hover{outline-color:rgba(0,119,255,.35)}
+    /* hover-to-play module hint card */
+    .hover-hint-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px 8px;border-radius:10px;border:1px solid;flex-shrink:0;align-self:flex-start;pointer-events:none;user-select:none}
+    .dark .hover-hint-card{background:rgba(31,33,48,.7);border-color:rgba(37,244,238,.18);backdrop-filter:blur(8px)}
+    .light .hover-hint-card{background:rgba(255,255,255,.8);border-color:rgba(0,119,255,.15);backdrop-filter:blur(8px)}
+    .hover-hint-card .hint-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+    .dark .hover-hint-card .hint-icon{background:rgba(37,244,238,.1);border:1px solid rgba(37,244,238,.25)}
+    .light .hover-hint-card .hint-icon{background:rgba(0,119,255,.07);border:1px solid rgba(0,119,255,.18)}
+    .hover-hint-card .hint-icon svg{width:14px;height:14px}
+    .dark .hover-hint-card .hint-icon svg{stroke:#25f4ee}
+    .light .hover-hint-card .hint-icon svg{stroke:#0077ff}
+    .hover-hint-card .hint-text{font-family:'Space Mono',monospace;font-size:.46rem;letter-spacing:.1em;text-transform:uppercase;text-align:center;line-height:1.5}
+    .dark .hover-hint-card .hint-text{color:rgba(37,244,238,.7)}
+    .light .hover-hint-card .hint-text{color:rgba(0,119,255,.7)}
+    .hover-hint-card .hint-dot{width:4px;height:4px;border-radius:50%;animation:hintPulse 2s ease-in-out infinite}
+    .dark .hover-hint-card .hint-dot{background:#25f4ee}
+    .light .hover-hint-card .hint-dot{background:#0077ff}
+    @keyframes hintPulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.4)}}
+    .editing .hover-hint-card{display:none!important}
 
     /* ── Drag & Drop Sort ── */
     .editing .vcard[draggable="true"]{cursor:grab}
@@ -1117,13 +1131,10 @@ function makeMp4Card(item){
   if(!mediaSrc){
     mediaHtml = `<div class="no-thumb">待上传</div>`;
   } else if(isAnim){
-    // webp/gif: frozen by default, play on hover; mobile tap opens zoom
-    const BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
-    const badgeLabel = item.type === 'gif' ? 'GIF' : 'GIF';
+    // webp/gif: show first frame as static cover, play on hover
+    // First frame will be set asynchronously via canvas after card is inserted
     mediaHtml = `<div class="anim-card-wrap">
-      <img class="anim-img" src="${BLANK}" data-anim-src="${mediaSrc}" alt="" style="width:100%;height:100%;object-fit:cover;pointer-events:none;display:block">
-      <div class="anim-hover-hint"><div class="anim-hover-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
-      <span class="anim-badge">${badgeLabel}</span>
+      <img class="anim-img" src="${mediaSrc}" data-anim-src="${mediaSrc}" alt="" style="width:100%;height:100%;object-fit:cover;pointer-events:none;display:block">
     </div>`;
   } else {
     // mp4: show cover with always-visible play badge
@@ -1149,14 +1160,19 @@ function makeMp4Card(item){
     // Hover-to-play for anim cards (desktop only)
     if(isAnim){
       const animImg = card.querySelector('.anim-img');
-      const BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
       if(animImg && mediaEl){
+        // Extract first frame via canvas, then freeze until hover
+        extractAnimFirstFrame(mediaSrc).then(frameSrc => {
+          if(frameSrc) animImg.src = frameSrc;
+          // Store frame src for restore on mouseleave
+          animImg.dataset.frameSrc = frameSrc || mediaSrc;
+        });
         mediaEl.addEventListener('mouseenter', ()=>{
           animImg.src = animImg.dataset.animSrc;
           mediaEl.classList.add('anim-playing');
         });
         mediaEl.addEventListener('mouseleave', ()=>{
-          animImg.src = BLANK;
+          animImg.src = animImg.dataset.frameSrc || animImg.dataset.animSrc;
           mediaEl.classList.remove('anim-playing');
         });
       }
@@ -1344,6 +1360,45 @@ function renderSection(sectionKey, gridId, type){
   });
 
   container.style.cssText = `display:flex;flex-wrap:wrap;gap:${gap}px;justify-content:center;align-items:flex-start;position:static;height:auto;width:auto;margin-left:0`;
+
+  // Hover hint card: show if any anim items exist, on desktop non-edit mode
+  const hasAnim = items.some(it => it.type==='webp' || it.type==='gif');
+  // Remove any previously injected hint card for this container
+  const existingHint = container.parentElement && container.parentElement.querySelector(`.hover-play-hint[data-for="${sectionKey}"]`);
+  if(existingHint) existingHint.remove();
+  if(hasAnim && !editMode && !isMobile){
+    const hintCard = document.createElement('div');
+    hintCard.className = 'hover-hint-card';
+    hintCard.dataset.for = sectionKey;
+    hintCard.style.cssText = `width:${rowH*0.55}px;height:${rowH}px;`;
+    hintCard.innerHTML = `
+      <div class="hint-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 3l14 9-7 1-4 7-3-17z"/>
+        </svg>
+      </div>
+      <div class="hint-text">Hover<br/>to<br/>Play</div>
+      <div class="hint-dot"></div>`;
+    // Wrap container + hint in a flex row if not already wrapped
+    const parent = container.parentElement;
+    let wrap = parent.querySelector(`.grid-with-hint[data-for="${sectionKey}"]`);
+    if(!wrap){
+      wrap = document.createElement('div');
+      wrap.className = 'grid-with-hint';
+      wrap.dataset.for = sectionKey;
+      wrap.style.cssText = 'display:flex;align-items:flex-start;gap:10px;';
+      parent.insertBefore(wrap, container);
+      wrap.appendChild(container);
+    }
+    wrap.insertBefore(hintCard, container);
+  } else {
+    // Unwrap if previously wrapped
+    const wrap = container.parentElement && container.parentElement.classList.contains('grid-with-hint') ? container.parentElement : null;
+    if(wrap){
+      wrap.parentElement.insertBefore(container, wrap);
+      wrap.remove();
+    }
+  }
 
   // Initialize drag-sort if in edit mode
   if (editMode) initDragSort(container, sectionKey);
@@ -1799,6 +1854,28 @@ function rerenderItemSection(id){
   const sec = findSection(id);
   if(!sec) return;
   renderSection(sec, sec+'-grid');
+}
+
+// Extract first frame of animated webp/gif from a URL via canvas
+function extractAnimFirstFrame(src){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=>{
+      try{
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg', 0.88));
+      } catch(e){
+        // CORS or other error: fall back to using src directly
+        resolve(null);
+      }
+    };
+    img.onerror = ()=>resolve(null);
+    img.src = src;
+  });
 }
 
 function extractFirstFrame(file){
