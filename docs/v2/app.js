@@ -486,18 +486,18 @@ function initHorizontalScroll() {
   sticky.style.position = 'sticky';
   sticky.style.top = '0';
 
-  // ── Wheel event: boost speed ──
+  // ── Wheel event: boost speed only when mouse is over gallery ──
   let _galWheelActive = false;
   const onWheel = (e) => {
     _galWheelActive = true;
     const delta = e.deltaY || e.deltaX;
     _galBoost = Math.max(-25, Math.min(25, _galBoost + delta * 0.08));
-    // Prevent page scroll while hovering gallery
-    e.preventDefault();
+    e.preventDefault(); // prevent page scroll while over gallery
   };
-  outer.addEventListener('wheel', onWheel, { passive: false });
-  // When mouse leaves gallery area, wheel no longer captured
-  outer.addEventListener('mouseleave', () => { _galWheelActive = false; });
+  // Only intercept wheel when mouse is over the gallery area
+  const gallerySection = document.getElementById('gallery-section');
+  gallerySection?.addEventListener('wheel', onWheel, { passive: false });
+  gallerySection?.addEventListener('mouseleave', () => { _galWheelActive = false; });
 
   // ── Pause on hover ──
   track.addEventListener('mouseenter', () => { /* don't pause — auto-scroll continues */ });
@@ -570,7 +570,7 @@ function initHorizontalScroll() {
   // Cleanup on resize
   const onResize = debounce(() => {
     cancelAnimationFrame(_galRAF);
-    outer.removeEventListener('wheel', onWheel);
+    gallerySection?.removeEventListener('wheel', onWheel);
     initHorizontalScroll();
   }, 300);
   window.addEventListener('resize', onResize, { once: true });
@@ -929,13 +929,16 @@ function toggleEdit() {
 // Double-press 'e' key to toggle edit mode
 let _ePresses = 0, _eTimer = null;
 document.addEventListener('keydown', e => {
-  if (e.key === 'e' || e.key === 'E') {
-    if (e.target.closest('[contenteditable="true"], input, textarea')) return;
-    _ePresses++;
-    clearTimeout(_eTimer);
-    _eTimer = setTimeout(() => { _ePresses = 0; }, 400);
-    if (_ePresses >= 2) { _ePresses = 0; clearTimeout(_eTimer); toggleEdit(); }
-  }
+  if (e.key !== 'e' && e.key !== 'E') return;
+  // Skip if user is typing in an input/textarea
+  const tag = e.target.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  // Skip if actively editing a contentEditable field
+  if (e.target.isContentEditable) return;
+  _ePresses++;
+  clearTimeout(_eTimer);
+  _eTimer = setTimeout(() => { _ePresses = 0; }, 400);
+  if (_ePresses >= 2) { _ePresses = 0; clearTimeout(_eTimer); toggleEdit(); }
 });
 
 // Work upload (gallery)
