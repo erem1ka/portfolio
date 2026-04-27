@@ -518,6 +518,7 @@ body::before {
   background: var(--bg2); cursor: none;
   border: 1px solid transparent;
   transition: border-color 0.25s, box-shadow 0.25s;
+  max-height: 220px;
 }
 .arc-card:hover {
   border-color: var(--accent);
@@ -525,6 +526,7 @@ body::before {
 }
 .arc-card img, .arc-card video {
   width: 100%; display: block; object-fit: cover;
+  max-height: 220px;
   transition: transform 0.5s var(--ease-out);
 }
 .arc-card:hover img, .arc-card:hover video { transform: scale(1.04); }
