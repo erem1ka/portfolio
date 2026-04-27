@@ -727,6 +727,108 @@ body::before {
 .modal-nav-btn:hover { border-color: var(--text3); color: var(--text); }
 .modal-nav-btn:disabled { opacity: 0.3; pointer-events: none; }
 
+/* ── Process Tab System ── */
+.modal-tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--divider);
+  margin-bottom: 24px;
+}
+.modal-tab {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 9px 20px; border: none;
+  color: var(--text3); background: transparent; cursor: none;
+  position: relative;
+  transition: color 0.2s;
+}
+.modal-tab.active { color: var(--accent); }
+.modal-tab.active::after {
+  content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+  height: 1px; background: var(--accent);
+}
+
+#modal-process { display: none; }
+#modal-process.active { display: block; }
+#modal-final.hidden { display: none; }
+
+/* Process Timeline */
+.process-timeline {
+  display: flex; align-items: flex-start;
+  gap: 0; margin-bottom: 32px;
+  position: relative;
+}
+.process-node {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 10px;
+  position: relative;
+  cursor: none;
+  transition: transform 0.2s var(--ease-out);
+}
+.process-node.active { transform: scale(1.08); }
+.process-node-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--divider);
+  background: var(--bg);
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.process-node.active .process-node-dot {
+  border-color: var(--accent);
+  background: var(--accent);
+  transform: scale(1.2);
+}
+/* Dashed connector lines between nodes */
+.process-node:not(:last-child)::after {
+  content: ''; position: absolute;
+  top: 6px; left: calc(50% + 12px); right: calc(-50% + 12px);
+  height: 1px;
+  border-top: 1px dashed var(--divider);
+}
+.process-node.active:not(:last-child)::after {
+  border-top-color: var(--accent);
+}
+.process-node-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text3);
+  transition: color 0.2s;
+}
+.process-node.active .process-node-label { color: var(--accent); }
+
+/* Process preview area */
+.process-preview {
+  aspect-ratio: 16/9;
+  background: var(--bg3);
+  border: 1px solid var(--divider);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  position: relative;
+}
+.process-preview img, .process-preview video {
+  width: 100%; height: 100%; object-fit: contain; display: block;
+}
+.process-empty {
+  width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3);
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+.process-desc {
+  font-size: 13px; line-height: 1.65; color: var(--text2); margin-bottom: 16px;
+}
+
+/* Progress bar above timeline */
+.process-progress {
+  height: 2px; background: var(--divider); border-radius: 1px;
+  margin-bottom: 20px;
+}
+.process-progress-fill {
+  height: 100%; background: var(--accent); border-radius: 1px;
+  width: 0%; transition: width 0.3s var(--ease-out);
+}
+
 /* ── Edit mode ── */
 #edit-bar {
   position: fixed; top: 0; left: 0; right: 0; height: 36px;

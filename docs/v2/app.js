@@ -707,6 +707,106 @@ function openModal(id, src = 'works') {
   document.getElementById('modal-backdrop')?.classList.add('open');
   document.getElementById('modal')?.classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  // Reset to Final tab on open
+  switchModalTab('final');
+
+  // Init Process view for this work
+  renderProcessView(w);
+}
+
+// ── Modal Tab Switch ──
+function switchModalTab(tab) {
+  const tabFinal   = document.getElementById('tab-final');
+  const tabProcess = document.getElementById('tab-process');
+  const viewFinal  = document.getElementById('modal-final');
+  const viewProcess = document.getElementById('modal-process');
+
+  if (tab === 'final') {
+    tabFinal?.classList.add('active');
+    tabProcess?.classList.remove('active');
+    viewFinal?.classList.remove('hidden');
+    viewProcess?.classList.remove('active');
+  } else {
+    tabFinal?.classList.remove('active');
+    tabProcess?.classList.add('active');
+    viewFinal?.classList.add('hidden');
+    viewProcess?.classList.add('active');
+  }
+}
+
+// ── Process View Rendering ──
+const DEFAULT_PROCESS_STEPS = [
+  { label: 'Sketch',  desc: '创意构思与草稿绘制', media: '' },
+  { label: 'Style',   desc: '视觉风格定调与设计稿', media: '' },
+  { label: 'Animate', desc: 'AE 动态制作与节奏卡点', media: '' },
+  { label: 'Render',  desc: '渲染输出与格式适配', media: '' },
+  { label: 'Final',   desc: '最终成品上线', media: '' },
+];
+
+let _processStep = 0;
+
+function renderProcessView(w) {
+  _processStep = 0;
+
+  // Use work's processSteps if defined, otherwise default template
+  const steps = w.processSteps || DEFAULT_PROCESS_STEPS;
+
+  const timeline = document.getElementById('process-timeline');
+  if (!timeline) return;
+  timeline.innerHTML = '';
+
+  steps.forEach((step, i) => {
+    const node = document.createElement('div');
+    node.className = 'process-node' + (i === 0 ? ' active' : '');
+    node.innerHTML = `
+      <div class="process-node-dot"></div>
+      <div class="process-node-label">${step.label}</div>`;
+    node.addEventListener('click', () => selectProcessStep(i, steps));
+    timeline.appendChild(node);
+  });
+
+  // Show first step preview
+  updateProcessPreview(steps, 0);
+
+  // Progress fill
+  const fill = document.getElementById('process-progress-fill');
+  if (fill) fill.style.width = (1 / steps.length * 100) + '%';
+}
+
+function selectProcessStep(idx, steps) {
+  _processStep = idx;
+
+  // Update node active state
+  document.querySelectorAll('.process-node').forEach((n, i) => {
+    n.classList.toggle('active', i === idx);
+  });
+
+  // Progress fill
+  const fill = document.getElementById('process-progress-fill');
+  if (fill) fill.style.width = ((idx + 1) / steps.length * 100) + '%';
+
+  updateProcessPreview(steps, idx);
+}
+
+function updateProcessPreview(steps, idx) {
+  const preview = document.getElementById('process-preview-content');
+  const descEl  = document.getElementById('process-desc');
+
+  if (!preview) return;
+
+  const step = steps[idx];
+  if (step.media) {
+    if (step.mediaType === 'mp4') {
+      preview.innerHTML = `<video src="${step.media}" controls muted playsinline style="width:100%;height:100%;object-fit:contain"></video>`;
+    } else {
+      preview.innerHTML = `<img src="${step.media}" alt="${step.label}" style="width:100%;height:100%;object-fit:contain">`;
+    }
+  } else {
+    preview.innerHTML = `<div class="process-empty">${step.label} — 待上传</div>`;
+  }
+
+  if (descEl) descEl.textContent = step.desc || '';
 }
 
 function closeModal() {
@@ -715,6 +815,9 @@ function closeModal() {
   document.body.style.overflow = '';
   const vid = document.querySelector('#modal-media video');
   if (vid) { vid.pause(); vid.src = ''; }
+  // Also stop process preview video
+  const pvid = document.querySelector('#process-preview-content video');
+  if (pvid) { pvid.pause(); pvid.src = ''; }
   _modalId = null;
 }
 
