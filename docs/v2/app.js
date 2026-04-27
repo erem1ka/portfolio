@@ -250,27 +250,62 @@ function applyVelocityEffects() {
   }, 300);
 }
 
-function updateNavActive() {
-  const ids = ['hero','gallery-section','archive','about','contact'];
-  let active = ids[0];
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (el && el.getBoundingClientRect().top <= 120) active = id;
+/* ── Page Section Switcher ── */
+const SECTION_MAP = {
+  'hero':           'hero',
+  '#works':         'gallery-section',
+  '#gallery-section': 'gallery-section',
+  '#archive':       'archive',
+  '#about':         'about',
+  '#contact':       'contact',
+};
+
+let _activePage = 'hero';
+
+function switchPage(targetId) {
+  const sections = document.querySelectorAll('.page-section');
+  sections.forEach(s => {
+    const isTarget = s.id === targetId;
+    s.classList.toggle('active', isTarget);
   });
+  _activePage = targetId;
+
+  // Update nav active state
   document.querySelectorAll('#s-nav a').forEach(a => {
     const h = a.getAttribute('href');
-    a.classList.toggle('active', h === '#' + active || (h === '#works' && active === 'gallery-section'));
+    const mapped = SECTION_MAP[h] || h.replace('#','');
+    a.classList.toggle('active', mapped === targetId);
   });
+
+  // Scroll content to top
+  const content = document.getElementById('content');
+  if (content) content.scrollTop = 0;
+
+  // Re-init gallery if switching to gallery page
+  if (targetId === 'gallery-section') {
+    setTimeout(() => initHorizontalScroll(), 100);
+  }
 }
+
+// Nav click → page switch
 document.querySelectorAll('#s-nav a').forEach(a => {
   a.addEventListener('click', e => {
     const h = a.getAttribute('href');
     if (!h.startsWith('#')) return;
     e.preventDefault();
-    const el = document.querySelector(h);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    const targetId = SECTION_MAP[h] || h.replace('#','');
+    switchPage(targetId);
   });
 });
+
+// Make content scrollable (not the whole page)
+function setupContentScroll() {
+  const content = document.getElementById('content');
+  if (content) {
+    content.style.overflowY = 'auto';
+    content.style.height = '100vh';
+  }
+}
 
 /* ────────────────────────────────────────────────
    5. HERO CAROUSEL
@@ -1079,6 +1114,10 @@ async function init() {
   renderAll();
   initMarquee();
   startHeroAuto();
+
+  // ── Page switcher setup ──
+  setupContentScroll();
+  switchPage('hero'); // default: show hero
 
   // Wait for GSAP
   if (!window.gsap || !window.ScrollTrigger) {

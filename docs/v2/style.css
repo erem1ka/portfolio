@@ -198,6 +198,17 @@ body::before {
   border-bottom: 1px solid var(--divider);
 }
 
+/* ── Page/Section switcher ── */
+.page-section {
+  display: none;
+}
+.page-section.active {
+  display: block;
+}
+#hero.active {
+  display: flex;
+}
+
 .sec-label {
   font-family: 'JetBrains Mono', monospace;
   font-size: clamp(9px, 0.65vw, 12px);
