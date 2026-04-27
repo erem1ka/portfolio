@@ -366,17 +366,6 @@ body::before {
 .gallery-card:hover .gc-media video { transform: scale(1.04); }
 
 /* Anim hover label */
-.gc-anim-label {
-  position: absolute; bottom: 8px; left: 50%;
-  transform: translateX(-50%);
-  font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.12em;
-  padding: 3px 8px; background: rgba(0,0,0,.55); color: rgba(255,255,255,.8);
-  border-radius: 2px; border: 1px solid rgba(255,255,255,.1);
-  backdrop-filter: blur(6px); pointer-events: none; white-space: nowrap; z-index: 3;
-  transition: opacity 0.18s;
-}
-.gallery-card:hover .gc-anim-label { opacity: 0; }
-
 /* Category badge */
 .gc-badge {
   position: absolute; top: 10px; left: 10px;
@@ -433,25 +422,10 @@ body::before {
   color: var(--text3); pointer-events: none;
 }
 
-/* Play badge for video cards */
-.play-badge {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; transition: opacity 0.2s;
-}
-.gallery-card:hover .play-badge { opacity: 1; }
-.play-badge-circle {
-  width: 48px; height: 48px; border-radius: 50%;
-  background: rgba(0,0,0,.6); border: 1.5px solid rgba(255,255,255,.85);
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(8px);
-}
-.play-badge-circle svg { width: 16px; height: 16px; fill: white; }
-
 /* Add card (edit mode) */
 .gallery-add-card {
   flex-shrink: 0;
-  width: 280px; height: 640px;
+  width: 280px; height: 380px;
   border: 1.5px dashed rgba(255,59,92,.25);
   border-radius: 4px;
   display: none; align-items: center; justify-content: center;

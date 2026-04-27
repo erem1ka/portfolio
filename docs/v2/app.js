@@ -385,11 +385,9 @@ function makeGalleryCard(w, idx) {
   if (!w.media && !w.cover) {
     mediaHtml = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"><span style="font-family:monospace;font-size:11px;color:#333;letter-spacing:0.1em">待上传</span></div>`;
   } else if (isAnim && w.media) {
-    mediaHtml = `<img class="anim-img" src="${BLANK}" data-anim-src="${w.media}" data-frame-src="" alt="${w.title||''}">`;
+    mediaHtml = `<img class="anim-img" src="${w.media}" alt="${w.title||''}" style="animation-play-state:running">`;
   } else if (isVideo) {
-    const poster = w.cover || '';
-    mediaHtml = `<img src="${poster}" alt="${w.title||''}">
-      <div class="play-badge"><div class="play-badge-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>`;
+    mediaHtml = `<video src="${w.media}" muted loop playsinline autoplay poster="${w.cover||''}" style="width:100%;height:100%;object-fit:cover"></video>`;
   } else {
     mediaHtml = `<img src="${w.media||w.cover}" alt="${w.title||''}">`;
   }
@@ -399,7 +397,6 @@ function makeGalleryCard(w, idx) {
     <div class="gc-media">
       ${mediaHtml}
       <span class="gc-badge ${catInfo.cls}">${catInfo.label}</span>
-      ${isAnim && w.media ? '<span class="gc-anim-label">悬停播放</span>' : ''}
       <div class="gc-upload-overlay">
         <button class="gc-upload-btn" onclick="event.stopPropagation();triggerWorkUpload('${w.id}')">上传媒体</button>
         <button class="gc-del-btn" onclick="event.stopPropagation();deleteWork('${w.id}')">删除</button>
@@ -413,17 +410,7 @@ function makeGalleryCard(w, idx) {
       </div>
     </div>`;
 
-  // Hover-to-play anim
-  if (isAnim && w.media) {
-    const animImg = card.querySelector('.anim-img');
-    const gcMedia = card.querySelector('.gc-media');
-    extractAnimFirstFrame(w.media).then(frame => {
-      if (frame && animImg) animImg.src = frame;
-      if (animImg) animImg.dataset.frameSrc = frame || w.media;
-    });
-    gcMedia?.addEventListener('mouseenter', () => { if(animImg) animImg.src = animImg.dataset.animSrc; });
-    gcMedia?.addEventListener('mouseleave', () => { if(animImg) animImg.src = animImg.dataset.frameSrc || BLANK; });
-  }
+  // Anim cards: already auto-playing (src set directly, no hover logic)
 
   // Edit title
   const titleEl = card.querySelector('[data-field="title"]');
@@ -487,18 +474,7 @@ function initHorizontalScroll() {
   clonesBefore.reverse().forEach(c => track.insertBefore(c, track.firstChild));
   clonesAfter.forEach(c => track.appendChild(c));
 
-  // Re-bind hover-play for clones (anim cards)
-  track.querySelectorAll('.gallery-card-clone .anim-img').forEach(img => {
-    const parent = img.closest('.gc-media');
-    if (!parent) return;
-    parent.addEventListener('mouseenter', () => { img.src = img.dataset.animSrc; });
-    parent.addEventListener('mouseleave', () => { img.src = img.dataset.frameSrc || img.dataset.animSrc; });
-    if (img.dataset.animSrc) {
-      extractAnimFirstFrame(img.dataset.animSrc).then(frame => {
-        if (frame) { img.src = frame; img.dataset.frameSrc = frame; }
-      });
-    }
-  });
+  // Clones already have auto-playing media (cloned from originals), no extra binding needed
 
   // Start position: at the real set (offset past clones)
   const loopStart = -(totalW - PADDING);
