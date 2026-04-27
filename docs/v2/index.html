@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>张峻烨 · 效果创意设计师</title>
+  <meta name="description" content="张峻烨 — 效果创意设计 × AIGC 全链路创作者。AE 动态设计、Seedream 生图、骨骼木偶动画。">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- CloudBase SDK -->
+  <script src="https://imgcache.qq.com/qcloud/tcbjs/1.10.6/tcb.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Custom Cursor -->
+  <div id="cursor"></div>
+  <div id="cursor-label"></div>
+
+  <!-- Scroll Progress (left edge) -->
+  <div id="scroll-progress"></div>
+
+  <!-- Edit Mode Indicator -->
+  <div id="edit-indicator">编辑模式</div>
+
+  <!-- Toast -->
+  <div id="toast"></div>
+
+  <!-- ═══════════════════════════════════════════
+       APP WRAPPER
+  ═══════════════════════════════════════════ -->
+  <div id="app">
+
+    <!-- ─────────────────────────────────────────
+         LEFT SIDEBAR (fixed)
+    ───────────────────────────────────────── -->
+    <aside id="sidebar">
+      <div class="sidebar-top">
+
+        <!-- Name -->
+        <div class="sidebar-name">
+          <span class="cn">张峻烨</span>
+          <span class="en">Zhang Junye</span>
+        </div>
+
+        <!-- Role -->
+        <div class="sidebar-role">Motion Designer / 效果创意设计师</div>
+
+        <!-- Bio -->
+        <p class="sidebar-bio">
+          效果创意设计 × AIGC 全链路创作者。实习期间参与短视频平台全链路特效素材设计，熟练掌握 AE 动态设计、Seedream 生图、骨骼木偶动画。持续探索 AI 工具与视觉创作的融合边界，自主搭建创意工作流工具集。
+        </p>
+
+        <!-- Navigation -->
+        <nav>
+          <ul id="sidebar-nav" class="stagger">
+            <li><a href="#hero" class="active">精选作品</a></li>
+            <li><a href="#works">作品集</a></li>
+            <li><a href="#about">关于我</a></li>
+            <li><a href="#contact">联系</a></li>
+          </ul>
+        </nav>
+
+        <!-- Skill Tags -->
+        <div class="sidebar-skills stagger">
+          <span class="skill-tag">After Effects</span>
+          <span class="skill-tag">Premiere</span>
+          <span class="skill-tag">Photoshop</span>
+          <span class="skill-tag ai">Seedream</span>
+          <span class="skill-tag ai">AIGC</span>
+          <span class="skill-tag">MG 动效</span>
+          <span class="skill-tag">骨骼动画</span>
+          <span class="skill-tag ai">AI Workflow</span>
+          <span class="skill-tag">剪映</span>
+        </div>
+      </div>
+
+      <!-- Sidebar Bottom -->
+      <div class="sidebar-bottom">
+        <!-- Resume CTA -->
+        <a id="sidebar-resume" class="resume-btn" href="#" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          下载简历
+        </a>
+
+        <!-- Copyright -->
+        <p class="sidebar-copyright" id="sidebar-copyright">
+          © 2025 张峻烨 · Portfolio v2
+        </p>
+      </div>
+    </aside>
+
+    <!-- ─────────────────────────────────────────
+         RIGHT CONTENT
+    ───────────────────────────────────────── -->
+    <main id="content">
+
+      <!-- ══════════════════════
+           HERO SECTION
+      ══════════════════════ -->
+      <section id="hero">
+        <!-- Slides container -->
+        <div id="hero-slides" class="hero-slides"></div>
+
+        <!-- Slide counter -->
+        <div id="hero-counter" class="hero-counter">01 / 03</div>
+
+        <!-- Dot controls -->
+        <div id="hero-dots" class="hero-controls"></div>
+      </section>
+
+      <!-- ══════════════════════
+           WORKS SECTION
+      ══════════════════════ -->
+      <section id="works" class="section">
+        <div class="section-label">Selected Works</div>
+        <h2 class="section-title">作品集</h2>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar stagger">
+          <button class="filter-btn active" data-filter="all">全部</button>
+          <button class="filter-btn" data-filter="motion">动态特效</button>
+          <button class="filter-btn" data-filter="video">视频模板</button>
+          <button class="filter-btn" data-filter="aigc">AIGC 创意</button>
+          <button class="filter-btn" data-filter="mg">MG 动画</button>
+          <button class="filter-btn" data-filter="agent">工具开发</button>
+        </div>
+
+        <!-- Works Grid (JS rendered) -->
+        <div id="works-grid" class="works-grid"></div>
+
+        <!-- Edit mode: Add work button -->
+        <div id="add-work-wrap" style="display:none;margin-top:24px">
+          <button onclick="addWork()" style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;padding:10px 24px;border:1px dashed rgba(255,59,92,.4);border-radius:2px;color:rgba(255,59,92,.8);background:transparent;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='rgba(255,59,92,.06)'" onmouseout="this.style.background='transparent'">
+            + 添加作品
+          </button>
+        </div>
+      </section>
+
+      <!-- ══════════════════════
+           ABOUT SECTION
+      ══════════════════════ -->
+      <section id="about" class="section">
+        <div class="section-label">About Me</div>
+        <h2 class="section-title">关于我</h2>
+
+        <div class="about-grid">
+          <!-- Education / Experience -->
+          <div>
+            <div class="about-block-label">教育 · 经历</div>
+            <ul class="timeline">
+              <li class="timeline-item">
+                <div class="timeline-year">2024</div>
+                <div class="timeline-title">短视频平台 · 效果创意实习</div>
+                <div class="timeline-desc">参与全链路特效素材设计，独立完成动态特效、画面转场、轻量化动画素材的 AE 全流程制作</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-year">2023</div>
+                <div class="timeline-title">AIGC 工作流 · 自研工具集</div>
+                <div class="timeline-desc">基于 AIGC 开放 API 与智能体调度逻辑，自主搭建网页端设计辅助工具，整合素材生成、Prompt 管理与设计流程自动化能力</div>
+              </li>
+              <li class="timeline-item">
+                <div class="timeline-year">2022</div>
+                <div class="timeline-title">MG 动画 · 独立创作</div>
+                <div class="timeline-desc">无畏契约 LOGO 原创 MG 动画，全程 AE 矢量形状图层手搓制作</div>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Skills -->
+          <div>
+            <div class="about-block-label">技能栈</div>
+            <div class="about-block-content" style="display:flex;flex-direction:column;gap:20px">
+              <div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">Motion Design</div>
+                <div style="color:var(--text2);font-size:14px;line-height:1.8">After Effects · Premiere Pro · Photoshop · 剪映</div>
+              </div>
+              <div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent2);margin-bottom:8px">AI &amp; AIGC</div>
+                <div style="color:var(--text2);font-size:14px;line-height:1.8">Seedream 生图 · 骨骼木偶动画 · AI Workflow · Agent 基建</div>
+              </div>
+              <div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#ffaa33;margin-bottom:8px">Development</div>
+                <div style="color:var(--text2);font-size:14px;line-height:1.8">HTML · CSS · JavaScript · 创意工具开发</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Philosophy Quote -->
+        <div class="philosophy-quote">
+          「AI 不是替代设计师的工具，而是设计师扩展创作边界的新型感知器官。我相信最好的效果设计，是让 AI 的生成能力与设计师的审美意图精准对齐的那一刻。」
+        </div>
+      </section>
+
+      <!-- ══════════════════════
+           CONTACT SECTION
+      ══════════════════════ -->
+      <section id="contact" class="section">
+        <div class="section-label">Contact</div>
+        <h2 class="section-title">联系我</h2>
+
+        <!-- Email (click to copy) -->
+        <div style="margin-bottom:20px">
+          <a id="contact-email" class="contact-email" href="#" tabindex="0">
+            — 点击获取邮箱
+          </a>
+          <span class="contact-copy-hint">点击复制</span>
+        </div>
+
+        <!-- Social Links -->
+        <div class="contact-links stagger">
+          <a id="contact-douyin" class="contact-link" href="#" target="_blank" rel="noopener" style="display:none">
+            抖音
+          </a>
+          <a id="contact-bilibili" class="contact-link" href="#" target="_blank" rel="noopener" style="display:none">
+            Bilibili
+          </a>
+          <a class="contact-link" href="#" style="pointer-events:none;opacity:.4">Behance</a>
+          <a class="contact-link" href="#" style="pointer-events:none;opacity:.4">即刻</a>
+        </div>
+
+        <!-- Resume CTA -->
+        <a id="resume-download" class="resume-btn" href="#" download style="display:none;margin-bottom:80px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          下载简历
+        </a>
+
+        <!-- Footer -->
+        <div class="contact-footer" style="margin-top:80px">
+          <span class="contact-footer-text">© 2025 张峻烨 · 效果创意设计</span>
+          <span class="contact-footer-text" style="opacity:.5">Built with Motion & Code</span>
+        </div>
+      </section>
+
+    </main><!-- /content -->
+  </div><!-- /app -->
+
+  <!-- ═══════════════════════════════════════════
+       MODAL
+  ═══════════════════════════════════════════ -->
+  <div id="modal-backdrop"></div>
+  <div id="modal" role="dialog" aria-modal="true" aria-label="作品详情">
+    <div class="modal-inner">
+      <button id="modal-close" class="modal-close" aria-label="关闭">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+
+      <!-- Media area -->
+      <div id="modal-media" class="modal-media"></div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <div id="modal-category" class="modal-category"></div>
+        <h3 id="modal-title" class="modal-title"></h3>
+        <p id="modal-desc" class="modal-desc"></p>
+        <div id="modal-tools" class="modal-tools"></div>
+        <div class="modal-nav">
+          <button id="modal-prev" class="modal-nav-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            上一个
+          </button>
+          <button id="modal-next" class="modal-nav-btn">
+            下一个
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- app.js -->
+  <script src="app.js"></script>
+
+  <!-- Show add-work button in edit mode -->
+  <script>
+    // Toggle add-work-wrap visibility based on edit mode changes
+    const _origToggleEdit = window.toggleEdit;
+    // Watch editMode changes via MutationObserver on #app
+    const _addWorkWrap = document.getElementById('add-work-wrap');
+    const _obs = new MutationObserver(() => {
+      if (_addWorkWrap) {
+        _addWorkWrap.style.display = document.getElementById('app').classList.contains('editing') ? 'block' : 'none';
+      }
+    });
+    _obs.observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
+  </script>
+</body>
+</html>
