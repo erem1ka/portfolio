@@ -11,6 +11,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
 
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
   <!-- CloudBase SDK -->
   <script src="https://imgcache.qq.com/qcloud/tcbjs/1.10.6/tcb.js"></script>
 
@@ -18,115 +22,92 @@
 </head>
 <body>
 
-  <!-- Custom Cursor -->
+  <!-- Cursor -->
   <div id="cursor"></div>
   <div id="cursor-label"></div>
 
   <!-- Scroll Progress (left edge) -->
-  <div id="scroll-progress"></div>
+  <div id="scroll-bar"></div>
 
-  <!-- Edit Mode Indicator -->
-  <div id="edit-indicator">编辑模式</div>
+  <!-- Edit bar -->
+  <div id="edit-bar">编辑模式 · 三击版权文字退出</div>
 
   <!-- Toast -->
   <div id="toast"></div>
 
-  <!-- ═══════════════════════════════════════════
-       APP WRAPPER
-  ═══════════════════════════════════════════ -->
   <div id="app">
 
-    <!-- ─────────────────────────────────────────
-         LEFT SIDEBAR (fixed)
-    ───────────────────────────────────────── -->
+    <!-- ══════════════════════════════════════
+         SIDEBAR
+    ══════════════════════════════════════ -->
     <aside id="sidebar">
-      <div class="sidebar-top">
-
-        <!-- Name -->
-        <div class="sidebar-name">
+      <div>
+        <div class="s-name">
           <span class="cn">张峻烨</span>
           <span class="en">Zhang Junye</span>
         </div>
-
-        <!-- Role -->
-        <div class="sidebar-role">Motion Designer / 效果创意设计师</div>
-
-        <!-- Bio -->
-        <p class="sidebar-bio">
-          效果创意设计 × AIGC 全链路创作者。实习期间参与短视频平台全链路特效素材设计，熟练掌握 AE 动态设计、Seedream 生图、骨骼木偶动画。持续探索 AI 工具与视觉创作的融合边界，自主搭建创意工作流工具集。
+        <div class="s-role">Motion Designer / 效果创意设计师</div>
+        <p class="s-bio">
+          效果创意设计 × AIGC 全链路创作者。参与短视频平台全链路特效素材设计，熟练掌握 AE 动态设计、Seedream 生图、骨骼木偶动画。持续探索 AI 工具与视觉创作的融合边界。
         </p>
-
-        <!-- Navigation -->
         <nav>
-          <ul id="sidebar-nav" class="stagger">
-            <li><a href="#hero" class="active">精选作品</a></li>
-            <li><a href="#works">作品集</a></li>
+          <ul id="s-nav">
+            <li><a href="#hero" class="active">首屏</a></li>
+            <li><a href="#works">精选作品</a></li>
+            <li><a href="#archive">作品全集</a></li>
             <li><a href="#about">关于我</a></li>
             <li><a href="#contact">联系</a></li>
           </ul>
         </nav>
-
-        <!-- Skill Tags -->
-        <div class="sidebar-skills stagger">
-          <span class="skill-tag">After Effects</span>
-          <span class="skill-tag">Premiere</span>
-          <span class="skill-tag">Photoshop</span>
-          <span class="skill-tag ai">Seedream</span>
-          <span class="skill-tag ai">AIGC</span>
-          <span class="skill-tag">MG 动效</span>
-          <span class="skill-tag">骨骼动画</span>
-          <span class="skill-tag ai">AI Workflow</span>
-          <span class="skill-tag">剪映</span>
+        <div class="s-skills">
+          <span class="s-tag">After Effects</span>
+          <span class="s-tag">Premiere</span>
+          <span class="s-tag">Photoshop</span>
+          <span class="s-tag ai">Seedream</span>
+          <span class="s-tag ai">AIGC</span>
+          <span class="s-tag">MG 动效</span>
+          <span class="s-tag">骨骼动画</span>
+          <span class="s-tag ai">AI Workflow</span>
+          <span class="s-tag">剪映</span>
         </div>
       </div>
-
-      <!-- Sidebar Bottom -->
-      <div class="sidebar-bottom">
-        <!-- Resume CTA -->
-        <a id="sidebar-resume" class="resume-btn" href="#" download>
+      <div>
+        <a id="sidebar-resume" class="resume-btn" href="#" download style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
           下载简历
         </a>
-
-        <!-- Copyright -->
-        <p class="sidebar-copyright" id="sidebar-copyright">
-          © 2025 张峻烨 · Portfolio v2
-        </p>
+        <p class="s-copy" id="s-copy">© 2025 张峻烨 · Portfolio v2</p>
       </div>
     </aside>
 
-    <!-- ─────────────────────────────────────────
-         RIGHT CONTENT
-    ───────────────────────────────────────── -->
+    <!-- ══════════════════════════════════════
+         CONTENT
+    ══════════════════════════════════════ -->
     <main id="content">
 
-      <!-- ══════════════════════
-           HERO SECTION
-      ══════════════════════ -->
+      <!-- ─────────────────────────
+           HERO
+      ───────────────────────── -->
       <section id="hero">
-        <!-- Slides container -->
         <div id="hero-slides" class="hero-slides"></div>
-
-        <!-- Slide counter -->
         <div id="hero-counter" class="hero-counter">01 / 03</div>
-
-        <!-- Dot controls -->
-        <div id="hero-dots" class="hero-controls"></div>
+        <div id="hero-dots" class="hero-dots"></div>
       </section>
 
-      <!-- ══════════════════════
-           WORKS SECTION
-      ══════════════════════ -->
-      <section id="works" class="section">
-        <div class="section-label">Selected Works</div>
-        <h2 class="section-title">作品集</h2>
+      <!-- ─────────────────────────
+           HORIZONTAL GALLERY
+      ───────────────────────── -->
+      <section id="gallery-section">
 
-        <!-- Filter Bar -->
-        <div class="filter-bar stagger">
+        <div class="gallery-header">
+          <div class="sec-label">Selected Works</div>
+          <h2 class="sec-title">精选作品</h2>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="filter-bar">
           <button class="filter-btn active" data-filter="all">全部</button>
           <button class="filter-btn" data-filter="motion">动态特效</button>
           <button class="filter-btn" data-filter="video">视频模板</button>
@@ -135,123 +116,133 @@
           <button class="filter-btn" data-filter="agent">工具开发</button>
         </div>
 
-        <!-- Works Grid (JS rendered) -->
-        <div id="works-grid" class="works-grid"></div>
+        <!-- Horizontal scroll outer -->
+        <div id="gallery-outer" class="gallery-outer">
+          <div class="gallery-sticky">
+            <div id="gallery-track" class="gallery-track"></div>
+            <!-- Progress -->
+            <div class="gallery-progress-wrap">
+              <div id="gallery-progress-bar" class="gallery-progress-bar"></div>
+            </div>
+            <div id="gallery-counter-label" class="gallery-counter-label">01 / 04</div>
+          </div>
+        </div>
 
-        <!-- Edit mode: Add work button -->
-        <div id="add-work-wrap" style="display:none;margin-top:24px">
-          <button onclick="addWork()" style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;padding:10px 24px;border:1px dashed rgba(255,59,92,.4);border-radius:2px;color:rgba(255,59,92,.8);background:transparent;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='rgba(255,59,92,.06)'" onmouseout="this.style.background='transparent'">
-            + 添加作品
-          </button>
+      </section>
+
+      <!-- ─────────────────────────
+           INFINITE MARQUEE
+      ───────────────────────── -->
+      <div id="marquee-section" aria-hidden="true">
+        <div class="marquee-row" id="marquee-1"></div>
+        <div class="marquee-row" id="marquee-2"></div>
+      </div>
+
+      <!-- ─────────────────────────
+           ARCHIVE (MASONRY)
+      ───────────────────────── -->
+      <section id="archive" class="section">
+        <div class="sec-label">Archive</div>
+        <h2 class="sec-title">作品全集</h2>
+        <div class="masonry-grid">
+          <div class="masonry-col" id="masonry-col-0"></div>
+          <div class="masonry-col" id="masonry-col-1"></div>
+          <div class="masonry-col" id="masonry-col-2"></div>
+          <div class="masonry-col" id="masonry-col-3"></div>
+        </div>
+        <div class="load-more-wrap">
+          <button id="load-more-btn" class="load-more-btn" style="display:none">加载更多</button>
         </div>
       </section>
 
-      <!-- ══════════════════════
-           ABOUT SECTION
-      ══════════════════════ -->
+      <!-- ─────────────────────────
+           ABOUT
+      ───────────────────────── -->
       <section id="about" class="section">
-        <div class="section-label">About Me</div>
-        <h2 class="section-title">关于我</h2>
-
-        <div class="about-grid">
-          <!-- Education / Experience -->
+        <div class="sec-label">About Me</div>
+        <h2 class="sec-title">关于我</h2>
+        <div class="about-cols">
           <div>
-            <div class="about-block-label">教育 · 经历</div>
+            <div class="ab-label">教育 · 经历</div>
             <ul class="timeline">
-              <li class="timeline-item">
-                <div class="timeline-year">2024</div>
-                <div class="timeline-title">短视频平台 · 效果创意实习</div>
-                <div class="timeline-desc">参与全链路特效素材设计，独立完成动态特效、画面转场、轻量化动画素材的 AE 全流程制作</div>
+              <li class="tl-item">
+                <div class="tl-year">2024</div>
+                <div class="tl-title">短视频平台 · 效果创意实习</div>
+                <div class="tl-desc">参与全链路特效素材设计，独立完成动态特效、画面转场、轻量化动画素材的 AE 全流程制作与方案输出</div>
               </li>
-              <li class="timeline-item">
-                <div class="timeline-year">2023</div>
-                <div class="timeline-title">AIGC 工作流 · 自研工具集</div>
-                <div class="timeline-desc">基于 AIGC 开放 API 与智能体调度逻辑，自主搭建网页端设计辅助工具，整合素材生成、Prompt 管理与设计流程自动化能力</div>
+              <li class="tl-item">
+                <div class="tl-year">2023</div>
+                <div class="tl-title">AIGC 工作流 · 自研工具集</div>
+                <div class="tl-desc">基于 AIGC 开放 API 与智能体调度逻辑，自主搭建网页端设计辅助工具，整合素材生成、Prompt 管理与设计流程自动化能力</div>
               </li>
-              <li class="timeline-item">
-                <div class="timeline-year">2022</div>
-                <div class="timeline-title">MG 动画 · 独立创作</div>
-                <div class="timeline-desc">无畏契约 LOGO 原创 MG 动画，全程 AE 矢量形状图层手搓制作</div>
+              <li class="tl-item">
+                <div class="tl-year">2022</div>
+                <div class="tl-title">MG 动画 · 独立创作</div>
+                <div class="tl-desc">无畏契约 LOGO 原创 MG 动画，全程 AE 矢量形状图层手搓制作，独立完成 LOGO 图形拆解与形变动画</div>
               </li>
             </ul>
           </div>
-
-          <!-- Skills -->
           <div>
-            <div class="about-block-label">技能栈</div>
-            <div class="about-block-content" style="display:flex;flex-direction:column;gap:20px">
+            <div class="ab-label">技能栈</div>
+            <div class="ab-text" style="display:flex;flex-direction:column;gap:18px">
               <div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px">Motion Design</div>
-                <div style="color:var(--text2);font-size:14px;line-height:1.8">After Effects · Premiere Pro · Photoshop · 剪映</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:#FF3B5C;margin-bottom:6px">Motion Design</div>
+                <div>After Effects · Premiere Pro · Photoshop · 剪映</div>
               </div>
               <div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent2);margin-bottom:8px">AI &amp; AIGC</div>
-                <div style="color:var(--text2);font-size:14px;line-height:1.8">Seedream 生图 · 骨骼木偶动画 · AI Workflow · Agent 基建</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:#00D4FF;margin-bottom:6px">AI &amp; AIGC</div>
+                <div>Seedream 生图 · 骨骼木偶动画 · AI Workflow · Agent 基建</div>
               </div>
               <div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#ffaa33;margin-bottom:8px">Development</div>
-                <div style="color:var(--text2);font-size:14px;line-height:1.8">HTML · CSS · JavaScript · 创意工具开发</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:#ffaa33;margin-bottom:6px">Development</div>
+                <div>HTML · CSS · JavaScript · 创意工具开发</div>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Philosophy Quote -->
-        <div class="philosophy-quote">
+        <div class="philosophy-block">
           「AI 不是替代设计师的工具，而是设计师扩展创作边界的新型感知器官。我相信最好的效果设计，是让 AI 的生成能力与设计师的审美意图精准对齐的那一刻。」
         </div>
       </section>
 
-      <!-- ══════════════════════
-           CONTACT SECTION
-      ══════════════════════ -->
-      <section id="contact" class="section">
-        <div class="section-label">Contact</div>
-        <h2 class="section-title">联系我</h2>
+      <!-- ─────────────────────────
+           CONTACT
+      ───────────────────────── -->
+      <section id="contact" class="section" style="border-bottom:none">
+        <div class="sec-label">Contact</div>
+        <h2 class="sec-title">联系我</h2>
 
-        <!-- Email (click to copy) -->
-        <div style="margin-bottom:20px">
-          <a id="contact-email" class="contact-email" href="#" tabindex="0">
-            — 点击获取邮箱
-          </a>
-          <span class="contact-copy-hint">点击复制</span>
+        <div style="margin-bottom:16px">
+          <a id="contact-email" class="contact-email" href="#" tabindex="0">— 点击获取邮箱</a>
+          <span class="copy-hint">点击复制</span>
         </div>
 
-        <!-- Social Links -->
-        <div class="contact-links stagger">
-          <a id="contact-douyin" class="contact-link" href="#" target="_blank" rel="noopener" style="display:none">
-            抖音
-          </a>
-          <a id="contact-bilibili" class="contact-link" href="#" target="_blank" rel="noopener" style="display:none">
-            Bilibili
-          </a>
-          <a class="contact-link" href="#" style="pointer-events:none;opacity:.4">Behance</a>
-          <a class="contact-link" href="#" style="pointer-events:none;opacity:.4">即刻</a>
+        <div class="contact-links">
+          <a id="contact-douyin"   class="contact-link" href="#" target="_blank" rel="noopener" style="display:none">抖音</a>
+          <a id="contact-bilibili" class="contact-link" href="#" target="_blank" rel="noopener" style="display:none">Bilibili</a>
+          <a class="contact-link" style="opacity:.3;pointer-events:none">Behance</a>
+          <a class="contact-link" style="opacity:.3;pointer-events:none">即刻</a>
         </div>
 
-        <!-- Resume CTA -->
-        <a id="resume-download" class="resume-btn" href="#" download style="display:none;margin-bottom:80px">
+        <a id="resume-download" class="resume-btn" href="#" download style="display:none;margin-bottom:72px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
           下载简历
         </a>
 
-        <!-- Footer -->
-        <div class="contact-footer" style="margin-top:80px">
+        <div class="contact-footer" style="margin-top:72px">
           <span class="contact-footer-text">© 2025 张峻烨 · 效果创意设计</span>
-          <span class="contact-footer-text" style="opacity:.5">Built with Motion & Code</span>
+          <span class="contact-footer-text" style="opacity:.4">Built with Motion &amp; Code</span>
         </div>
       </section>
 
-    </main><!-- /content -->
+    </main>
   </div><!-- /app -->
 
-  <!-- ═══════════════════════════════════════════
+  <!-- ══════════════════════════════════════
        MODAL
-  ═══════════════════════════════════════════ -->
+  ══════════════════════════════════════ -->
   <div id="modal-backdrop"></div>
   <div id="modal" role="dialog" aria-modal="true" aria-label="作品详情">
     <div class="modal-inner">
@@ -260,45 +251,48 @@
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
-
-      <!-- Media area -->
       <div id="modal-media" class="modal-media"></div>
-
-      <!-- Body -->
       <div class="modal-body">
-        <div id="modal-category" class="modal-category"></div>
-        <h3 id="modal-title" class="modal-title"></h3>
-        <p id="modal-desc" class="modal-desc"></p>
+        <div id="modal-cat"   class="modal-cat"></div>
+        <h3  id="modal-title" class="modal-title"></h3>
+        <p   id="modal-desc"  class="modal-desc"></p>
         <div id="modal-tools" class="modal-tools"></div>
         <div class="modal-nav">
           <button id="modal-prev" class="modal-nav-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
             上一个
           </button>
           <button id="modal-next" class="modal-nav-btn">
             下一个
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- app.js -->
+  <!-- Easter Egg -->
+  <script src="easterEgg.js"></script>
+
+  <!-- App -->
   <script src="app.js"></script>
 
-  <!-- Show add-work button in edit mode -->
+  <!-- Mount easter egg after GSAP gallery is ready -->
   <script>
-    // Toggle add-work-wrap visibility based on edit mode changes
-    const _origToggleEdit = window.toggleEdit;
-    // Watch editMode changes via MutationObserver on #app
-    const _addWorkWrap = document.getElementById('add-work-wrap');
-    const _obs = new MutationObserver(() => {
-      if (_addWorkWrap) {
-        _addWorkWrap.style.display = document.getElementById('app').classList.contains('editing') ? 'block' : 'none';
-      }
+    // Re-init easter egg whenever gallery scrolltrigger is created
+    const _origInitHS = window.initHorizontalScroll;
+    document.addEventListener('DOMContentLoaded', () => {
+      // Intercept gallery-outer height set to mount easter egg
+      const obs = new MutationObserver(() => {
+        const track = document.getElementById('gallery-track');
+        if (window.initTimeCapsule && window._galleryTrigger && track) {
+          window.initTimeCapsule(window._galleryTrigger, track);
+          obs.disconnect();
+        }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
     });
-    _obs.observe(document.getElementById('app'), { attributes: true, attributeFilter: ['class'] });
   </script>
+
 </body>
 </html>
