@@ -755,6 +755,19 @@ function loadData(){
 }
 
 // Push DATA.json to GitHub so any visitor can load it
+// Load only the version number from cloud (no data overwrite)
+async function loadCloudDataVersion() {
+  if (!db) return 0;
+  try {
+    const collection = db.collection('portfolio');
+    const result = await collection.doc('main').get();
+    if (result.data && result.data.length > 0) {
+      return result.data[0].data._version || 0;
+    }
+  } catch(e) {}
+  return 0;
+}
+
 async function publishDataToCloud() {
   if (!db) {
     console.warn('云数据库未初始化，跳过同步');
@@ -762,6 +775,15 @@ async function publishDataToCloud() {
   }
   
   try {
+    // Safety check: only push if local version >= cloud version
+    const cloudVer = await loadCloudDataVersion();
+    const localVer = DATA._version || 0;
+    if (cloudVer > localVer) {
+      console.log('云端数据更新(local=' + localVer + ' cloud=' + cloudVer + ')，跳过推送，先拉取');
+      await loadDataFromCloud(true);
+      return;
+    }
+    
     const collection = db.collection('portfolio');
     const dataToSave = JSON.parse(JSON.stringify(DATA));
     // 版本号：用时间戳，加载时比较，云端的更大则用云端的
@@ -2092,17 +2114,22 @@ async function init(){
   renderAll();
   
   if (cloudReady) {
-    // 编辑者标识：只有进入过编辑模式的设备才能推送数据
+    // Always pull latest data from cloud first, then decide whether to push
     const isEditor = !!localStorage.getItem('portfolio_editor_token');
     const localVersion = DATA._version || 0;
     
-    if (isEditor && localVersion > 0) {
-      // 编辑者设备：推送本地数据到云端
+    // First: load cloud data to see what version is there
+    const cloudResult = await loadCloudDataVersion();
+    const cloudVersion = cloudResult || 0;
+    
+    if (localVersion > 0 && localVersion >= cloudVersion && isEditor) {
+      // Local data is newer or same version — push to cloud
       publishDataToCloud();
-    } else {
-      // 访客设备：始终从云端加载最新数据，忽略本地缓存
-      setTimeout(()=>loadDataFromCloud(true), 300);
+    } else if (cloudVersion > 0) {
+      // Cloud data is newer — load from cloud (overwrites local)
+      await loadDataFromCloud(true);
     }
+    // If both are 0 (first time, no data anywhere), nothing to sync
   }
 }
 
