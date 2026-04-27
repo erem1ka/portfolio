@@ -301,7 +301,8 @@ body::before {
 /* Horizontal track wrapper */
 .gallery-outer {
   position: relative;
-  /* JS will set height dynamically based on total scroll distance */
+  height: 100vh;
+  overflow: hidden;
 }
 
 .gallery-sticky {
@@ -311,6 +312,7 @@ body::before {
   overflow: hidden;
   display: flex;
   align-items: center;
+  /* no scroll-driven height needed; auto-loop handles movement */
 }
 
 .gallery-track {
@@ -322,7 +324,7 @@ body::before {
 }
 
 /* Horizontal card 480×640 */
-.gallery-card {
+.gallery-card, .gallery-card-clone {
   flex-shrink: 0;
   width: 480px;
   height: 640px;

@@ -441,8 +441,23 @@ function makeGalleryCard(w, idx) {
   return card;
 }
 
+/* ────────────────────────────────────────────────
+   AUTO-SCROLL GALLERY ENGINE
+   - Constant auto speed (px/frame)
+   - Wheel/trackpad delta boosts speed, decays after
+   - Loops seamlessly (clones leading/trailing cards)
+   - Pause on hover / focus
+──────────────────────────────────────────────── */
+let _galRAF = null;
+let _galPaused = false;
+let _galPos = 0;          // current translateX (negative = scroll left)
+let _galBoost = 0;        // extra speed from manual scroll (decays)
+let _galBaseSpeed = 0.8;  // px per frame at 60fps
+let _galDir = 1;          // 1 = left  -1 = right
+
 function initHorizontalScroll() {
-  // Kill previous
+  // Cancel previous loop
+  if (_galRAF) { cancelAnimationFrame(_galRAF); _galRAF = null; }
   if (_galleryTrigger) { _galleryTrigger.kill(); _galleryTrigger = null; }
 
   // Mobile: use native scroll
@@ -453,64 +468,129 @@ function initHorizontalScroll() {
   const sticky = document.querySelector('.gallery-sticky');
   if (!track || !outer || !sticky) return;
 
-  const gsap = window.gsap;
-  const ScrollTrigger = window.ScrollTrigger;
-  if (!gsap || !ScrollTrigger) return;
+  // ── Make outer just a normal-height container (not scroll-distance tall) ──
+  outer.style.height = '';
 
-  gsap.registerPlugin(ScrollTrigger);
+  const cards = Array.from(track.querySelectorAll('.gallery-card'));
+  if (!cards.length) return;
 
-  const updateLayout = () => {
-    const cards = track.querySelectorAll('.gallery-card');
-    if (!cards.length) return;
-    const cardW = 480 + 48; // card + gap
-    const totalW = cards.length * cardW + 80 * 2; // + padding
-    const translateX = -(totalW - window.innerWidth) - 80;
+  const CARD_W = 480 + 48; // width + gap
+  const PADDING = 80;
+  const totalW = cards.length * CARD_W + PADDING * 2;
 
-    if (_galleryTrigger) { _galleryTrigger.kill(); _galleryTrigger = null; }
+  // ── Seamless loop: duplicate cards ──
+  // Remove old clones first
+  track.querySelectorAll('.gallery-card-clone').forEach(c => c.remove());
+  // Clone set A (prepended) + set B (appended)
+  const clonesBefore = cards.map(c => { const cl = c.cloneNode(true); cl.classList.add('gallery-card-clone'); return cl; });
+  const clonesAfter  = cards.map(c => { const cl = c.cloneNode(true); cl.classList.add('gallery-card-clone'); return cl; });
+  clonesBefore.reverse().forEach(c => track.insertBefore(c, track.firstChild));
+  clonesAfter.forEach(c => track.appendChild(c));
 
-    const scrollDist = Math.abs(translateX);
-    outer.style.height = (scrollDist + window.innerHeight) + 'px';
+  // Re-bind hover-play for clones (anim cards)
+  track.querySelectorAll('.gallery-card-clone .anim-img').forEach(img => {
+    const parent = img.closest('.gc-media');
+    if (!parent) return;
+    parent.addEventListener('mouseenter', () => { img.src = img.dataset.animSrc; });
+    parent.addEventListener('mouseleave', () => { img.src = img.dataset.frameSrc || img.dataset.animSrc; });
+    if (img.dataset.animSrc) {
+      extractAnimFirstFrame(img.dataset.animSrc).then(frame => {
+        if (frame) { img.src = frame; img.dataset.frameSrc = frame; }
+      });
+    }
+  });
 
-    _galleryTrigger = ScrollTrigger.create({
-      trigger: outer,
-      start: 'top top',
-      end: () => `+=${scrollDist}`,
-      pin: sticky,
-      scrub: 1.2,
-      onUpdate: self => {
-        gsap.set(track, { x: translateX * self.progress });
+  // Start position: at the real set (offset past clones)
+  const loopStart = -(totalW - PADDING);
+  _galPos = loopStart;
+  track.style.willChange = 'transform';
 
-        // Card scale: center card gets scale 1.05
-        const midX = window.innerWidth / 2;
-        cards.forEach(c => {
-          const rect = c.getBoundingClientRect();
-          const cardMid = rect.left + rect.width / 2;
-          const dist = Math.abs(cardMid - midX);
-          const maxDist = window.innerWidth * 0.6;
-          const scale = dist > maxDist ? 0.9 : gsap.utils.mapRange(0, maxDist, 1.05, 0.9, dist);
-          const opacity = dist > maxDist ? 0.5 : gsap.utils.mapRange(0, maxDist, 1.0, 0.5, dist);
-          gsap.set(c, { scale, opacity });
-        });
+  // ── Sticky: make gallery-sticky fixed inside outer ──
+  // No GSAP pin needed; we handle transform directly
+  sticky.style.position = 'sticky';
+  sticky.style.top = '0';
 
-        // Progress bar
-        const progressBar = document.getElementById('gallery-progress-bar');
-        if (progressBar) progressBar.style.width = (self.progress * 100) + '%';
-
-        // Counter label
-        const label = document.getElementById('gallery-counter-label');
-        if (label) {
-          const visible = Math.min(cards.length, Math.ceil(self.progress * cards.length) + 1);
-          label.textContent = `${String(visible).padStart(2,'0')} / ${String(cards.length).padStart(2,'0')}`;
-        }
-
-        // Easter egg onUpdate passthrough
-        if (window._easterUpdate) window._easterUpdate(self);
-      },
-    });
+  // ── Wheel event: boost speed ──
+  const onWheel = (e) => {
+    e.preventDefault();
+    const delta = e.deltaY || e.deltaX;
+    // Accumulate boost, cap at 20px/frame
+    _galBoost = Math.max(-20, Math.min(20, _galBoost + delta * 0.06));
   };
+  outer.addEventListener('wheel', onWheel, { passive: false });
 
-  updateLayout();
-  window.addEventListener('resize', debounce(updateLayout, 300));
+  // ── Pause on hover ──
+  track.addEventListener('mouseenter', () => { _galPaused = true; });
+  track.addEventListener('mouseleave', () => { _galPaused = false; });
+
+  // ── RAF loop ──
+  let lastT = null;
+  const loop = (t) => {
+    if (!lastT) lastT = t;
+    const dt = Math.min((t - lastT) / (1000/60), 3); // normalize to 60fps, cap spike
+    lastT = t;
+
+    if (!_galPaused) {
+      // Total speed = base + boost
+      const speed = (_galBaseSpeed + Math.abs(_galBoost)) * _galDir;
+      _galPos -= speed * dt;
+
+      // Boost decay
+      _galBoost *= 0.88;
+      if (Math.abs(_galBoost) < 0.05) _galBoost = 0;
+
+      // Seamless loop: when we've scrolled one full set, jump back
+      const loopEnd = loopStart - totalW;
+      if (_galPos <= loopEnd) _galPos += totalW;
+      if (_galPos >= loopStart) _galPos -= totalW;
+
+      track.style.transform = `translateX(${_galPos}px)`;
+
+      // ── Card scale + opacity (centre focus) ──
+      const allCards = track.querySelectorAll('.gallery-card, .gallery-card-clone');
+      const midX = window.innerWidth / 2;
+      const maxDist = window.innerWidth * 0.55;
+      let closestIdx = 0, closestDist = Infinity;
+
+      allCards.forEach((c, i) => {
+        const rect = c.getBoundingClientRect();
+        const cardMid = rect.left + rect.width / 2;
+        const dist = Math.abs(cardMid - midX);
+        const scale   = dist > maxDist ? 0.88 : 0.88 + (1.05 - 0.88) * Math.pow(1 - dist / maxDist, 2);
+        const opacity = dist > maxDist ? 0.45 : 0.45 + (1.0 - 0.45) * Math.pow(1 - dist / maxDist, 2);
+        c.style.transform = `scale(${scale.toFixed(3)})`;
+        c.style.opacity = opacity.toFixed(3);
+        if (dist < closestDist) { closestDist = dist; closestIdx = i; }
+      });
+
+      // ── Progress bar & counter (based on position within one loop) ──
+      const progress = Math.abs((_galPos - loopStart) % totalW) / totalW;
+      const progressBar = document.getElementById('gallery-progress-bar');
+      if (progressBar) progressBar.style.width = (progress * 100) + '%';
+
+      const label = document.getElementById('gallery-counter-label');
+      if (label) {
+        const nth = (Math.floor(progress * cards.length) % cards.length) + 1;
+        label.textContent = `${String(nth).padStart(2,'0')} / ${String(cards.length).padStart(2,'0')}`;
+      }
+
+      // Easter egg passthrough (simulate progress 0→1)
+      if (window._easterUpdate) {
+        window._easterUpdate({ progress });
+      }
+    }
+
+    _galRAF = requestAnimationFrame(loop);
+  };
+  _galRAF = requestAnimationFrame(loop);
+
+  // Cleanup on resize
+  const onResize = debounce(() => {
+    cancelAnimationFrame(_galRAF);
+    outer.removeEventListener('wheel', onWheel);
+    initHorizontalScroll();
+  }, 300);
+  window.addEventListener('resize', onResize, { once: true });
 }
 
 // Filter
