@@ -30,7 +30,7 @@
   </script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{--ease:cubic-bezier(.16,1,.3,1)}
+    :root{--ease:cubic-bezier(.77,0,.175,1)}
     html{scroll-behavior:smooth}
 section[id]{scroll-margin-top:50px}
     body{font-family:'Noto Sans SC',sans-serif;overflow-x:hidden;transition:background .25s,color .25s}
@@ -38,18 +38,28 @@ section[id]{scroll-margin-top:50px}
     body{animation:fadeIn .6s var(--ease)}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
     /* 2. Scroll reveal */
-    .reveal{opacity:0;transform:translateY(20px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+    .reveal{opacity:0;transform:translateY(40px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
     .reveal.visible{opacity:1;transform:translateY(0)}
     /* 3. Card cursor */
     .vcard:not(.drag-src){cursor:pointer}
     /* 4. Focus-visible stronger */
     :focus-visible{outline:3px solid #25f4ee;outline-offset:3px;border-radius:3px}
     .dark :focus-visible{outline-color:#25f4ee}
-    .light :focus-visible{outline-color:#0077ff}
+    .light :focus-visible{outline-color:#25f4ee}
 
-    /* 6. Section title accent bar */
-    .section-title-wrap::before{content:'';display:inline-block;width:3px;height:1.1em;background:#25f4ee;border-radius:2px;margin-right:10px;vertical-align:middle}
-    .light .section-title-wrap::before{background:#0077ff}
+    /* 6. Section title accent dot – breathing pulse */
+    @keyframes dot-breathe{
+      0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(37,244,238,.5)}
+      50%{opacity:.45;box-shadow:0 0 0 5px rgba(37,244,238,0)}
+    }
+    .section-title-wrap::before{
+      content:'';display:inline-block;width:7px;height:7px;
+      background:#25f4ee;border-radius:50%;
+      margin-right:10px;vertical-align:middle;
+      position:relative;top:-1px;flex-shrink:0;
+      animation:dot-breathe 2.8s ease-in-out infinite;
+    }
+    .light .section-title-wrap::before{background:#25f4ee}
 
     .dark body,.dark{background:#161823;color:#ffffff}
     .dark .bg-page{background:#161823}
@@ -65,7 +75,7 @@ section[id]{scroll-margin-top:50px}
     .dark .border-sep{border-color:rgba(255,255,255,.12)}
     .dark .card-hover:hover{border-color:rgba(255,255,255,.2);box-shadow:0 8px 36px rgba(0,0,0,.55)}
     .dark .accent{color:#25f4ee}
-    .dark .accent-bg{background:linear-gradient(135deg,#25f4ee,#0077ff)}
+    .dark .accent-bg{background:linear-gradient(135deg,#25f4ee,#25f4ee)}
 
     .light body,.light{background:#f8f8f8;color:#161823}
     .light .bg-page{background:#f8f8f8}
@@ -80,8 +90,8 @@ section[id]{scroll-margin-top:50px}
     .light .text-dim{color:#888888}
     .light .border-sep{border-color:rgba(0,0,0,.1)}
     .light .card-hover:hover{border-color:rgba(0,0,0,.15);box-shadow:0 8px 28px rgba(0,0,0,.1)}
-    .light .accent{color:#0077ff}
-    .light .accent-bg{background:linear-gradient(135deg,#25f4ee,#0077ff)}
+    .light .accent{color:#25f4ee}
+    .light .accent-bg{background:linear-gradient(135deg,#25f4ee,#25f4ee)}
     /* Light mode header: match unified background */
     .light header{background:rgba(248,248,248,.88)!important}
 
@@ -209,7 +219,7 @@ section[id]{scroll-margin-top:50px}
     #editMenu{position:fixed;inset:0;z-index:880;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
     #editMenu.open{opacity:1;pointer-events:all}
 
-    .hero-glow{width:1400px;height:520px;background:radial-gradient(ellipse at 50% 0%,rgba(37,244,238,.18) 0%,rgba(37,244,238,.06) 45%,transparent 68%);pointer-events:none;z-index:1}
+    .hero-glow{width:1400px;height:600px;background:radial-gradient(ellipse at 50% 0%,rgba(37,244,238,.22) 0%,rgba(37,244,238,.08) 40%,transparent 65%);pointer-events:none;z-index:1}
     .dark .hero-glow{opacity:1}
     .light .hero-glow{opacity:.45}
     /* Hero glow centers on full viewport (no sidebar offset, to avoid center gap) */
@@ -291,24 +301,31 @@ section[id]{scroll-margin-top:50px}
     .editing .vcard[draggable="true"]:hover::after{opacity:1}
 
     /* ── Sidebar Navigation ── */
-    .sidebar{position:fixed;left:0;top:0;bottom:0;width:72px;z-index:60;display:flex;flex-direction:column;align-items:center;padding:8px 0;overflow-y:auto;overflow-x:hidden}
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;z-index:60;display:flex;flex-direction:column;align-items:stretch;padding:32px 24px 20px;overflow-y:auto;overflow-x:hidden}
     .dark .sidebar{background:#161823}
     .light .sidebar{background:#f8f8f8}
-    .sidebar-logo{margin:8px 0 16px;font-size:.88rem;font-weight:700;text-align:center;line-height:1.2;color:#fff}
+    .sidebar-logo{margin:0 0 4px;font-size:1.3rem;font-weight:700;text-align:left;line-height:1.1;letter-spacing:-.01em;color:#fff!important}
+    .sidebar-subrole{font-family:'Space Mono',monospace;font-size:.48rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px;color:#fff!important}
+    .sidebar-divider{height:1px;margin:14px 0}
+    .dark .sidebar-divider{background:rgba(255,255,255,.1)}
+    .light .sidebar-divider{background:rgba(0,0,0,.08)}
+    .sidebar-bio{font-size:.72rem;line-height:1.72;margin-bottom:0}
+    .dark .sidebar-bio{color:#b2b2b2}
+    .light .sidebar-bio{color:#555}
     .dark .sidebar-logo{color:#25f4ee}
-    .light .sidebar-logo{color:#0077ff}
-    .sidebar-nav{display:flex;flex-direction:column;gap:2px;width:100%;padding:0 6px;flex:1}
-    .sidebar-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px 6px;border-radius:8px;cursor:pointer;transition:background .18s,color .18s;text-decoration:none;position:relative;border-left:2px solid transparent;margin-left:-2px}
+    .light .sidebar-logo{color:#25f4ee}
+    .sidebar-nav{display:flex;flex-direction:column;gap:1px;width:100%;padding:0;flex:1}
+    .sidebar-item{display:flex;flex-direction:row;align-items:center;gap:8px;padding:7px 8px 7px 10px;border-radius:6px;cursor:pointer;transition:background .18s,color .18s,text-decoration:none;position:relative;border-left:2px solid transparent;margin-left:-2px}
     .dark .sidebar-item{color:#7a7a8a}
     .light .sidebar-item{color:#888}
     .sidebar-item:hover{background:rgba(37,244,238,.06)}
     .sidebar-item.active{border-left-color:#25f4ee;color:#25f4ee;background:rgba(37,244,238,.08)}
-    .light .sidebar-item.active{border-left-color:#0077ff;color:#0077ff}
+    .light .sidebar-item.active{border-left-color:#25f4ee;color:#25f4ee}
     .sidebar-item.active svg{stroke:#25f4ee}
-.light .sidebar-item.active svg{stroke:#0077ff}
+.light .sidebar-item.active svg{stroke:#25f4ee}
 .sidebar-item svg{width:20px;height:20px;flex-shrink:0;transition:stroke .18s}
-    .sidebar-item span{font-size:.62rem;font-weight:500;letter-spacing:.04em;text-align:center;white-space:nowrap}
-    .sidebar-bottom{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;margin-top:auto}
+    .sidebar-item span{font-size:.72rem;font-weight:500;letter-spacing:.04em;text-align:left;white-space:nowrap}
+    .sidebar-bottom{display:flex;flex-direction:row;align-items:center;gap:8px;padding:8px 0;margin-top:auto}
     .sidebar-btn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid;transition:background .18s,border-color .18s;flex-shrink:0}
     .dark .sidebar-btn{background:#252634;border-color:rgba(255,255,255,.1);color:#9fa5b8}
     .light .sidebar-btn{background:#fff;border-color:rgba(0,0,0,.08);color:#646b80}
@@ -322,8 +339,8 @@ section[id]{scroll-margin-top:50px}
 
     /* ── Content area offset for sidebar ── */
     @media(min-width:901px){
-      .content-offset{margin-left:72px}
-      header{margin-left:72px!important}
+      .content-offset{margin-left:240px}
+      header{margin-left:240px!important}
       .md-hide{display:none!important}
       /* Desktop: hide mobile nav links */
       #navLinks{display:none!important}
@@ -357,32 +374,175 @@ section[id]{scroll-margin-top:50px}
       #contact .grid.grid-cols-2{grid-template-columns:1fr!important}
       #mod-aigc .flex.items-center.gap-2{flex-wrap:wrap}
     }
+  
+    /* ── Gallery ── */
+    .gallery-outer{overflow:hidden;margin-bottom:14px;border-radius:10px}
+    .gallery-track{display:flex;gap:10px;padding:0 2px;will-change:transform}
+    .gallery-card,.gallery-card-clone{width:205px;flex-shrink:0;border-radius:10px;border:1px solid;overflow:hidden;transition:opacity .3s var(--ease),transform .3s var(--ease),border-color .22s,box-shadow .22s}
+    .dark .gallery-card,.dark .gallery-card-clone{border-color:rgba(255,255,255,.1);background:#1f2130}
+    .light .gallery-card,.light .gallery-card-clone{border-color:rgba(0,0,0,.08);background:#fff}
+    .gallery-card:hover,.gallery-card-clone:hover{border-color:rgba(37,244,238,.2);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+    .gc-media{width:205px;height:313px;overflow:hidden;position:relative}
+    .gc-media img,.gc-media video{width:100%;height:100%;object-fit:cover;display:block}
+    .gc-title{font-size:.78rem;font-weight:500;padding:10px 12px 0;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .gc-sub{font-size:.68rem;color:#7a7a8a;padding:2px 12px 10px;font-family:'Space Mono',monospace}
+    .gallery-progress-wrap{height:2px;background:rgba(255,255,255,.08);border-radius:1px;margin-top:8px;overflow:hidden}
+    .gallery-progress-bar{height:100%;background:#25f4ee;width:0;border-radius:1px;transition:width .1s}
+    .gallery-counter{font-family:'Space Mono',monospace;font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;margin-top:6px}
+    .gallery-hint{display:inline-flex;align-items:center;gap:7px;font-family:'Space Mono',monospace;font-size:.48rem;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px;border-radius:20px;margin-bottom:12px;opacity:1;transition:opacity .4s var(--ease)}
+    .gallery-hint.hide{opacity:0;pointer-events:none}
+    .dark .gallery-hint{color:#b2b2b2;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+    .light .gallery-hint{color:#888;background:rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.09)}
+    /* 默认隐藏 */
+    .gallery-card .upload-ov,.gallery-card-clone .upload-ov{display:none}
+    /* 编辑模式下悬停卡片才显示 */
+    .editing .gallery-card:hover .upload-ov,
+    .editing .gallery-card-clone:hover .upload-ov{display:flex}
+    /* 没有媒体的空卡片编辑模式下始终显示 */
+    .editing .gallery-card .gc-media.empty-card .upload-ov,
+    .editing .gallery-card-clone .gc-media.empty-card .upload-ov{display:flex!important}
+    .gallery-card .gc-media,.gallery-card-clone .gc-media{position:relative}
+    /* 编辑模式下sidebar可编辑字段提示 */
+    .editing .sidebar-logo,.editing .sidebar-subrole,.editing .sidebar-bio{outline:1px dashed rgba(160,156,150,.3);border-radius:2px;cursor:text}
+
+    /* ── 自定义光标 ── */
+    @media(pointer:fine){
+      *{cursor:none!important}
+      #cf-cursor{position:fixed;top:0;left:0;width:10px;height:10px;border-radius:50%;background:#25f4ee;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference}
+      #cf-ring{position:fixed;top:0;left:0;width:30px;height:30px;border-radius:50%;border:1px solid rgba(37,244,238,.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .25s cubic-bezier(.77,0,.175,1),height .25s cubic-bezier(.77,0,.175,1),border-color .2s}
+      #cf-ring.hovered{width:44px;height:44px;border-color:rgba(37,244,238,.75)}
+      #cf-cursor.hidden,#cf-ring.hidden{opacity:0}
+    }
+
+    /* ── 全局噪点质感 ── */
+    #grain-overlay{position:fixed;inset:0;z-index:9997;pointer-events:none;opacity:.045;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");background-repeat:repeat;background-size:200px 200px}
+
+    /* ── 卡片 hover 微反馈增强 ── */
+    .dark .card-hover:hover{transform:translateY(-5px) scale(1.015)!important;border-color:rgba(255,255,255,.18)!important;box-shadow:0 12px 40px rgba(0,0,0,.6),0 0 0 1px rgba(37,244,238,.1)!important}
+    .light .card-hover:hover{transform:translateY(-5px) scale(1.015)!important;border-color:rgba(0,0,0,.12)!important;box-shadow:0 8px 28px rgba(0,0,0,.12),0 0 0 1px rgba(37,244,238,.08)!important}
+    .dark .tool-card:hover{border-color:rgba(37,244,238,.3)!important;box-shadow:0 10px 36px rgba(0,0,0,.5)!important}
+    .light .tool-card:hover{border-color:rgba(37,244,238,.22)!important;box-shadow:0 8px 28px rgba(0,0,0,.11)!important}
+
+  
+    /* ── 顶部滚动进度条 ── */
+    #scroll-progress{
+      position:fixed;top:0;left:0;width:0%;height:2px;
+      background:linear-gradient(90deg,#25f4ee,rgba(37,244,238,.5));
+      z-index:10000;pointer-events:none;transition:none;
+    }
+
+    /* ── 卡片错落入场（stagger via nth-child delay） ── */
+    .vcard{transition-delay:0ms}
+    .masonry-grid .vcard:nth-child(1),.work-grid .vcard:nth-child(1){transition-delay:0ms}
+    .masonry-grid .vcard:nth-child(2),.work-grid .vcard:nth-child(2){transition-delay:40ms}
+    .masonry-grid .vcard:nth-child(3),.work-grid .vcard:nth-child(3){transition-delay:80ms}
+    .masonry-grid .vcard:nth-child(4),.work-grid .vcard:nth-child(4){transition-delay:120ms}
+    .masonry-grid .vcard:nth-child(5),.work-grid .vcard:nth-child(5){transition-delay:160ms}
+    .masonry-grid .vcard:nth-child(6),.work-grid .vcard:nth-child(6){transition-delay:200ms}
+    .masonry-grid .vcard:nth-child(n+7),.work-grid .vcard:nth-child(n+7){transition-delay:240ms}
+
+    /* ── Subtle-border token ── */
+    :root{--hairline:rgba(255,255,255,.07)}
+    .light{--hairline:rgba(0,0,0,.07)}
+
+    /* ── Sticky section header ── */
+    .section-sticky-header{
+      position:sticky;top:0;z-index:20;
+      margin:-14px -5px 20px;padding:14px 5px 12px;
+      backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    }
+    .dark .section-sticky-header{background:rgba(22,24,35,.85)}
+    .light .section-sticky-header{background:rgba(248,248,248,.9)}
+
+    /* ── Bento grid ── */
+    .bento-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin-bottom:28px;
+    }
+    @media(max-width:900px){.bento-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:580px){.bento-grid{grid-template-columns:1fr}}
+    .bento-card{
+      border:1px solid var(--hairline);border-radius:14px;
+      padding:20px 20px 16px;
+      display:flex;flex-direction:column;gap:8px;
+      transition:transform .3s cubic-bezier(.77,0,.175,1),border-color .22s,box-shadow .22s;
+      position:relative;overflow:hidden;
+    }
+    .dark .bento-card{background:#1a1b28}
+    .light .bento-card{background:#fff}
+    .bento-card:hover{transform:translateY(-4px)}
+    .dark .bento-card:hover{border-color:rgba(37,244,238,.22);box-shadow:0 12px 36px rgba(0,0,0,.5)}
+    .light .bento-card:hover{border-color:rgba(0,119,255,.18);box-shadow:0 8px 24px rgba(0,0,0,.1)}
+    .bento-card.span2{grid-column:span 2}
+    @media(max-width:900px){.bento-card.span2{grid-column:span 1}}
+    /* subtle top accent on hover */
+    .bento-card::before{
+      content:'';position:absolute;top:0;left:20px;right:20px;height:1px;
+      background:linear-gradient(90deg,transparent,rgba(37,244,238,.3),transparent);
+      opacity:0;transition:opacity .25s;
+    }
+    .bento-card:hover::before{opacity:1}
+    .bento-card-icon{
+      width:32px;height:32px;border-radius:8px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:1rem;flex-shrink:0;margin-bottom:2px;
+    }
+    .dark .bento-card-icon{background:rgba(37,244,238,.09);color:#25f4ee}
+    .light .bento-card-icon{background:rgba(0,119,255,.07);color:#0077ff}
+    .bento-card-title{
+      font-size:.82rem;font-weight:600;line-height:1.3;
+      color:inherit;
+    }
+    .bento-card-desc{
+      font-size:.7rem;line-height:1.7;opacity:.62;
+      font-family:ui-monospace,monospace;
+    }
+    /* editing: contenteditable highlight */
+    .editing .bento-card-title[contenteditable="true"],
+    .editing .bento-card-desc[contenteditable="true"]{
+      outline:1px dashed rgba(160,156,150,.25);border-radius:2px;cursor:text;
+    }
+
   </style>
 </head>
 <body>
+<!-- 噪点质感层 -->
+<div id="scroll-progress" aria-hidden="true"></div>
+<div id="grain-overlay" aria-hidden="true"></div>
+<!-- 自定义光标 -->
+<div id="cf-cursor" aria-hidden="true"></div>
+<div id="cf-ring" aria-hidden="true"></div>
 <div id="app" class="dark">
 
 <aside class="sidebar" id="sidebar">
-  <div class="sidebar-logo">张峻烨</div>
+  <div class="sidebar-about">
+  <div class="sidebar-logo" id="sidebar-name" contenteditable="false">张峻烨</div>
+  <div class="sidebar-subrole" id="sidebar-role" contenteditable="false">UI/Motion Designer</div>
+  <hr class="sidebar-divider">
+  <p class="sidebar-bio" id="sidebar-bio" contenteditable="false">热爱设计与创意，擅长 UI 设计、动效制作与 AIGC 内容生产，长期探索设计与技术的交叉边界。</p>
+  <hr class="sidebar-divider">
+</div>
   <nav class="sidebar-nav" id="sidebarNav">
     <a href="#mod-practice" class="sidebar-item active" data-section="practice" onclick="sidebarNavClick(event,'practice')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
       <span>业务作品</span>
     </a>
     <a href="#mod-mg" class="sidebar-item" data-section="mg" onclick="sidebarNavClick(event,'mg')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14"/><rect x="2" y="6" width="13" height="12" rx="2"/><circle cx="8" cy="12" r="2"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14"/><rect x="2" y="6" width="13" height="12" rx="2"/><circle cx="8" cy="12" r="2"/></svg>
       <span>个人作品</span>
     </a>
     <a href="#mod-aigc" class="sidebar-item" data-section="aigc" onclick="sidebarNavClick(event,'aigc')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a5 5 0 015 5v3a5 5 0 01-10 0V7a5 5 0 015-5z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a5 5 0 015 5v3a5 5 0 01-10 0V7a5 5 0 015-5z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
       <span>AIGC</span>
     </a>
     <a href="#mod-agent" class="sidebar-item" data-section="agent" onclick="sidebarNavClick(event,'agent')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
       <span>工具开发</span>
     </a>
     <a href="#contact" class="sidebar-item" data-section="contact" onclick="sidebarNavClick(event,'contact')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       <span>联系</span>
     </a>
   </nav>
@@ -458,7 +618,8 @@ section[id]{scroll-margin-top:50px}
 
 <section id="mod-practice" class="bg-mod1 py-14 px-5 content-offset reveal">
   <div class="max-w-screen-xl mx-auto">
-    <div class="mod-header-divider flex items-center border-b border-sep pb-4 mb-8">
+    <div class="section-sticky-header">
+    <div class="mod-header-divider flex items-center border-b border-sep pb-4">
       <div class="flex-1">
         <div class="section-title-wrap">
           <h2 class="font-sans font-bold text-main text-[1.4rem] tracking-tight" id="practice-title" contenteditable="false">短视频平台 · 业务作品</h2>
@@ -466,6 +627,7 @@ section[id]{scroll-margin-top:50px}
         </div>
         <p class="font-mono text-[.72rem] text-sub mt-1.5" id="practice-desc" contenteditable="false">参与短视频平台全链路特效素材设计，独立完成动态特效、画面转场、轻量化动画素材的 AE 全流程制作与方案输出</p>
       </div>
+    </div>
     </div>
     <div class="mb-6">
       <div class="masonry-grid" data-row-h="160" id="practice-grid" style="--cols:8"></div>
@@ -481,7 +643,8 @@ section[id]{scroll-margin-top:50px}
 
 <section id="mod-mg" class="bg-mod2 py-14 px-5 content-offset reveal">
   <div class="max-w-screen-xl mx-auto">
-    <div class="mod-header-divider flex items-center border-b border-sep pb-4 mb-8">
+    <div class="section-sticky-header">
+    <div class="mod-header-divider flex items-center border-b border-sep pb-4">
       <div class="flex-1">
         <div class="section-title-wrap">
           <h2 class="font-sans font-bold text-main text-[1.4rem] tracking-tight" id="mg-title" contenteditable="false">无畏契约 LOGO · 原创 MG 动画</h2>
@@ -489,6 +652,7 @@ section[id]{scroll-margin-top:50px}
         </div>
         <p class="font-mono text-[.72rem] text-sub mt-1.5" id="mg-desc" contenteditable="false">基于 IP 原生视觉体系，全程 AE 矢量形状图层原创手搓制作，独立完成 LOGO 图形拆解、形变动画、版式动态延展、节奏卡点与氛围光效设计</p>
       </div>
+    </div>
     </div>
     <div class="masonry-grid" data-row-h="160" id="mg-grid" style="--cols:8"></div>
     <div class="add-card mt-2" id="mg-add" onclick="addWorkCard('mg','auto')">
@@ -502,13 +666,15 @@ section[id]{scroll-margin-top:50px}
 
 <section id="mod-aigc" class="bg-mod3 py-14 px-5 content-offset reveal">
   <div class="max-w-screen-xl mx-auto">
-    <div class="mod-header-divider flex items-center border-b border-sep pb-4 mb-8">
+    <div class="section-sticky-header">
+    <div class="mod-header-divider flex items-center border-b border-sep pb-4">
       <div class="flex-1">
         <div class="section-title-wrap">
           <h2 class="font-sans font-bold text-main text-[1.4rem] tracking-tight" id="aigc-title" contenteditable="false">Seedream 生图 + AE 木偶骨骼动效</h2>
         </div>
         <p class="font-mono text-[.72rem] text-sub mt-1.5" id="aigc-desc" contenteditable="false">AI 生成原画素材 → 透明抠图 → AE 骨骼点位绑定 → 循环动态打磨 → 抖音特效模板适配，完整「AI 素材生成→后期动态设计」全链路工作流</p>
       </div>
+    </div>
     </div>
 
     <div class="mb-10">
@@ -545,13 +711,15 @@ section[id]{scroll-margin-top:50px}
 
 <section id="mod-agent" class="bg-mod4 py-14 px-5 content-offset reveal">
   <div class="max-w-screen-xl mx-auto">
-    <div class="mod-header-divider flex items-center border-b border-sep pb-4 mb-8">
+    <div class="section-sticky-header">
+    <div class="mod-header-divider flex items-center border-b border-sep pb-4">
       <div class="flex-1">
         <div class="section-title-wrap">
           <h2 class="font-sans font-bold text-main text-[1.4rem] tracking-tight" id="agent-title" contenteditable="false">AI 智能体创意工作流工具集</h2>
         </div>
         <p class="font-mono text-[.72rem] text-sub mt-1.5" id="agent-desc" contenteditable="false">基于 AIGC 开放 API 与智能体调度逻辑，自主搭建网页端设计辅助工具，整合素材生成、Prompt 管理、设计流程自动化能力</p>
       </div>
+    </div>
     </div>
 
 
@@ -574,14 +742,8 @@ section[id]{scroll-margin-top:50px}
 <section id="contact" class="bg-page px-5 border-t border-sep content-offset reveal">
   <div class="max-w-screen-xl mx-auto" style="max-width:720px">
     <div style="padding:56px 0">
-      <div class="mb-10">
-        <p class="font-mono text-[.68rem] tracking-[.15em] uppercase text-dim mb-3">关于我</p>
-        <h3 class="font-sans font-bold text-main text-[1.1rem] mb-3" id="contact-name" contenteditable="false">张峻烨</h3>
-        <p class="text-sub font-light text-[.88rem] leading-relaxed" id="contact-bio" contenteditable="false">效果创意设计 × AIGC 全链路创作者。实习期间参与短视频平台全链路特效素材设计，熟练掌握 AE 动态设计、Seedream 生图、骨骼木偶动画。持续探索 AI 工具与视觉创作的融合边界，自主搭建创意工作流工具集，具备 AI Agent 应用思维与全链路创意基建能力。</p>
-      </div>
-
-      <div class="border-t border-sep">
-        <div class="flex justify-center" style="gap:150px;padding-top:40px" id="contact-grid">
+      <div>
+        <div class="flex justify-center" style="gap:150px" id="contact-grid">
         <!-- Left: WeChat QR -->
         <div id="contact-left-col">
           <p class="font-mono text-[.72rem] tracking-[.15em] uppercase text-sub" style="margin-bottom:12px">联系方式</p>
@@ -1352,7 +1514,7 @@ function renderSection(sectionKey, gridId, type){
 }
 
 function renderAll(){
-  renderSection('practice', 'practice-grid', 'auto');
+  renderSection('practice', 'practice-gallery-track', 'auto');
   renderSection('mg', 'mg-grid', 'auto');
   renderSection('aigc-img', 'aigc-img-grid', 'auto');
   renderSection('aigc-vid', 'aigc-vid-grid', 'auto');
@@ -1405,6 +1567,10 @@ function restoreContact(){
   const setEl = (id, val)=>{ const el=document.getElementById(id); if(el&&val) el.textContent=val; };
   setEl('contact-name', c.name);
   setEl('contact-bio', c.bio);
+  // 同步 sidebar 关于我区块
+  setEl('sidebar-name', c.name);
+  setEl('sidebar-bio', c.bio);
+  if(c.role) setEl('sidebar-role', c.role);
   setEl('contact-email', c.email);
   setEl('contact-qq', c.qq);
   setEl('contact-phone', c.phone);
@@ -1454,7 +1620,27 @@ function restoreContact(){
   }
   ['contact-name','contact-bio','contact-email','contact-qq','contact-phone'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el) el.addEventListener('blur',()=>{ DATA.contact[id.replace('contact-','')]=el.textContent.trim(); saveData(); });
+    if(el) el.addEventListener('blur',()=>{
+      const key=id.replace('contact-','');
+      DATA.contact[key]=el.textContent.trim(); saveData();
+      if(key==='name'){const s=document.getElementById('sidebar-name');if(s) s.textContent=el.textContent.trim();}
+      if(key==='bio'){const s=document.getElementById('sidebar-bio');if(s) s.textContent=el.textContent.trim();}
+    });
+  });
+  // sidebar 字段编辑同步保存到 DATA 并更新 contact 区块
+  const sidebarName=document.getElementById('sidebar-name');
+  const sidebarRole=document.getElementById('sidebar-role');
+  const sidebarBio=document.getElementById('sidebar-bio');
+  if(sidebarName) sidebarName.addEventListener('blur',()=>{
+    DATA.contact.name=sidebarName.textContent.trim();saveData();
+    const cn=document.getElementById('contact-name');if(cn) cn.textContent=sidebarName.textContent.trim();
+  });
+  if(sidebarRole) sidebarRole.addEventListener('blur',()=>{
+    if(!DATA.contact)DATA.contact={};DATA.contact.role=sidebarRole.textContent.trim();saveData();
+  });
+  if(sidebarBio) sidebarBio.addEventListener('blur',()=>{
+    DATA.contact.bio=sidebarBio.textContent.trim();saveData();
+    const cb=document.getElementById('contact-bio');if(cb) cb.textContent=sidebarBio.textContent.trim();
   });
 
 
@@ -2152,8 +2338,8 @@ function applyLayoutByScreen() {
     if(navLinks) navLinks.style.display = 'none'; // desktop: navLinks hidden, sidebar handles navigation
     if(hamburger) hamburger.style.display = 'none';
     // Apply content-offset on desktop
-    document.querySelectorAll('.content-offset').forEach(el => el.style.marginLeft = '72px');
-    document.querySelector('header') && (document.querySelector('header').style.marginLeft = '72px');
+    document.querySelectorAll('.content-offset').forEach(el => el.style.marginLeft = '240px');
+    document.querySelector('header') && (document.querySelector('header').style.marginLeft = '240px');
   }
 }
 
@@ -2190,6 +2376,185 @@ async function init(){
 }
 
 init();
+
+
+// ── 画廊引擎 ──
+let _galRAF, _galPos, _galBoost=0, _galBase=0.8, _galWheeling=false;
+
+function renderPracticeGallery(items){
+  const track=document.getElementById('practice-gallery-track');
+  if(!track) return;
+  track.innerHTML='';
+  const realItems=items.filter(i=>i.media||i.type==='prompt');
+  realItems.forEach(item=>{
+    const card=makeGalleryCard(item);
+    track.appendChild(card);
+  });
+  // 空卡片（编辑模式）
+  if(editMode){
+    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'});
+    track.appendChild(empty);
+  }
+  initPracticeGalleryLoop(track,realItems.length);
+}
+
+function makeGalleryCard(item){
+  const card=document.createElement('div');
+  card.className='gallery-card'+(editMode?' card-hover':'');
+  card.dataset.id=item.id||'';
+  const mediaDiv=document.createElement('div');
+  mediaDiv.className='gc-media'+(!item.media?' empty-card':'');
+  if(item.media){
+    if(item.type==='video'||item.type==='anim'){
+      mediaDiv.innerHTML=`<video src="${item.media}" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>`;
+    } else {
+      mediaDiv.innerHTML=`<img src="${item.media}" alt="${item.title||''}" loading="lazy">`;
+    }
+    mediaDiv.style.cursor='pointer';
+    mediaDiv.onclick=function(){
+      if(editMode) return;
+      if(item.type==='video'||item.type==='anim') openInlinePlayer(item.media);
+      else openImgZoom(item.media);
+    };
+  }
+  // 编辑模式 overlay
+  if(editMode){
+    const ov=document.createElement('div');
+    ov.className='upload-ov';
+    const upBtn=document.createElement('button');
+    upBtn.className='upload-ov-btn';
+    upBtn.textContent='上传';
+    upBtn.onclick=()=>triggerUpload(item.id,'media');
+    const delBtn=document.createElement('button');
+    delBtn.className='del-ov-btn';
+    delBtn.textContent='删除';
+    delBtn.onclick=()=>deleteCard(item.id);
+    ov.appendChild(upBtn);
+    ov.appendChild(delBtn);
+    mediaDiv.appendChild(ov);
+  }
+  card.appendChild(mediaDiv);
+  if(item.title){
+    const t=document.createElement('div');
+    t.className='gc-title';
+    t.textContent=item.title;
+    card.appendChild(t);
+  }
+  if(item.desc){
+    const d=document.createElement('div');
+    d.className='gc-sub';
+    d.textContent=item.desc;
+    card.appendChild(d);
+  }
+  return card;
+}
+
+function initPracticeGalleryLoop(track, realCount){
+  if(_galRAF) cancelAnimationFrame(_galRAF);
+  track.innerHTML='';
+  const realItems=(DATA.practice||[]).filter(i=>i.media||i.type==='prompt');
+  if(editMode){
+    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'});
+    track.appendChild(empty);
+  }
+  // clone for seamless loop
+  realItems.forEach(item=>track.appendChild(makeGalleryCard(item)));
+  const clonesBefore=realItems.map(item=>makeGalleryCard(item));
+  const clonesAfter=realItems.map(item=>makeGalleryCard(item));
+  clonesBefore.slice().reverse().forEach(c=>track.insertBefore(c,track.firstChild));
+  clonesAfter.forEach(c=>track.appendChild(c));
+
+  const CARD_W=205+10;
+  const totalW=realCount*CARD_W;
+  _galPos=-totalW;
+  track.style.willChange='transform';
+
+  // Wheel event — only inside gallery container
+  const galleryOuter=document.getElementById('practice-gallery-outer');
+  const onWheel=(e)=>{
+    if(!galleryOuter||!galleryOuter.contains(e.target)) return;
+    _galWheeling=true;
+    const delta=e.deltaY!==0?e.deltaY:e.deltaX;
+    _galBoost=Math.max(-22,Math.min(22,_galBoost+delta*0.07));
+    e.preventDefault();
+  };
+  galleryOuter?.addEventListener('wheel',onWheel,{passive:false});
+  galleryOuter?.addEventListener('mouseleave',()=>{_galWheeling=false;});
+
+  // Show hint badge, hide after 4s
+  const hint=document.getElementById('gallery-hint');
+  if(hint){
+    hint.classList.remove('hide');
+    clearTimeout(hint._hideTimer);
+    hint._hideTimer=setTimeout(()=>hint.classList.add('hide'),4000);
+  }
+
+  // RAF loop
+  let lastT=null;
+  const loop=(t)=>{
+    if(!lastT) lastT=t;
+    const dt=Math.min((t-lastT)/(1000/60),3);
+    lastT=t;
+    const speed=_galWheeling?_galBoost:(_galBase+Math.abs(_galBoost));
+    _galPos-=speed*dt;
+    _galBoost*=0.88;
+    if(Math.abs(_galBoost)<0.05) _galBoost=0;
+    if(!_galWheeling&&Math.abs(_galBoost)<0.05) _galWheeling=false;
+    if(_galPos<=-(2*totalW)) _galPos+=totalW;
+    if(_galPos>=0) _galPos-=totalW;
+    track.style.transform=`translateX(${_galPos}px)`;
+    const progress=Math.abs((_galPos+totalW)%totalW)/totalW;
+    const bar=document.getElementById('gallery-progress-bar');
+    if(bar) bar.style.width=(progress*100)+'%';
+    const nth=(Math.floor(progress*realCount)%realCount)+1;
+    updateGalleryCounter(nth,realCount);
+    _galRAF=requestAnimationFrame(loop);
+  };
+  _galRAF=requestAnimationFrame(loop);
+}
+
+function updateGalleryCounter(nth,total){
+  const el=document.getElementById('gallery-counter');
+  if(el) el.textContent=`${String(nth).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
+}
+
+// ── 自定义光标 ──
+(function(){
+  if(!window.matchMedia('(pointer:fine)').matches) return;
+  const dot=document.getElementById('cf-cursor');
+  const ring=document.getElementById('cf-ring');
+  if(!dot||!ring) return;
+  let mx=-100,my=-100,rx=-100,ry=-100;
+  function lerp(a,b,t){return a+(b-a)*t;}
+  function tick(){
+    rx=lerp(rx,mx,0.12);ry=lerp(ry,my,0.12);
+    dot.style.transform=`translate(${mx}px,${my}px) translate(-50%,-50%)`;
+    ring.style.transform=`translate(${rx}px,${ry}px) translate(-50%,-50%)`;
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.classList.remove('hidden');ring.classList.remove('hidden');},{passive:true});
+  document.addEventListener('mouseleave',()=>{dot.classList.add('hidden');ring.classList.add('hidden');});
+  const clickables='a,button,[role="button"],.vcard,.gallery-card,.sidebar-item,.tool-card';
+  document.addEventListener('mouseover',e=>{if(e.target.closest&&e.target.closest(clickables))ring.classList.add('hovered');},{passive:true});
+  document.addEventListener('mouseout',e=>{if(e.target.closest&&e.target.closest(clickables))ring.classList.remove('hovered');},{passive:true});
+})();
+
+
+// ── 顶部滚动进度条 ──
+(function(){
+  const bar = document.getElementById('scroll-progress');
+  if(!bar) return;
+  function update(){
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0;
+    bar.style.width = pct + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
+})();
+
 </script>
 </div>
 </body>
