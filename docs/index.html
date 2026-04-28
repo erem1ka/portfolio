@@ -2471,12 +2471,28 @@ function makeGalleryCard(item){
 function initPracticeGalleryLoop(track, realCount){
   if(_galRAF) cancelAnimationFrame(_galRAF);
   track.innerHTML='';
+  _galBoost=0; _galWheeling=false;
   const realItems=(DATA.practice||[]).filter(i=>i.media||i.type==='prompt');
   if(editMode){
     const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'});
     track.appendChild(empty);
   }
-  // clone for seamless loop
+
+  // If too few cards for seamless loop, show statically (no clones, no auto-scroll)
+  const MIN_LOOP=3;
+  if(realCount<MIN_LOOP){
+    realItems.forEach(item=>track.appendChild(makeGalleryCard(item)));
+    track.style.transform='translateX(0)';
+    track.style.willChange='auto';
+    updateGalleryCounter(1,realCount);
+    const bar=document.getElementById('gallery-progress-bar');
+    if(bar) bar.style.width=(realCount>0?'100':'0')+'%';
+    const hint=document.getElementById('gallery-hint');
+    if(hint) hint.classList.add('hide');
+    return;
+  }
+
+  // clone for seamless loop (only when enough cards)
   realItems.forEach(item=>track.appendChild(makeGalleryCard(item)));
   const clonesBefore=realItems.map(item=>makeGalleryCard(item));
   const clonesAfter=realItems.map(item=>makeGalleryCard(item));
