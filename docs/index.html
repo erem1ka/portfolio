@@ -1144,9 +1144,10 @@ function toggleEdit(){
     if(headerDouyin) headerDouyin.style.display = 'flex';
     if(headerBilibili) headerBilibili.style.display = 'flex';
   }
+  // Re-render practice gallery so overlays update with editMode
+  renderPracticeGallery(DATA.practice||[]);
   // Enable/disable drag-sort
   if(editMode) {
-    // Re-render all sections so draggable attr is set correctly
     enableDragSort();
   } else {
     disableDragSort();
@@ -2430,7 +2431,7 @@ function makeGalleryCard(item){
     const upBtn=document.createElement('button');
     upBtn.className='upload-ov-btn';
     upBtn.textContent='上传';
-    upBtn.onclick=()=>triggerUpload(item.id,'media');
+    upBtn.onclick=()=>triggerMediaUpload(item.id, item.type||'auto');
     const delBtn=document.createElement('button');
     delBtn.className='del-ov-btn';
     delBtn.textContent='删除';
