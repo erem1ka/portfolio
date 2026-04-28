@@ -629,13 +629,18 @@ section[id]{scroll-margin-top:50px}
       </div>
     </div>
     </div>
-    <div class="mb-6">
-      <div class="masonry-grid" data-row-h="160" id="practice-grid" style="--cols:8"></div>
-      <div class="add-card mt-2" id="practice-add" onclick="addWorkCard('practice','auto')">
-        <div class="add-label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          添加作品
-        </div>
+    <!-- 横向画廊 -->
+    <div id="practice-gallery-outer" class="mb-6" style="position:relative;overflow:hidden;border-radius:8px;padding-bottom:6px">
+      <div id="practice-gallery-track" class="gallery-track"></div>
+      <!-- 进度条 + 计数器 -->
+      <div class="gallery-progress-wrap"><div id="gallery-progress-bar" class="gallery-progress-bar"></div></div>
+      <span id="gallery-counter" class="gallery-counter font-mono text-[.52rem] tracking-wider text-sub" style="position:absolute;bottom:0;right:0"></span>
+      <p class="gallery-hint font-mono text-[.56rem] text-dim mt-2" id="gallery-hint">← 滚轮/拖拽浏览 →</p>
+    </div>
+    <div class="add-card mt-2" id="practice-add" onclick="addWorkCard('practice','auto')">
+      <div class="add-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        添加作品
       </div>
     </div>
   </div>
