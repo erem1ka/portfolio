@@ -2431,12 +2431,23 @@ function makeGalleryCard(item){
     ov.className='upload-ov';
     const upBtn=document.createElement('button');
     upBtn.className='upload-ov-btn';
-    upBtn.textContent='上传';
-    upBtn.onclick=()=>triggerMediaUpload(item.id, item.type||'auto');
+    if(item.id){
+      // 有 id 的卡片：替换媒体
+      upBtn.textContent='上传';
+      upBtn.onclick=()=>triggerMediaUpload(item.id, item.type||'auto');
+    } else {
+      // 空占位卡片：添加新作品
+      upBtn.textContent='上传';
+      upBtn.onclick=()=>addWorkCard('practice','auto');
+    }
     const delBtn=document.createElement('button');
     delBtn.className='del-ov-btn';
-    delBtn.textContent='删除';
-    delBtn.onclick=()=>deleteCard(item.id);
+    if(item.id){
+      delBtn.textContent='删除';
+      delBtn.onclick=()=>deleteCard(item.id);
+    } else {
+      delBtn.style.display='none';
+    }
     ov.appendChild(upBtn);
     ov.appendChild(delBtn);
     mediaDiv.appendChild(ov);
