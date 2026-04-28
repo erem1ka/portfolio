@@ -1993,7 +1993,8 @@ function findSection(id){
 function rerenderItemSection(id){
   const sec = findSection(id);
   if(!sec) return;
-  renderSection(sec, sec+'-grid');
+  if(sec==='practice') renderPracticeGallery(DATA.practice||[]);
+  else renderSection(sec, sec+'-grid');
 }
 
 // Extract first frame of animated webp/gif from a URL via canvas
