@@ -639,7 +639,6 @@ function renderSection(sectionKey, gridId, type){
       card.style.width = isMobile ? '100%' : '280px';
       container.appendChild(card);
     });
-    });
     container.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;position:static;height:auto;width:auto;margin-left:0';
     if (editMode) initDragSort(container, sectionKey);
     return;
@@ -660,7 +659,6 @@ function renderSection(sectionKey, gridId, type){
         });
       }
       container.appendChild(card);
-    });
     });
     container.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:6px;position:static;height:auto;width:auto;margin-left:0';
     if (editMode) initDragSort(container, sectionKey);
