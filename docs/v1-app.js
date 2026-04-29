@@ -792,11 +792,11 @@ function restoreContact(){
   const douyinEl = document.getElementById('contact-douyin');
   if(biliEl && c.bilibili && c.bilibili!=='{{BILIBILI_UID}}'){
     biliEl.href = c.bilibili;
-    biliEl.textContent = c.bilibili;
+    biliEl.textContent = editMode ? c.bilibili : '哔哩哔哩主页';
   }
   if(douyinEl && c.douyin && c.douyin!=='{{DOUYIN_ID}}'){
     douyinEl.href = c.douyin;
-    douyinEl.textContent = c.douyin;
+    douyinEl.textContent = editMode ? c.douyin : '抖音主页';
   }
   // Social links: update header icons
   const headerDouyin = document.getElementById('header-douyin');
