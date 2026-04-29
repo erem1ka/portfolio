@@ -380,12 +380,7 @@ section[id]{scroll-margin-top:50px}
 
     /* ── 自定义光标 ── */
     @media(pointer:fine){
-      *{cursor:none!important}
-      .editing *{cursor:default!important}
-      #cf-cursor{position:fixed;top:0;left:0;width:10px;height:10px;border-radius:50%;background:#25f4ee;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference}
-      #cf-ring{position:fixed;top:0;left:0;width:30px;height:30px;border-radius:50%;border:1px solid rgba(37,244,238,.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .25s cubic-bezier(.77,0,.175,1),height .25s cubic-bezier(.77,0,.175,1),border-color .2s}
-      #cf-ring.hovered{width:44px;height:44px;border-color:rgba(37,244,238,.75)}
-      #cf-cursor.hidden,#cf-ring.hidden{opacity:0}
+
     }
 
     /* ── 全局噪点质感 ── */

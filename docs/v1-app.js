@@ -1753,29 +1753,6 @@ function updateGalleryCounter(key,nth,total){
   if(el) el.textContent=`${String(nth).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
 }
 
-// ── 自定义光标 ──
-(function(){
-  if(!window.matchMedia('(pointer:fine)').matches) return;
-  const dot=document.getElementById('cf-cursor');
-  const ring=document.getElementById('cf-ring');
-  if(!dot||!ring) return;
-  let mx=-100,my=-100,rx=-100,ry=-100;
-  function lerp(a,b,t){return a+(b-a)*t;}
-  function tick(){
-    rx=lerp(rx,mx,0.25);ry=lerp(ry,my,0.25);
-    dot.style.transform=`translate(${mx}px,${my}px) translate(-50%,-50%)`;
-    ring.style.transform=`translate(${rx}px,${ry}px) translate(-50%,-50%)`;
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-  document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.classList.remove('hidden');ring.classList.remove('hidden');},{passive:true});
-  document.addEventListener('mouseleave',()=>{dot.classList.add('hidden');ring.classList.add('hidden');});
-  const clickables='a,button,[role="button"],.vcard,.gallery-card,.sidebar-item,.tool-card';
-  document.addEventListener('mouseover',e=>{if(editMode){dot.classList.add('hidden');ring.classList.add('hidden');return;}if(e.target.closest&&e.target.closest(clickables))ring.classList.add('hovered');},{passive:true});
-  document.addEventListener('mouseout',e=>{if(e.target.closest&&e.target.closest(clickables))ring.classList.remove('hovered');},{passive:true});
-})();
-
-
 // ── contenteditable 粘贴只保留纯文本 ──
 document.addEventListener('paste', e => {
   if(e.target.isContentEditable){
