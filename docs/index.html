@@ -646,6 +646,23 @@ section[id]{scroll-margin-top:50px}
         添加作品
       </div>
     </div>
+    <!-- 第二条画廊 -->
+    <div class="section-title-wrap mt-8">
+      <h2 class="font-sans font-bold text-main text-[1.1rem] tracking-tight" id="practice2-title" contenteditable="false">短视频平台 · 业务作品 2</h2>
+    </div>
+    <p class="font-mono text-[.72rem] text-sub mt-1" id="practice2-desc" contenteditable="false">更多业务作品展示</p>
+    <div id="practice2-gallery-outer" class="mb-6" style="position:relative;overflow:hidden;border-radius:8px;padding-bottom:6px">
+      <div id="practice2-gallery-track" class="gallery-track"></div>
+      <div class="gallery-progress-wrap"><div id="practice2-gallery-progress-bar" class="gallery-progress-bar"></div></div>
+      <span id="practice2-gallery-counter" class="gallery-counter font-mono text-[.52rem] tracking-wider text-sub" style="position:absolute;bottom:0;right:0"></span>
+      <p class="gallery-hint font-mono text-[.56rem] text-dim mt-2" id="practice2-gallery-hint">← 滚轮/拖拽浏览 →</p>
+    </div>
+    <div class="add-card mt-2" id="practice2-add" onclick="addWorkCard('practice2','auto')">
+      <div class="add-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        添加作品
+      </div>
+    </div>
   </div>
 </section>
 
@@ -858,6 +875,7 @@ async function initCloudBase() {
 
 let DATA = {
   practice: [],
+  practice2: [],
   mg: [],
   'aigc-img': [],
   'aigc-vid': [],
@@ -897,7 +915,7 @@ function loadData(){
     if(s){
       const d=JSON.parse(s);
       // 深度替换：用本地缓存完全替换各数组，防止浅合并残留旧数据
-      const SECTIONS = ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+      const SECTIONS = ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
       SECTIONS.forEach(sec=>{ DATA[sec] = d[sec] || []; });
       if(d.contact) DATA.contact = Object.assign(DATA.contact, d.contact);
       if(d.sectionTitles) DATA.sectionTitles = d.sectionTitles;
@@ -971,7 +989,7 @@ async function publishDataToCloud() {
     
     // 清理 blob/data URL（刷新后无效），直接置空而不是推迟发布
     // 上传进行中的文件：用 fileID 还原云端 URL；无 fileID 则清空，等用户重新上传
-    ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec => {
+    ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec => {
       if(!dataToSave[sec]) return;
       dataToSave[sec].forEach(item => {
         if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) item.media = '';
@@ -1033,7 +1051,7 @@ async function loadDataFromCloud(forceLoad) {
         // 云端数据更新，用云端的
         // 深度合并：确保所有子对象也被覆盖
         // 清理 blob/data 链接 + 修复旧 URL
-        ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec=>{
+        ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec=>{
           if(!cloudData[sec]) cloudData[sec]=[];
           cloudData[sec].forEach(item=>{
             if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) item.media='';
@@ -1063,7 +1081,7 @@ async function loadDataFromCloud(forceLoad) {
         if(cloudData.tags) DATA.tags = cloudData.tags;
         if(cloudData.cols) {
           DATA.cols = cloudData.cols;
-          const SECTIONS2 = ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+          const SECTIONS2 = ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
           SECTIONS2.forEach(sec=>{
             if(DATA.cols[sec] !== undefined && (DATA.cols[sec] <= 8 || DATA.cols[sec] === 100)) DATA.cols[sec] = 180;
           });
@@ -1104,7 +1122,7 @@ function toggleTheme(){
 function toggleEdit(){
   // When exiting edit mode, purge empty cards (no media uploaded)
   if(editMode){
-    const sections = ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+    const sections = ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
     let cleaned = false;
     sections.forEach(sec=>{
       const before = (DATA[sec]||[]).length;
@@ -1148,8 +1166,9 @@ function toggleEdit(){
     if(headerDouyin) headerDouyin.style.display = 'flex';
     if(headerBilibili) headerBilibili.style.display = 'flex';
   }
-  // Re-render practice gallery so overlays update with editMode
-  renderPracticeGallery(DATA.practice||[]);
+  // Re-render galleries so overlays update with editMode
+  renderGallerySection('practice');
+  renderGallerySection('practice2');
   // Enable/disable drag-sort
   if(editMode) {
     enableDragSort();
@@ -1523,7 +1542,8 @@ function renderSection(sectionKey, gridId, type){
 }
 
 function renderAll(){
-  renderPracticeGallery(DATA.practice||[]);
+  renderGallerySection('practice');
+  renderGallerySection('practice2');
   renderSection('mg', 'mg-grid', 'auto');
   renderSection('aigc-img', 'aigc-img-grid', 'auto');
   renderSection('aigc-vid', 'aigc-vid-grid', 'auto');
@@ -1545,7 +1565,7 @@ window.addEventListener('resize', ()=>{
 
 function restoreCols(){
   const map = {
-    'practice-cols':'practice', 'mg-cols':'mg', 'aigc-img-cols':'aigc-img',
+    'practice-cols':'practice','practice2-cols':'practice2', 'mg-cols':'mg', 'aigc-img-cols':'aigc-img',
     'aigc-vid-cols':'aigc-vid', 'aigc-prompt-cols':'aigc-prompt', 'agent-cols':'agent'
   };
   Object.entries(map).forEach(([inputId, key])=>{
@@ -1860,7 +1880,7 @@ function addWorkCard(section, forceType){
   const item = { id: uid(), type: forceType, title:'', desc:'', media:'', cover:'', ar:0 };
   DATA[section].push(item);
   saveData();
-  if(section==='practice') renderPracticeGallery(DATA.practice||[]);
+  if(section==='practice'||section==='practice2') renderGallerySection(section);
   else renderSection(section, section+'-grid', forceType);
   setTimeout(()=>triggerMediaUpload(item.id, forceType), 100);
 }
@@ -1876,7 +1896,7 @@ async function deleteCard(id){
   // Find the item first to get its fileIDs for cloud storage cleanup
   let sec = '';
   let fileIDs = [];
-  ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(s=>{
+  ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(s=>{
     const idx = DATA[s].findIndex(x=>x.id===id);
     if(idx>-1){
       sec = s;
@@ -1889,7 +1909,7 @@ async function deleteCard(id){
     const idx = DATA[sec].findIndex(x=>x.id===id);
     DATA[sec].splice(idx,1);
     saveData();
-    if(sec==='practice') renderPracticeGallery(DATA.practice||[]);
+    if(sec==='practice'||sec==='practice2') renderGallerySection(sec);
     else renderSection(sec, sec+'-grid');
     // Delete files from cloud storage using fileID
     if(tcbApp && fileIDs.length){
@@ -1980,7 +2000,7 @@ fileInput.addEventListener('change', async ()=>{
 });
 
 function findItem(id){
-  for(const sec of ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent']){
+  for(const sec of ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent']){
     const it = DATA[sec].find(x=>x.id===id);
     if(it) return it;
   }
@@ -1988,7 +2008,7 @@ function findItem(id){
 }
 
 function findSection(id){
-  for(const sec of ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent']){
+  for(const sec of ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent']){
     if(DATA[sec].find(x=>x.id===id)) return sec;
   }
   return null;
@@ -1997,7 +2017,7 @@ function findSection(id){
 function rerenderItemSection(id){
   const sec = findSection(id);
   if(!sec) return;
-  if(sec==='practice') renderPracticeGallery(DATA.practice||[]);
+  if(sec==='practice'||sec==='practice2') renderGallerySection(sec);
   else renderSection(sec, sec+'-grid');
 }
 
@@ -2390,31 +2410,33 @@ async function init(){
 init();
 
 
-// ── 画廊引擎 ──
-let _galRAF, _galPos, _galBoost=0, _galBase=0.8, _galWheeling=false;
+// ── 画廊引擎（支持多条画廊）──
+const _galInst = {}; // per-key: {raf,pos,boost,wheeling,base}
+const GALLERY_ROW_H = 280;
 
-const GALLERY_ROW_H = 280; // gallery card height in px
-
-function renderPracticeGallery(items){
-  const track=document.getElementById('practice-gallery-track');
+function renderGallerySection(key){
+  const track=document.getElementById(key+'-gallery-track');
   if(!track) return;
   track.innerHTML='';
-  const realItems=items.filter(i=>i.media||i.type==='prompt');
-  realItems.forEach(item=>{
-    const card=makeGalleryCard(item, GALLERY_ROW_H);
+  const items=(DATA[key]||[]).filter(i=>i.media||i.type==='prompt');
+  items.forEach(item=>{
+    const card=makeGalleryCard(item, GALLERY_ROW_H, key);
     track.appendChild(card);
   });
-  // 空卡片（编辑模式）
   if(editMode){
-    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, GALLERY_ROW_H);
+    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, GALLERY_ROW_H, key);
     track.appendChild(empty);
   }
-  initPracticeGalleryLoop(track,realItems);
+  initGalleryLoop(key, track, items);
 }
 
-function makeGalleryCard(item, rowH){
+// backwards compat alias
+function renderPracticeGallery(items){ renderGallerySection('practice'); }
+
+function makeGalleryCard(item, rowH, galKey){
   rowH = rowH || GALLERY_ROW_H;
-  const ar = item.ar || (9/16); // default portrait
+  galKey = galKey || 'practice';
+  const ar = item.ar || (9/16);
   const cardW = Math.round(rowH * ar);
   const card=document.createElement('div');
   card.className='gallery-card'+(editMode?' card-hover':'');
@@ -2437,20 +2459,17 @@ function makeGalleryCard(item, rowH){
       else openImgZoom(item.media);
     };
   }
-  // 编辑模式 overlay
   if(editMode){
     const ov=document.createElement('div');
     ov.className='upload-ov';
     const upBtn=document.createElement('button');
     upBtn.className='upload-ov-btn';
     if(item.id){
-      // 有 id 的卡片：替换媒体
       upBtn.textContent='上传';
       upBtn.onclick=()=>triggerMediaUpload(item.id, item.type||'auto');
     } else {
-      // 空占位卡片：添加新作品
       upBtn.textContent='上传';
-      upBtn.onclick=()=>addWorkCard('practice','auto');
+      upBtn.onclick=()=>addWorkCard(galKey,'auto');
     }
     const delBtn=document.createElement('button');
     delBtn.className='del-ov-btn';
@@ -2480,92 +2499,88 @@ function makeGalleryCard(item, rowH){
   return card;
 }
 
-function initPracticeGalleryLoop(track, realItems){
-  if(_galRAF) cancelAnimationFrame(_galRAF);
+function initGalleryLoop(key, track, realItems){
+  if(_galInst[key]?.raf) cancelAnimationFrame(_galInst[key].raf);
+  _galInst[key] = {raf:null,pos:0,boost:0,base:0.8,wheeling:false};
+  const inst=_galInst[key];
   track.innerHTML='';
-  _galBoost=0; _galWheeling=false;
+  inst.boost=0; inst.wheeling=false;
   const realCount = realItems.length;
   if(editMode){
-    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, GALLERY_ROW_H);
+    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, GALLERY_ROW_H, key);
     track.appendChild(empty);
   }
 
-  // If too few cards for seamless loop, show statically (no clones, no auto-scroll)
   const MIN_LOOP=3;
   if(realCount<MIN_LOOP){
-    realItems.forEach(item=>track.appendChild(makeGalleryCard(item, GALLERY_ROW_H)));
+    realItems.forEach(item=>track.appendChild(makeGalleryCard(item, GALLERY_ROW_H, key)));
     track.style.transform='translateX(0)';
     track.style.willChange='auto';
-    updateGalleryCounter(1,realCount);
-    const bar=document.getElementById('gallery-progress-bar');
+    updateGalleryCounter(key,1,realCount);
+    const bar=document.getElementById(key+'-gallery-progress-bar');
     if(bar) bar.style.width=(realCount>0?'100':'0')+'%';
-    const hint=document.getElementById('gallery-hint');
+    const hint=document.getElementById(key+'-gallery-hint');
     if(hint) hint.classList.add('hide');
     return;
   }
 
-  // clone for seamless loop
-  realItems.forEach(item=>track.appendChild(makeGalleryCard(item, GALLERY_ROW_H)));
-  const clonesBefore=realItems.map(item=>makeGalleryCard(item, GALLERY_ROW_H));
-  const clonesAfter=realItems.map(item=>makeGalleryCard(item, GALLERY_ROW_H));
+  realItems.forEach(item=>track.appendChild(makeGalleryCard(item, GALLERY_ROW_H, key)));
+  const clonesBefore=realItems.map(item=>makeGalleryCard(item, GALLERY_ROW_H, key));
+  const clonesAfter=realItems.map(item=>makeGalleryCard(item, GALLERY_ROW_H, key));
   clonesBefore.slice().reverse().forEach(c=>track.insertBefore(c,track.firstChild));
   clonesAfter.forEach(c=>track.appendChild(c));
 
-  // Compute totalW from item aspect ratios (same formula as makeGalleryCard)
   const GAP=10;
   const totalW=realItems.reduce((sum,item)=>{
     const ar=item.ar||(9/16);
     return sum+Math.round(GALLERY_ROW_H*ar)+GAP;
   },0);
-  _galPos=-totalW;
+  inst.pos=-totalW;
   track.style.willChange='transform';
 
-  // Wheel event — only inside gallery container
-  const galleryOuter=document.getElementById('practice-gallery-outer');
+  const galleryOuter=document.getElementById(key+'-gallery-outer');
   const onWheel=(e)=>{
     if(!galleryOuter||!galleryOuter.contains(e.target)) return;
-    _galWheeling=true;
+    inst.wheeling=true;
     const delta=e.deltaY!==0?e.deltaY:e.deltaX;
-    _galBoost=Math.max(-22,Math.min(22,_galBoost+delta*0.07));
+    inst.boost=Math.max(-22,Math.min(22,inst.boost+delta*0.07));
     e.preventDefault();
   };
   galleryOuter?.addEventListener('wheel',onWheel,{passive:false});
-  galleryOuter?.addEventListener('mouseleave',()=>{_galWheeling=false;});
+  galleryOuter?.addEventListener('mouseleave',()=>{inst.wheeling=false;});
 
-  // Show hint badge, hide after 4s
-  const hint=document.getElementById('gallery-hint');
+  const hint=document.getElementById(key+'-gallery-hint');
   if(hint){
     hint.classList.remove('hide');
     clearTimeout(hint._hideTimer);
     hint._hideTimer=setTimeout(()=>hint.classList.add('hide'),4000);
   }
 
-  // RAF loop
   let lastT=null;
   const loop=(t)=>{
     if(!lastT) lastT=t;
     const dt=Math.min((t-lastT)/(1000/60),3);
     lastT=t;
-    const speed=_galWheeling?_galBoost:(_galBase+Math.abs(_galBoost));
-    _galPos-=speed*dt;
-    _galBoost*=0.88;
-    if(Math.abs(_galBoost)<0.05) _galBoost=0;
-    if(!_galWheeling&&Math.abs(_galBoost)<0.05) _galWheeling=false;
-    if(_galPos<=-(2*totalW)) _galPos+=totalW;
-    if(_galPos>=0) _galPos-=totalW;
-    track.style.transform=`translateX(${_galPos}px)`;
-    const progress=Math.abs((_galPos+totalW)%totalW)/totalW;
-    const bar=document.getElementById('gallery-progress-bar');
+    const speed=inst.wheeling?inst.boost:(inst.base+Math.abs(inst.boost));
+    inst.pos-=speed*dt;
+    inst.boost*=0.88;
+    if(Math.abs(inst.boost)<0.05) inst.boost=0;
+    if(!inst.wheeling&&Math.abs(inst.boost)<0.05) inst.wheeling=false;
+    if(inst.pos<=-(2*totalW)) inst.pos+=totalW;
+    if(inst.pos>=0) inst.pos-=totalW;
+    track.style.transform=`translateX(${inst.pos}px)`;
+    const progress=Math.abs((inst.pos+totalW)%totalW)/totalW;
+    const bar=document.getElementById(key+'-gallery-progress-bar');
     if(bar) bar.style.width=(progress*100)+'%';
     const nth=(Math.floor(progress*realCount)%realCount)+1;
-    updateGalleryCounter(nth,realCount);
-    _galRAF=requestAnimationFrame(loop);
+    updateGalleryCounter(key,nth,realCount);
+    inst.raf=requestAnimationFrame(loop);
   };
-  _galRAF=requestAnimationFrame(loop);
+  inst.raf=requestAnimationFrame(loop);
 }
 
-function updateGalleryCounter(nth,total){
-  const el=document.getElementById('gallery-counter');
+function updateGalleryCounter(key,nth,total){
+  const el=document.getElementById(key+'-gallery-counter');
   if(el) el.textContent=`${String(nth).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
 }
 
