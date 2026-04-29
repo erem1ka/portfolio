@@ -1653,18 +1653,16 @@ function makeGalleryCard(item, rowH, galKey){
     mediaDiv.appendChild(ov);
   }
   card.appendChild(mediaDiv);
-  if(item.title){
-    const t=document.createElement('div');
-    t.className='gc-title';
-    t.textContent=item.title;
-    card.appendChild(t);
-  }
-  if(item.desc){
-    const d=document.createElement('div');
-    d.className='gc-sub';
-    d.textContent=item.desc;
-    card.appendChild(d);
-  }
+  const titleDiv=document.createElement('div');
+  titleDiv.className='gc-title';
+  titleDiv.textContent=item.title||'作品标题';
+  if(editMode){ titleDiv.contentEditable='true'; titleDiv.onblur=()=>{item.title=titleDiv.textContent.trim();saveData();}; }
+  card.appendChild(titleDiv);
+  const descDiv=document.createElement('div');
+  descDiv.className='gc-sub';
+  descDiv.textContent=item.desc||'';
+  if(editMode){ descDiv.contentEditable='true'; descDiv.onblur=()=>{item.desc=descDiv.textContent.trim();saveData();}; }
+  if(item.desc||editMode) card.appendChild(descDiv);
   return card;
 }
 
