@@ -1610,15 +1610,21 @@ function makeGalleryCard(item, rowH, galKey){
   mediaDiv.style.height = rowH + 'px';
   mediaDiv.style.width = '100%';
   if(item.media){
-    if(item.type==='mp4'||item.type==='video'||item.type==='anim'||item.type==='webp'||item.mediaType==='mp4'){
-      mediaDiv.innerHTML=`<video src="${item.media}" poster="${item.cover||''}" muted loop playsinline autoplay preload="auto"></video>`;
+    const isVideo=item.type==='mp4'||item.type==='video'||item.mediaType==='mp4';
+    const isAnim=item.type==='webp'||item.type==='gif'||item.type==='anim'||item.mediaType==='webp'||item.mediaType==='gif';
+    if(isVideo){
+      // 视频：只显示封面，点击播放
+      mediaDiv.innerHTML=`<img src="${item.cover||''}" alt="${item.title||''}" style="width:100%;height:100%;object-fit:cover"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="40" height="40" viewBox="0 0 24 24" fill="white" style="opacity:.85"><polygon points="5,3 19,12 5,21"/></svg></div>`;
+    } else if(isAnim){
+      // 动图：自动播放
+      mediaDiv.innerHTML=`<img src="${item.media}" alt="${item.title||''}" style="width:100%;height:100%;object-fit:cover">`;
     } else {
-      mediaDiv.innerHTML=`<img src="${item.media}" alt="${item.title||''}" loading="lazy">`;
+      mediaDiv.innerHTML=`<img src="${item.media}" alt="${item.title||''}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`;
     }
     mediaDiv.style.cursor='pointer';
     mediaDiv.onclick=function(){
       if(editMode) return;
-      if(item.type==='mp4'||item.type==='video'||item.type==='anim'||item.type==='webp'||item.mediaType==='mp4') openInlinePlayer(item.media);
+      if(isVideo) openInlinePlayer(item.media);
       else openImgZoom(item.media);
     };
   }
