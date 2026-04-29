@@ -302,8 +302,8 @@ section[id]{scroll-margin-top:50px}
 
     /* ── Sidebar Navigation ── */
     .sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;z-index:60;display:flex;flex-direction:column;align-items:stretch;padding:32px 24px 20px;overflow-y:auto;overflow-x:hidden}
-    .dark .sidebar{background:#161823}
-    .light .sidebar{background:#f8f8f8}
+    .dark .sidebar{background:rgba(22,24,35,.72);backdrop-filter:blur(24px) saturate(1.4);-webkit-backdrop-filter:blur(24px) saturate(1.4);border-right:1px solid rgba(255,255,255,.06)}
+    .light .sidebar{background:rgba(248,248,248,.72);backdrop-filter:blur(24px) saturate(1.6);-webkit-backdrop-filter:blur(24px) saturate(1.6);border-right:1px solid rgba(0,0,0,.06)}
     .sidebar-logo{margin:0 0 4px;font-size:1.8rem;font-weight:700;text-align:left;line-height:1.1;letter-spacing:-.01em;color:#fff}
     .sidebar-subrole{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px;color:#fff}
     .sidebar-divider{height:1px;margin:14px 0}
@@ -316,12 +316,15 @@ section[id]{scroll-margin-top:50px}
     .light .sidebar-logo{color:#111}
     .light .sidebar-subrole{color:#555}
     .sidebar-nav{display:flex;flex-direction:column;gap:1px;width:100%;padding:0;flex:1}
-    .sidebar-item{display:flex;flex-direction:row;align-items:center;gap:8px;padding:7px 8px 7px 10px;border-radius:6px;cursor:pointer;transition:background .18s,color .18s,text-decoration:none;position:relative;border-left:2px solid transparent;margin-left:-2px}
+    .sidebar-item{display:flex;flex-direction:row;align-items:center;gap:8px;padding:9px 10px 9px 12px;border-radius:10px;cursor:pointer;transition:background .25s,color .18s,box-shadow .25s,text-decoration:none;position:relative;border-left:2px solid transparent;margin-left:-2px}
     .dark .sidebar-item{color:#7a7a8a}
     .light .sidebar-item{color:#888}
-    .sidebar-item:hover{background:rgba(37,244,238,.06)}
-    .sidebar-item.active{border-left-color:#25f4ee;color:#25f4ee;background:rgba(37,244,238,.08)}
-    .light .sidebar-item.active{border-left-color:#25f4ee;color:#25f4ee}
+    .sidebar-item:hover{background:rgba(37,244,238,.08);box-shadow:0 2px 12px rgba(37,244,238,.12)}
+    .dark .sidebar-item:hover{background:rgba(37,244,238,.1);box-shadow:0 2px 16px rgba(37,244,238,.15),inset 0 0 0 1px rgba(37,244,238,.12)}
+    .light .sidebar-item:hover{background:rgba(37,244,238,.06);box-shadow:0 2px 16px rgba(37,244,238,.1),inset 0 0 0 1px rgba(37,244,238,.15)}
+    .sidebar-item.active{border-left-color:#25f4ee;color:#25f4ee;background:rgba(37,244,238,.1);box-shadow:0 4px 20px rgba(37,244,238,.18),inset 0 0 0 1px rgba(37,244,238,.2)}
+    .dark .sidebar-item.active{background:rgba(37,244,238,.12);box-shadow:0 4px 24px rgba(37,244,238,.22),inset 0 0 0 1.5px rgba(37,244,238,.25)}
+    .light .sidebar-item.active{border-left-color:#25f4ee;color:#25f4ee;background:rgba(37,244,238,.08);box-shadow:0 4px 24px rgba(37,244,238,.15),inset 0 0 0 1.5px rgba(37,244,238,.2)}
     .sidebar-item.active svg{stroke:#25f4ee}
 .light .sidebar-item.active svg{stroke:#25f4ee}
 .sidebar-item svg{width:20px;height:20px;flex-shrink:0;transition:stroke .18s}
