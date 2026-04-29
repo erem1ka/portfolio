@@ -378,11 +378,11 @@ section[id]{scroll-margin-top:50px}
     /* ── Gallery ── */
     .gallery-outer{overflow:hidden;margin-bottom:14px;border-radius:10px}
     .gallery-track{display:flex;gap:10px;padding:0 2px;will-change:transform}
-    .gallery-card,.gallery-card-clone{width:205px;flex-shrink:0;border-radius:10px;border:1px solid;overflow:hidden;transition:opacity .3s var(--ease),transform .3s var(--ease),border-color .22s,box-shadow .22s}
+    .gallery-card,.gallery-card-clone{flex-shrink:0;border-radius:10px;border:1px solid;overflow:hidden;transition:opacity .3s var(--ease),transform .3s var(--ease),border-color .22s,box-shadow .22s;display:flex;flex-direction:column}
     .dark .gallery-card,.dark .gallery-card-clone{border-color:rgba(255,255,255,.1);background:#1f2130}
     .light .gallery-card,.light .gallery-card-clone{border-color:rgba(0,0,0,.08);background:#fff}
     .gallery-card:hover,.gallery-card-clone:hover{border-color:rgba(37,244,238,.2);box-shadow:0 4px 20px rgba(0,0,0,.3)}
-    .gc-media{width:205px;height:313px;overflow:hidden;position:relative}
+    .gc-media{overflow:hidden;position:relative;flex-shrink:0}
     .gc-media img,.gc-media video{width:100%;height:100%;object-fit:cover;display:block}
     .gc-title{font-size:.78rem;font-weight:500;padding:10px 12px 0;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .gc-sub{font-size:.68rem;color:#7a7a8a;padding:2px 12px 10px;font-family:'Space Mono',monospace}
@@ -2389,29 +2389,37 @@ init();
 // ── 画廊引擎 ──
 let _galRAF, _galPos, _galBoost=0, _galBase=0.8, _galWheeling=false;
 
+const GALLERY_ROW_H = 280; // gallery card height in px
+
 function renderPracticeGallery(items){
   const track=document.getElementById('practice-gallery-track');
   if(!track) return;
   track.innerHTML='';
   const realItems=items.filter(i=>i.media||i.type==='prompt');
   realItems.forEach(item=>{
-    const card=makeGalleryCard(item);
+    const card=makeGalleryCard(item, GALLERY_ROW_H);
     track.appendChild(card);
   });
   // 空卡片（编辑模式）
   if(editMode){
-    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'});
+    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, GALLERY_ROW_H);
     track.appendChild(empty);
   }
-  initPracticeGalleryLoop(track,realItems.length);
+  initPracticeGalleryLoop(track,realItems);
 }
 
-function makeGalleryCard(item){
+function makeGalleryCard(item, rowH){
+  rowH = rowH || GALLERY_ROW_H;
+  const ar = item.ar || (9/16); // default portrait
+  const cardW = Math.round(rowH * ar);
   const card=document.createElement('div');
   card.className='gallery-card'+(editMode?' card-hover':'');
   card.dataset.id=item.id||'';
+  card.style.width = cardW + 'px';
   const mediaDiv=document.createElement('div');
   mediaDiv.className='gc-media'+(!item.media?' empty-card':'');
+  mediaDiv.style.height = rowH + 'px';
+  mediaDiv.style.width = '100%';
   if(item.media){
     if(item.type==='video'||item.type==='anim'){
       mediaDiv.innerHTML=`<video src="${item.media}" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>`;
@@ -2468,20 +2476,20 @@ function makeGalleryCard(item){
   return card;
 }
 
-function initPracticeGalleryLoop(track, realCount){
+function initPracticeGalleryLoop(track, realItems){
   if(_galRAF) cancelAnimationFrame(_galRAF);
   track.innerHTML='';
   _galBoost=0; _galWheeling=false;
-  const realItems=(DATA.practice||[]).filter(i=>i.media||i.type==='prompt');
+  const realCount = realItems.length;
   if(editMode){
-    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'});
+    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, GALLERY_ROW_H);
     track.appendChild(empty);
   }
 
   // If too few cards for seamless loop, show statically (no clones, no auto-scroll)
   const MIN_LOOP=3;
   if(realCount<MIN_LOOP){
-    realItems.forEach(item=>track.appendChild(makeGalleryCard(item)));
+    realItems.forEach(item=>track.appendChild(makeGalleryCard(item, GALLERY_ROW_H)));
     track.style.transform='translateX(0)';
     track.style.willChange='auto';
     updateGalleryCounter(1,realCount);
@@ -2492,15 +2500,19 @@ function initPracticeGalleryLoop(track, realCount){
     return;
   }
 
-  // clone for seamless loop (only when enough cards)
-  realItems.forEach(item=>track.appendChild(makeGalleryCard(item)));
-  const clonesBefore=realItems.map(item=>makeGalleryCard(item));
-  const clonesAfter=realItems.map(item=>makeGalleryCard(item));
+  // clone for seamless loop
+  realItems.forEach(item=>track.appendChild(makeGalleryCard(item, GALLERY_ROW_H)));
+  const clonesBefore=realItems.map(item=>makeGalleryCard(item, GALLERY_ROW_H));
+  const clonesAfter=realItems.map(item=>makeGalleryCard(item, GALLERY_ROW_H));
   clonesBefore.slice().reverse().forEach(c=>track.insertBefore(c,track.firstChild));
   clonesAfter.forEach(c=>track.appendChild(c));
 
-  const CARD_W=205+10;
-  const totalW=realCount*CARD_W;
+  // Compute totalW from item aspect ratios (same formula as makeGalleryCard)
+  const GAP=10;
+  const totalW=realItems.reduce((sum,item)=>{
+    const ar=item.ar||(9/16);
+    return sum+Math.round(GALLERY_ROW_H*ar)+GAP;
+  },0);
   _galPos=-totalW;
   track.style.willChange='transform';
 
