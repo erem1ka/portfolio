@@ -1035,8 +1035,15 @@ function restoreHeroNav(){
     const el = document.getElementById(id);
     if(!el) return;
     if(DATA.heroNav[id]) el.textContent = DATA.heroNav[id];
-    el.addEventListener('blur',()=>{ DATA.heroNav[id]=el.textContent.trim(); saveData(); },{once:false});
+    el.onblur=()=>{ DATA.heroNav[id]=el.textContent.trim(); saveData(); };
   });
+  // hero hint editable
+  const hintEl = document.querySelector('[data-field="heroHint"]');
+  if(hintEl){
+    if(!DATA.heroNav) DATA.heroNav={};
+    if(DATA.heroNav['heroHint']) hintEl.textContent = DATA.heroNav['heroHint'];
+    hintEl.onblur=()=>{ DATA.heroNav['heroHint']=hintEl.textContent.trim(); saveData(); };
+  }
 }
 
 function addWorkCard(section, forceType){
