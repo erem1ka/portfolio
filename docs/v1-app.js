@@ -1788,38 +1788,22 @@ function updateGalleryCounter(key,nth,total){
   if(el) el.textContent=`${String(nth).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
 }
 
-// ── 性能优化：非视口内的webp/gif暂停，画廊离屏时暂停RAF ──
+// ── 性能优化：画廊离屏时暂停RAF ──
 (function(){
-  // 视口外的动图暂停
-  const animObs=new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{
-      const img=e.target;
-      if(!e.isIntersecting){ img.style.animationPlayState='paused'; img.dataset._animSrc=img.src; img.src=''; }
-      else if(img.dataset._animSrc){ img.src=img.dataset._animSrc; img.style.animationPlayState='running'; delete img.dataset._animSrc; }
-    });
-  },{rootMargin:'100px'});
-  // 延迟观察：每次 renderAll 后重新绑定
-  const _origRenderAll=window.renderAll;
-  window.renderAll=function(){
-    _origRenderAll();
-    setTimeout(()=>{
-      document.querySelectorAll('.gc-media img:not([loading]),.card-media img:not([loading])').forEach(img=>{
-        if(img.src&&img.src.includes('.webp')) animObs.observe(img);
-      });
-    },100);
-  };
-  // 画廊离屏时暂停RAF
   const galObs=new IntersectionObserver((entries)=>{
     entries.forEach(e=>{
       const id=e.target.id;
       const key=id.replace('-gallery-outer','');
       if(!_galInst[key]) return;
-      if(!e.isIntersecting){ if(_galInst[key].raf){cancelAnimationFrame(_galInst[key].raf);_galInst[key].raf=null;_galInst[key]._paused=true;} }
-      else if(_galInst[key]._paused){
-        _galInst[key]._paused=false;
+      const inst=_galInst[key];
+      if(!e.isIntersecting){
+        // 离屏：暂停RAF
+        if(inst.raf){cancelAnimationFrame(inst.raf);inst.raf=null;inst._paused=true;}
+      } else if(inst._paused){
+        // 回屏：恢复RAF循环
+        inst._paused=false;
         const track=document.getElementById(key+'-gallery-track');
-        if(track) _galInst[key].raf=requestAnimationFrame(loop=>{/* resume loop will re-enter via initGalleryLoop */});
-        // 重新初始化循环
+        if(!track) return;
         const items=(DATA[key]||[]).filter(i=>i.media||i.type==='prompt');
         initGalleryLoop(key,track,items);
       }
