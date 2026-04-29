@@ -280,19 +280,6 @@ function toggleTheme(){
 }
 
 function toggleEdit(){
-  // Require password verification before entering edit mode
-  if(!editMode){
-    const pw = localStorage.getItem('_edit_pw_verified');
-    if(!pw){
-      const input = prompt('请输入管理密码');
-      if(!input) return;
-      const hash = btoa(input);
-      const stored = localStorage.getItem('_edit_pw');
-      if(!stored){ localStorage.setItem('_edit_pw', hash); localStorage.setItem('_edit_pw_verified', '1'); }
-      else if(stored !== hash){ showToast('密码错误'); return; }
-      else { localStorage.setItem('_edit_pw_verified', '1'); }
-    }
-  }
   // When exiting edit mode, purge empty cards (no media uploaded)
   if(editMode){
     const sections = ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
@@ -350,24 +337,7 @@ function toggleEdit(){
   }
 }
 
-function openEditMenu(){
-  const pw = localStorage.getItem('_edit_pw_verified');
-  if(!pw){
-    const input = prompt('请输入管理密码（首次设置后自动保存）');
-    if(!input) return;
-    const hash = btoa(input); // simple base64 as 'hash'
-    const stored = localStorage.getItem('_edit_pw');
-    if(!stored){
-      localStorage.setItem('_edit_pw', hash);
-      localStorage.setItem('_edit_pw_verified', '1');
-    } else if(stored !== hash){
-      showToast('密码错误'); return;
-    } else {
-      localStorage.setItem('_edit_pw_verified', '1');
-    }
-  }
-  document.getElementById('editMenu').classList.add('open');
-}
+function openEditMenu(){ document.getElementById('editMenu').classList.add('open'); }
 function closeEditMenu(){ document.getElementById('editMenu').classList.remove('open'); }
 
 function toggleMobileNav(){
