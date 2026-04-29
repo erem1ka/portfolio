@@ -412,6 +412,7 @@ section[id]{scroll-margin-top:50px}
     /* ── 自定义光标 ── */
     @media(pointer:fine){
       *{cursor:none!important}
+      .editing *{cursor:default!important}
       #cf-cursor{position:fixed;top:0;left:0;width:10px;height:10px;border-radius:50%;background:#25f4ee;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference}
       #cf-ring{position:fixed;top:0;left:0;width:30px;height:30px;border-radius:50%;border:1px solid rgba(37,244,238,.5);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .25s cubic-bezier(.77,0,.175,1),height .25s cubic-bezier(.77,0,.175,1),border-color .2s}
       #cf-ring.hovered{width:44px;height:44px;border-color:rgba(37,244,238,.75)}
@@ -551,10 +552,10 @@ section[id]{scroll-margin-top:50px}
     </a>
   </nav>
   <div class="sidebar-bottom">
-    <button class="sidebar-btn" id="themeBtnSidebar" onclick="toggleTheme()" title="切换深浅色">
+    <button class="sidebar-btn" id="themeBtnSidebar" onclick="toggleTheme()" title="切换深浅色" aria-label="切换深浅色">
       <svg id="themeIconSidebar" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
     </button>
-    <button class="sidebar-btn" id="editBtnSidebar" onclick="openEditMenu()" title="管理">
+    <button class="sidebar-btn" id="editBtnSidebar" onclick="openEditMenu()" title="管理" aria-label="管理设置">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
     </button>
   </div>
@@ -1116,6 +1117,19 @@ function toggleTheme(){
 }
 
 function toggleEdit(){
+  // Require password verification before entering edit mode
+  if(!editMode){
+    const pw = localStorage.getItem('_edit_pw_verified');
+    if(!pw){
+      const input = prompt('请输入管理密码');
+      if(!input) return;
+      const hash = btoa(input);
+      const stored = localStorage.getItem('_edit_pw');
+      if(!stored){ localStorage.setItem('_edit_pw', hash); localStorage.setItem('_edit_pw_verified', '1'); }
+      else if(stored !== hash){ showToast('密码错误'); return; }
+      else { localStorage.setItem('_edit_pw_verified', '1'); }
+    }
+  }
   // When exiting edit mode, purge empty cards (no media uploaded)
   if(editMode){
     const sections = ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
@@ -1173,7 +1187,24 @@ function toggleEdit(){
   }
 }
 
-function openEditMenu(){ document.getElementById('editMenu').classList.add('open'); }
+function openEditMenu(){
+  const pw = localStorage.getItem('_edit_pw_verified');
+  if(!pw){
+    const input = prompt('请输入管理密码（首次设置后自动保存）');
+    if(!input) return;
+    const hash = btoa(input); // simple base64 as 'hash'
+    const stored = localStorage.getItem('_edit_pw');
+    if(!stored){
+      localStorage.setItem('_edit_pw', hash);
+      localStorage.setItem('_edit_pw_verified', '1');
+    } else if(stored !== hash){
+      showToast('密码错误'); return;
+    } else {
+      localStorage.setItem('_edit_pw_verified', '1');
+    }
+  }
+  document.getElementById('editMenu').classList.add('open');
+}
 function closeEditMenu(){ document.getElementById('editMenu').classList.remove('open'); }
 
 function toggleMobileNav(){
@@ -1554,9 +1585,12 @@ function renderAll(){
 }
 
 let _resizeTimer = null;
+let _lastMobile = window.innerWidth <= 900;
 window.addEventListener('resize', ()=>{
   clearTimeout(_resizeTimer);
-  _resizeTimer = setTimeout(renderAll, 200);
+  const nowMobile = window.innerWidth <= 900;
+  if(nowMobile !== _lastMobile){ _lastMobile = nowMobile; _resizeTimer = setTimeout(renderAll, 200); }
+  else { applyLayoutByScreen(); }
 });
 
 function restoreCols(){
@@ -1582,8 +1616,8 @@ function restoreSectionTitles(){
   ['practice','mg','aigc','agent'].forEach(k=>{
     const t = document.getElementById(`${k}-title`);
     const d = document.getElementById(`${k}-desc`);
-    if(t) t.addEventListener('blur',()=>{ DATA.sectionTitles[k].title = t.textContent; saveData(); });
-    if(d) d.addEventListener('blur',()=>{ DATA.sectionTitles[k].desc = d.textContent; saveData(); });
+    if(t) t.onblur=()=>{ DATA.sectionTitles[k].title = t.textContent; saveData(); };
+    if(d) d.onblur=()=>{ DATA.sectionTitles[k].desc = d.textContent; saveData(); };
   });
 }
 
@@ -1645,28 +1679,28 @@ function restoreContact(){
   }
   ['contact-name','contact-bio','contact-email','contact-qq','contact-phone'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el) el.addEventListener('blur',()=>{
+    if(el) el.onblur=()=>{
       const key=id.replace('contact-','');
       DATA.contact[key]=el.textContent.trim(); saveData();
       if(key==='name'){const s=document.getElementById('sidebar-name');if(s) s.textContent=el.textContent.trim();}
       if(key==='bio'){const s=document.getElementById('sidebar-bio');if(s) s.textContent=el.textContent.trim();}
-    });
+    };
   });
   // sidebar 字段编辑同步保存到 DATA 并更新 contact 区块
   const sidebarName=document.getElementById('sidebar-name');
   const sidebarRole=document.getElementById('sidebar-role');
   const sidebarBio=document.getElementById('sidebar-bio');
-  if(sidebarName) sidebarName.addEventListener('blur',()=>{
+  if(sidebarName) sidebarName.onblur=()=>{
     DATA.contact.name=sidebarName.textContent.trim();saveData();
     const cn=document.getElementById('contact-name');if(cn) cn.textContent=sidebarName.textContent.trim();
-  });
-  if(sidebarRole) sidebarRole.addEventListener('blur',()=>{
+  };
+  if(sidebarRole) sidebarRole.onblur=()=>{
     if(!DATA.contact)DATA.contact={};DATA.contact.role=sidebarRole.textContent.trim();saveData();
-  });
-  if(sidebarBio) sidebarBio.addEventListener('blur',()=>{
+  };
+  if(sidebarBio) sidebarBio.onblur=()=>{
     DATA.contact.bio=sidebarBio.textContent.trim();saveData();
     const cb=document.getElementById('contact-bio');if(cb) cb.textContent=sidebarBio.textContent.trim();
-  });
+  };
 
 
   // ── Tool card fields ──
@@ -1676,7 +1710,7 @@ function restoreContact(){
     const el = document.getElementById(id);
     if(!el) return;
     if(DATA.toolCards[id]) el.textContent = DATA.toolCards[id];
-    el.addEventListener('blur',()=>{ DATA.toolCards[id]=el.textContent.trim(); saveData(); });
+    el.onblur=()=>{ DATA.toolCards[id]=el.textContent.trim(); saveData(); };
   });
   // restore resume
   if(!DATA.contact.resumeName) DATA.contact.resumeName='';
@@ -1685,13 +1719,13 @@ function restoreContact(){
   [biliEl, douyinEl].forEach(el=>{
     if(!el) return;
     el.contentEditable = editMode;
-    el.addEventListener('blur',()=>{
+    el.onblur=()=>{
       const url = el.textContent.trim();
       el.href = url || '#';
       if(el.id==='contact-bilibili') DATA.contact.bilibili = url;
       else DATA.contact.douyin = url;
       saveData();
-    });
+    };
   });
 }
 
@@ -2372,8 +2406,8 @@ function applyLayoutByScreen() {
 }
 
 // Run on load and resize
-const _layoutTimer = setInterval(applyLayoutByScreen, 500);
-window.addEventListener('resize', () => setTimeout(applyLayoutByScreen, 50));
+applyLayoutByScreen();
+window.addEventListener('resize', applyLayoutByScreen);
 
 async function init(){
   // 初始化云开发
@@ -2443,7 +2477,7 @@ function makeGalleryCard(item, rowH, galKey){
   mediaDiv.style.height = rowH + 'px';
   mediaDiv.style.width = '100%';
   if(item.media){
-    if(item.type==='video'||item.type==='anim'){
+    if(item.type==='mp4'||item.type==='video'||item.type==='anim'||item.type==='webp'||item.mediaType==='mp4'){
       mediaDiv.innerHTML=`<video src="${item.media}" poster="${item.cover||''}" muted loop playsinline autoplay preload="auto"></video>`;
     } else {
       mediaDiv.innerHTML=`<img src="${item.media}" alt="${item.title||''}" loading="lazy">`;
@@ -2451,7 +2485,7 @@ function makeGalleryCard(item, rowH, galKey){
     mediaDiv.style.cursor='pointer';
     mediaDiv.onclick=function(){
       if(editMode) return;
-      if(item.type==='video'||item.type==='anim') openInlinePlayer(item.media);
+      if(item.type==='mp4'||item.type==='video'||item.type==='anim'||item.type==='webp'||item.mediaType==='mp4') openInlinePlayer(item.media);
       else openImgZoom(item.media);
     };
   }
@@ -2598,10 +2632,19 @@ function updateGalleryCounter(key,nth,total){
   document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dot.classList.remove('hidden');ring.classList.remove('hidden');},{passive:true});
   document.addEventListener('mouseleave',()=>{dot.classList.add('hidden');ring.classList.add('hidden');});
   const clickables='a,button,[role="button"],.vcard,.gallery-card,.sidebar-item,.tool-card';
-  document.addEventListener('mouseover',e=>{if(e.target.closest&&e.target.closest(clickables))ring.classList.add('hovered');},{passive:true});
+  document.addEventListener('mouseover',e=>{if(editMode){dot.classList.add('hidden');ring.classList.add('hidden');return;}if(e.target.closest&&e.target.closest(clickables))ring.classList.add('hovered');},{passive:true});
   document.addEventListener('mouseout',e=>{if(e.target.closest&&e.target.closest(clickables))ring.classList.remove('hovered');},{passive:true});
 })();
 
+
+// ── contenteditable 粘贴只保留纯文本 ──
+document.addEventListener('paste', e => {
+  if(e.target.isContentEditable){
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+  }
+});
 
 // ── 顶部滚动进度条 ──
 (function(){
