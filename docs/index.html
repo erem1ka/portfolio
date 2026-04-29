@@ -2422,7 +2422,7 @@ function makeGalleryCard(item, rowH){
   mediaDiv.style.width = '100%';
   if(item.media){
     if(item.type==='video'||item.type==='anim'){
-      mediaDiv.innerHTML=`<video src="${item.media}" muted loop playsinline preload="metadata" onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0"></video>`;
+      mediaDiv.innerHTML=`<video src="${item.media}" poster="${item.cover||''}" muted loop playsinline autoplay preload="auto"></video>`;
     } else {
       mediaDiv.innerHTML=`<img src="${item.media}" alt="${item.title||''}" loading="lazy">`;
     }
