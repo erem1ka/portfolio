@@ -34,6 +34,31 @@
     html{scroll-behavior:smooth}
 section[id]{scroll-margin-top:50px}
     body{font-family:'Noto Sans SC',sans-serif;overflow-x:hidden;transition:background .25s,color .25s}
+
+    /* ── 深度背景光球 ── */
+    #depth-bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+    #depth-bg::before,#depth-bg::after{content:'';position:absolute;border-radius:50%;filter:blur(80px);transition:transform .1s linear}
+    .dark #depth-bg::before{width:700px;height:700px;background:radial-gradient(circle,rgba(37,244,238,.07) 0%,transparent 70%);top:-200px;left:-100px}
+    .dark #depth-bg::after{width:500px;height:500px;background:radial-gradient(circle,rgba(100,60,255,.06) 0%,transparent 70%);bottom:-100px;right:-50px}
+    .light #depth-bg::before{width:700px;height:700px;background:radial-gradient(circle,rgba(37,244,238,.12) 0%,transparent 70%);top:-200px;left:-100px}
+    .light #depth-bg::after{width:500px;height:500px;background:radial-gradient(circle,rgba(0,119,255,.08) 0%,transparent 70%);bottom:-100px;right:-50px}
+    #depth-orb1,#depth-orb2,#depth-orb3{position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(100px);will-change:transform}
+    .dark #depth-orb1{width:600px;height:600px;background:radial-gradient(circle,rgba(37,244,238,.05),transparent 65%);top:10%;left:20%}
+    .dark #depth-orb2{width:400px;height:400px;background:radial-gradient(circle,rgba(180,80,255,.05),transparent 65%);top:50%;right:15%}
+    .dark #depth-orb3{width:300px;height:300px;background:radial-gradient(circle,rgba(37,160,244,.06),transparent 65%);bottom:20%;left:40%}
+    .light #depth-orb1{width:600px;height:600px;background:radial-gradient(circle,rgba(37,244,238,.1),transparent 65%);top:10%;left:20%}
+    .light #depth-orb2{width:400px;height:400px;background:radial-gradient(circle,rgba(120,60,255,.07),transparent 65%);top:50%;right:15%}
+    .light #depth-orb3{width:300px;height:300px;background:radial-gradient(circle,rgba(0,100,255,.07),transparent 65%);bottom:20%;left:40%}
+
+    /* ── 内容区确保在背景光球上层 ── */
+    .content-offset{position:relative;z-index:1}
+    header{position:relative;z-index:50}
+    .sidebar{z-index:60}
+
+    /* ── 卡片 3D 透视环境 ── */
+    .masonry-grid,.work-grid{perspective:1200px}
+    .vcard{transform-style:preserve-3d;will-change:transform}
+
     /* 1. Page load fade-in */
     body{animation:fadeIn .6s var(--ease)}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -515,6 +540,10 @@ section[id]{scroll-margin-top:50px}
 <!-- 噪点质感层 -->
 <div id="scroll-progress" aria-hidden="true"></div>
 <div id="grain-overlay" aria-hidden="true"></div>
+<div id="depth-bg" aria-hidden="true"></div>
+<div id="depth-orb1" aria-hidden="true"></div>
+<div id="depth-orb2" aria-hidden="true"></div>
+<div id="depth-orb3" aria-hidden="true"></div>
 <!-- 自定义光标 -->
 <div id="cf-cursor" aria-hidden="true"></div>
 <div id="cf-ring" aria-hidden="true"></div>
@@ -2604,6 +2633,46 @@ function updateGalleryCounter(nth,total){
   }
   window.addEventListener('scroll', update, {passive: true});
   update();
+})();
+
+// ── 深度背景视差 + 卡片 3D tilt ──
+(function(){
+  const orb1=document.getElementById('depth-orb1');
+  const orb2=document.getElementById('depth-orb2');
+  const orb3=document.getElementById('depth-orb3');
+  let mx=0,my=0,tx=0,ty=0;
+  document.addEventListener('mousemove',e=>{
+    mx=(e.clientX/window.innerWidth-.5)*2;
+    my=(e.clientY/window.innerHeight-.5)*2;
+  },{passive:true});
+  function parallaxLoop(){
+    tx+=(mx-tx)*.04; ty+=(my-ty)*.04;
+    if(orb1) orb1.style.transform=`translate(${tx*-40}px,${ty*-30}px)`;
+    if(orb2) orb2.style.transform=`translate(${tx*30}px,${ty*25}px)`;
+    if(orb3) orb3.style.transform=`translate(${tx*-20}px,${ty*35}px)`;
+    requestAnimationFrame(parallaxLoop);
+  }
+  requestAnimationFrame(parallaxLoop);
+
+  // 3D tilt on vcards
+  const TILT=8; // max degrees
+  function addTilt(card){
+    card.addEventListener('mousemove',e=>{
+      const r=card.getBoundingClientRect();
+      const cx=(e.clientX-r.left)/r.width-.5;
+      const cy=(e.clientY-r.top)/r.height-.5;
+      card.style.transform=`translateY(-5px) scale(1.015) rotateY(${cx*TILT}deg) rotateX(${-cy*TILT}deg)`;
+    },{passive:true});
+    card.addEventListener('mouseleave',()=>{
+      card.style.transform='';
+    });
+  }
+  function initTilts(){
+    document.querySelectorAll('.vcard').forEach(addTilt);
+  }
+  // observe DOM changes for newly rendered cards
+  new MutationObserver(initTilts).observe(document.body,{childList:true,subtree:true});
+  initTilts();
 })();
 
 </script>
