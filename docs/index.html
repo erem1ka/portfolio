@@ -2574,7 +2574,7 @@ function updateGalleryCounter(nth,total){
   let mx=-100,my=-100,rx=-100,ry=-100;
   function lerp(a,b,t){return a+(b-a)*t;}
   function tick(){
-    rx=lerp(rx,mx,0.12);ry=lerp(ry,my,0.12);
+    rx=lerp(rx,mx,0.25);ry=lerp(ry,my,0.25);
     dot.style.transform=`translate(${mx}px,${my}px) translate(-50%,-50%)`;
     ring.style.transform=`translate(${rx}px,${ry}px) translate(-50%,-50%)`;
     requestAnimationFrame(tick);
