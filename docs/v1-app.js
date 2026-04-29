@@ -638,7 +638,7 @@ function renderSection(sectionKey, gridId, type){
       const card = makePromptCard(item);
       card.style.width = isMobile ? '100%' : '280px';
       container.appendChild(card);
-      requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*25));
+    });
     });
     container.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;position:static;height:auto;width:auto;margin-left:0';
     if (editMode) initDragSort(container, sectionKey);
@@ -660,7 +660,7 @@ function renderSection(sectionKey, gridId, type){
         });
       }
       container.appendChild(card);
-      requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*25));
+    });
     });
     container.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:6px;position:static;height:auto;width:auto;margin-left:0';
     if (editMode) initDragSort(container, sectionKey);
@@ -692,8 +692,13 @@ function renderSection(sectionKey, gridId, type){
     }
 
     container.appendChild(card);
-    requestAnimationFrame(()=>setTimeout(()=>card.classList.add('vis'), i*15));
   });
+
+  // 懒动画：只有进入视口的卡片才加 vis
+  const lazyVis=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');lazyVis.unobserve(e.target);}});
+  },{threshold:0.05});
+  container.querySelectorAll('.vcard').forEach(c=>lazyVis.observe(c));
 
   container.style.cssText = `display:flex;flex-wrap:wrap;gap:${gap}px;justify-content:center;align-items:flex-start;position:static;height:auto;width:auto;margin-left:0`;
 
@@ -1699,8 +1704,29 @@ function initGalleryLoop(key, track, realItems){
   }
 
   realItems.forEach(item=>track.appendChild(makeGalleryCard(item, GALLERY_ROW_H, key)));
-  const clonesBefore=realItems.map(item=>makeGalleryCard(item, GALLERY_ROW_H, key));
-  const clonesAfter=realItems.map(item=>makeGalleryCard(item, GALLERY_ROW_H, key));
+  // 轻量克隆：只用图片元素，不绑定事件/编辑器，减少DOM复杂度
+  const makeLightClone=(item)=>{
+    const ar=item.ar||(9/16);
+    const cardW=Math.round(GALLERY_ROW_H*ar);
+    const c=document.createElement('div');
+    c.className='gallery-card';
+    c.style.width=cardW+'px';
+    const m=document.createElement('div');
+    m.className='gc-media'+(!item.media?' empty-card':'');
+    m.style.height=GALLERY_ROW_H+'px';
+    m.style.width='100%';
+    const isVideo=item.type==='mp4'||item.type==='video'||item.mediaType==='mp4';
+    const isAnim=item.type==='webp'||item.type==='gif'||item.type==='anim'||item.mediaType==='webp'||item.mediaType==='gif';
+    if(item.media){
+      if(isVideo) m.innerHTML=`<img src="${item.cover||''}" style="width:100%;height:100%;object-fit:cover">`;
+      else if(isAnim) m.innerHTML=`<img src="${item.media}" style="width:100%;height:100%;object-fit:cover">`;
+      else m.innerHTML=`<img src="${item.media}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`;
+    }
+    c.appendChild(m);
+    return c;
+  };
+  const clonesBefore=realItems.map(makeLightClone);
+  const clonesAfter=realItems.map(makeLightClone);
   clonesBefore.slice().reverse().forEach(c=>track.insertBefore(c,track.firstChild));
   clonesAfter.forEach(c=>track.appendChild(c));
 
@@ -1730,7 +1756,7 @@ function initGalleryLoop(key, track, realItems){
     hint._hideTimer=setTimeout(()=>hint.classList.add('hide'),4000);
   }
 
-  let lastT=null;
+  let lastT=null, lastUI=0;
   const loop=(t)=>{
     if(!lastT) lastT=t;
     const dt=Math.min((t-lastT)/(1000/60),3);
@@ -1743,11 +1769,15 @@ function initGalleryLoop(key, track, realItems){
     if(inst.pos<=-(2*totalW)) inst.pos+=totalW;
     if(inst.pos>=0) inst.pos-=totalW;
     track.style.transform=`translateX(${inst.pos}px)`;
-    const progress=Math.abs((inst.pos+totalW)%totalW)/totalW;
-    const bar=document.getElementById(key+'-gallery-progress-bar');
-    if(bar) bar.style.width=(progress*100)+'%';
-    const nth=(Math.floor(progress*realCount)%realCount)+1;
-    updateGalleryCounter(key,nth,realCount);
+    // 节流UI更新：每200ms才更新进度条和计数器，避免每帧DOM查询
+    if(t-lastUI>200){
+      lastUI=t;
+      const progress=Math.abs((inst.pos+totalW)%totalW)/totalW;
+      const bar=document.getElementById(key+'-gallery-progress-bar');
+      if(bar) bar.style.width=(progress*100)+'%';
+      const nth=(Math.floor(progress*realCount)%realCount)+1;
+      updateGalleryCounter(key,nth,realCount);
+    }
     inst.raf=requestAnimationFrame(loop);
   };
   inst.raf=requestAnimationFrame(loop);
@@ -1757,6 +1787,46 @@ function updateGalleryCounter(key,nth,total){
   const el=document.getElementById(key+'-gallery-counter');
   if(el) el.textContent=`${String(nth).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
 }
+
+// ── 性能优化：非视口内的webp/gif暂停，画廊离屏时暂停RAF ──
+(function(){
+  // 视口外的动图暂停
+  const animObs=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      const img=e.target;
+      if(!e.isIntersecting){ img.style.animationPlayState='paused'; img.dataset._animSrc=img.src; img.src=''; }
+      else if(img.dataset._animSrc){ img.src=img.dataset._animSrc; img.style.animationPlayState='running'; delete img.dataset._animSrc; }
+    });
+  },{rootMargin:'100px'});
+  // 延迟观察：每次 renderAll 后重新绑定
+  const _origRenderAll=window.renderAll;
+  window.renderAll=function(){
+    _origRenderAll();
+    setTimeout(()=>{
+      document.querySelectorAll('.gc-media img:not([loading]),.card-media img:not([loading])').forEach(img=>{
+        if(img.src&&img.src.includes('.webp')) animObs.observe(img);
+      });
+    },100);
+  };
+  // 画廊离屏时暂停RAF
+  const galObs=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      const id=e.target.id;
+      const key=id.replace('-gallery-outer','');
+      if(!_galInst[key]) return;
+      if(!e.isIntersecting){ if(_galInst[key].raf){cancelAnimationFrame(_galInst[key].raf);_galInst[key].raf=null;_galInst[key]._paused=true;} }
+      else if(_galInst[key]._paused){
+        _galInst[key]._paused=false;
+        const track=document.getElementById(key+'-gallery-track');
+        if(track) _galInst[key].raf=requestAnimationFrame(loop=>{/* resume loop will re-enter via initGalleryLoop */});
+        // 重新初始化循环
+        const items=(DATA[key]||[]).filter(i=>i.media||i.type==='prompt');
+        initGalleryLoop(key,track,items);
+      }
+    });
+  },{rootMargin:'200px'});
+  document.querySelectorAll('[id$="-gallery-outer"]').forEach(el=>galObs.observe(el));
+})();
 
 // ── contenteditable 粘贴只保留纯文本 ──
 document.addEventListener('paste', e => {
