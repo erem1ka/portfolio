@@ -1700,6 +1700,12 @@ function initGalleryLoop(key, track, realItems){
       else m.innerHTML=`<img src="${item.media}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`;
     }
     c.appendChild(m);
+    // 克隆也要显示标题，否则滚一圈后看不到
+    const t=document.createElement('div');
+    t.className='gc-title';
+    t.textContent=item.title||'';
+    t.style.backfaceVisibility='hidden';
+    c.appendChild(t);
     return c;
   };
   const clonesBefore=realItems.map(makeLightClone);
