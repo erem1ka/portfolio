@@ -84,7 +84,7 @@ function loadData(){
       if(d.cols) {
         DATA.cols = d.cols;
         // Migrate old col-count values (1-8) or old default 100 to new default 180
-        const SECTIONS = ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+        const SECTIONS = ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
         SECTIONS.forEach(sec=>{
           if(DATA.cols[sec] !== undefined && (DATA.cols[sec] <= 8 || DATA.cols[sec] === 100)){
             DATA.cols[sec] = 180;
@@ -230,7 +230,7 @@ async function loadDataFromCloud(forceLoad) {
         
         // 深度替换：用云端数据完全替换本地数据，而不是浅合并
         // 确保数组字段被完全替换（不会保留本地旧数组）
-        const SECTIONS = ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+        const SECTIONS = ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
         SECTIONS.forEach(sec=>{
           DATA[sec] = cloudData[sec] || [];
         });
