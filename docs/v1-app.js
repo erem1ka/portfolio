@@ -1665,6 +1665,7 @@ function makeGalleryCard(item, rowH, galKey){
   card.appendChild(mediaDiv);
   const titleDiv=document.createElement('div');
   titleDiv.className='gc-title';
+  titleDiv.style.transform='translateZ(0)'; // force GPU layer to prevent text repaint flicker
   titleDiv.textContent=item.title||'作品标题';
   if(editMode){ titleDiv.contentEditable='true'; titleDiv.onblur=()=>{item.title=titleDiv.textContent.trim();saveData();}; }
   card.appendChild(titleDiv);
