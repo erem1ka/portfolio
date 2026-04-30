@@ -1716,8 +1716,8 @@ function initGalleryLoop(key, track, realItems){
     const isVideo=item.type==='mp4'||item.type==='video'||item.mediaType==='mp4';
     const isAnim=item.type==='webp'||item.type==='gif'||item.type==='anim'||item.mediaType==='webp'||item.mediaType==='gif';
     if(item.media){
-      if(isVideo) m.innerHTML=`<img src="${item.cover||''}" style="width:100%;height:100%;object-fit:cover">`;
-      else if(isAnim) m.innerHTML=`<img src="${item.media}" style="width:100%;height:100%;object-fit:cover">`;
+      if(isVideo) m.innerHTML=`<img src="${item.cover||''}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover">`;
+      else if(isAnim) m.innerHTML=`<img src="${item.media}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover">`;
       else m.innerHTML=`<img src="${item.media}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`;
     }
     c.appendChild(m);
@@ -1806,7 +1806,7 @@ function updateGalleryCounter(key,nth,total){
         initGalleryLoop(key,track,items);
       }
     });
-  },{rootMargin:'200px'});
+  },{rootMargin:'-50px'});
   document.querySelectorAll('[id$="-gallery-outer"]').forEach(el=>galObs.observe(el));
 })();
 
