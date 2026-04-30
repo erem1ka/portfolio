@@ -278,7 +278,7 @@ section[id]{scroll-margin-top:50px}
     .sidebar-divider{height:1px;margin:14px 0}
     .dark .sidebar-divider{background:rgba(255,255,255,.1)}
     .light .sidebar-divider{background:rgba(0,0,0,.08)}
-    .sidebar-bio{font-size:.86rem;line-height:1.72;margin-bottom:0}
+    .sidebar-bio{font-size:.86rem;line-height:1.72;margin-bottom:0;text-align:justify}
     .dark .sidebar-bio{color:#b2b2b2}
     .light .sidebar-bio{color:#555}
     .dark .sidebar-logo{color:#fff}
