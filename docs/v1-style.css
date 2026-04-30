@@ -349,7 +349,7 @@ section[id]{scroll-margin-top:50px}
     }
   
     /* ── Gallery ── */
-    .gallery-outer{overflow:hidden;margin-bottom:14px;border-radius:10px;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%)}
+    .gallery-outer{overflow:hidden;margin-bottom:14px;border-radius:10px;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 20%,#000 80%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 20%,#000 80%,transparent 100%)}
     .gallery-track{display:flex;gap:10px;padding:0 2px;will-change:transform}
     .gallery-card,.gallery-card-clone{flex-shrink:0;border-radius:10px;border:1px solid;overflow:hidden;transition:opacity .3s var(--ease),transform .3s var(--ease),border-color .22s,box-shadow .22s;display:flex;flex-direction:column}
     .dark .gallery-card,.dark .gallery-card-clone{border-color:rgba(255,255,255,.1);background:#1f2130}
