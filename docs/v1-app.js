@@ -459,7 +459,7 @@ function makeMp4Card(item){
   card.className = 'vcard bg-card border-card card-hover masonry-item';
   card.dataset.id = item.id;
   card.dataset.type = item.type || 'mp4';
-  const isAnim = item.type==='webp' || item.type==='gif';
+  const isAnim = item.type==='webp' || item.type==='gif' || item.type==='anim' || item.mediaType==='webp' || item.mediaType==='gif';
   const coverSrc = item.cover || '';
   const mediaSrc = item.media || '';
   let mediaHtml;
