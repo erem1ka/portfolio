@@ -1031,8 +1031,7 @@ function restoreHeroNav(){
     'aigc-img-label': 'AI 生成原画素材',
     'aigc-vid-label': 'AE 木偶骨骼绑定动效',
     'aigc-prompt-label': 'Prompt 工程',
-    'practice-vid-label': '特效 / 转场 / 模板',
-    'agent-vid-label': '工具演示'
+    'practice-vid-label': '特效 / 转场 / 模板'
   };
   Object.entries(fields).forEach(([id, def])=>{
     const el = document.getElementById(id);
