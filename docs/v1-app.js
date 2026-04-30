@@ -466,12 +466,8 @@ function makeMp4Card(item){
   if(!mediaSrc){
     mediaHtml = `<div class="no-thumb">待上传</div>`;
   } else if(isAnim){
-    // webp/gif: show first frame as static cover, play on hover
-    // First frame will be set asynchronously via canvas after card is inserted
-    mediaHtml = `<div class="anim-card-wrap">
-      <img class="anim-img" src="${mediaSrc}" data-anim-src="${mediaSrc}" alt="" style="width:100%;height:100%;object-fit:cover;pointer-events:none;display:block">
-      <span class="anim-play-label">悬停播放</span>
-    </div>`;
+    // webp/gif: autoplay directly
+    mediaHtml = `<img class="anim-img" src="${mediaSrc}" alt="" style="width:100%;height:100%;object-fit:cover;pointer-events:none;display:block">`;
   } else {
     // mp4: show cover with always-visible play badge
     mediaHtml = coverSrc
@@ -493,26 +489,6 @@ function makeMp4Card(item){
     </div>`;
   if(mediaSrc){
     const mediaEl = card.querySelector('.card-media');
-    // Hover-to-play for anim cards (desktop only)
-    if(isAnim){
-      const animImg = card.querySelector('.anim-img');
-      if(animImg && mediaEl){
-        // Extract first frame via canvas, then freeze until hover
-        extractAnimFirstFrame(mediaSrc).then(frameSrc => {
-          if(frameSrc) animImg.src = frameSrc;
-          // Store frame src for restore on mouseleave
-          animImg.dataset.frameSrc = frameSrc || mediaSrc;
-        });
-        mediaEl.addEventListener('mouseenter', ()=>{
-          animImg.src = animImg.dataset.animSrc;
-          mediaEl.classList.add('anim-playing');
-        });
-        mediaEl.addEventListener('mouseleave', ()=>{
-          animImg.src = animImg.dataset.frameSrc || animImg.dataset.animSrc;
-          mediaEl.classList.remove('anim-playing');
-        });
-      }
-    }
     card.querySelector('.card-media').addEventListener('click', e=>{
       if(e.target.closest('.upload-ov') || editMode) return;
       if(isAnim){
