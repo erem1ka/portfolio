@@ -1585,18 +1585,20 @@ init();
 // ── 画廊引擎（支持多条画廊）──
 const _galInst = {}; // per-key: {raf,pos,boost,wheeling,base}
 const GALLERY_ROW_H = 280;
+const GALLERY_ROW_H_MAP = { 'practice2': 200 }; // per-key overrides
 
 function renderGallerySection(key){
+  const rowH = GALLERY_ROW_H_MAP[key] || GALLERY_ROW_H;
   const track=document.getElementById(key+'-gallery-track');
   if(!track) return;
   track.innerHTML='';
   const items=(DATA[key]||[]).filter(i=>i.media||i.type==='prompt');
   items.forEach(item=>{
-    const card=makeGalleryCard(item, GALLERY_ROW_H, key);
+    const card=makeGalleryCard(item, rowH, key);
     track.appendChild(card);
   });
   if(editMode){
-    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, GALLERY_ROW_H, key);
+    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, rowH, key);
     track.appendChild(empty);
   }
   initGalleryLoop(key, track, items);
@@ -1680,17 +1682,18 @@ function initGalleryLoop(key, track, realItems){
   if(_galInst[key]?.raf) cancelAnimationFrame(_galInst[key].raf);
   _galInst[key] = {raf:null,pos:0,boost:0,base:0.8,wheeling:false};
   const inst=_galInst[key];
+  const rowH = GALLERY_ROW_H_MAP[key] || GALLERY_ROW_H;
   track.innerHTML='';
   inst.boost=0; inst.wheeling=false;
   const realCount = realItems.length;
   if(editMode){
-    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, GALLERY_ROW_H, key);
+    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, rowH, key);
     track.appendChild(empty);
   }
 
   const MIN_LOOP=3;
   if(realCount<MIN_LOOP){
-    realItems.forEach(item=>track.appendChild(makeGalleryCard(item, GALLERY_ROW_H, key)));
+    realItems.forEach(item=>track.appendChild(makeGalleryCard(item, rowH, key)));
     track.style.transform='translateX(0)';
     track.style.willChange='auto';
     updateGalleryCounter(key,1,realCount);
@@ -1701,17 +1704,17 @@ function initGalleryLoop(key, track, realItems){
     return;
   }
 
-  realItems.forEach(item=>track.appendChild(makeGalleryCard(item, GALLERY_ROW_H, key)));
+  realItems.forEach(item=>track.appendChild(makeGalleryCard(item, rowH, key)));
   // 轻量克隆：只用图片元素，不绑定事件/编辑器，减少DOM复杂度
   const makeLightClone=(item)=>{
     const ar=item.ar||(9/16);
-    const cardW=Math.round(GALLERY_ROW_H*ar);
+    const cardW=Math.round(rowH*ar);
     const c=document.createElement('div');
     c.className='gallery-card';
     c.style.width=cardW+'px';
     const m=document.createElement('div');
     m.className='gc-media'+(!item.media?' empty-card':'');
-    m.style.height=GALLERY_ROW_H+'px';
+    m.style.height=rowH+'px';
     m.style.width='100%';
     const isVideo=item.type==='mp4'||item.type==='video'||item.mediaType==='mp4';
     const isAnim=item.type==='webp'||item.type==='gif'||item.type==='anim'||item.mediaType==='webp'||item.mediaType==='gif';
@@ -1731,7 +1734,7 @@ function initGalleryLoop(key, track, realItems){
   const GAP=10;
   const totalW=realItems.reduce((sum,item)=>{
     const ar=item.ar||(9/16);
-    return sum+Math.round(GALLERY_ROW_H*ar)+GAP;
+    return sum+Math.round(rowH*ar)+GAP;
   },0);
   inst.pos=-totalW;
   track.style.willChange='transform';
