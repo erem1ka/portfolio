@@ -674,7 +674,10 @@ function renderSection(sectionKey, gridId, type){
   },{threshold:0.05});
   container.querySelectorAll('.vcard').forEach(c=>lazyVis.observe(c));
 
-  container.style.cssText = `display:flex;flex-wrap:wrap;gap:${gap}px;justify-content:center;align-items:flex-start;position:static;height:auto;width:auto;margin-left:0`;
+  // AIGC / Agent 卡片较少，从左边开始排列
+  const leftAlignSections = ['aigc-img','aigc-vid','aigc-prompt','agent'];
+  const justifyContent = leftAlignSections.includes(sectionKey) ? 'flex-start' : 'center';
+  container.style.cssText = `display:flex;flex-wrap:wrap;gap:${gap}px;justify-content:${justifyContent};align-items:flex-start;position:static;height:auto;width:auto;margin-left:0`;
 
   // Initialize drag-sort if in edit mode
   if (editMode) initDragSort(container, sectionKey);
