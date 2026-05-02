@@ -48,7 +48,7 @@ let DATA = {
     email: '{{EMAIL}}',
     qq: '{{QQ}}',
     phone: '{{PHONE}}',
-    bilibili: '',
+
     douyin: 'https://www.douyin.com/user/MS4wLjABAAAA3JxwUq5D1epmpu-ZVxnAm6JzOTQzohLG4oUqFH09aiZPN8xeokgwXIA3A2H5wZFg',
     wechatQr: ''
   },
@@ -111,7 +111,12 @@ function loadData(){
   } catch(e){}
 }
 
-// Push DATA.json to GitHub so any visitor can load it
+// 兼容旧代码的别名
+async function publishDataToGitHub() {
+  return publishDataToCloud();
+}
+
+// 从云端加载数据
 // Load only the version number from cloud (no data overwrite)
 async function loadCloudDataVersion() {
   if (!db) return 0;
@@ -260,9 +265,6 @@ async function loadDataFromCloud(forceLoad) {
 }
 
 // 兼容旧代码的别名
-async function loadDataFromGitHub() {
-  return loadDataFromCloud();
-}
 
 function toggleTheme(){
   darkMode = !darkMode;
@@ -315,16 +317,14 @@ function toggleEdit(){
   document.querySelectorAll('.resume-edit-ctrl,.nav-resume-edit').forEach(el=>el.style.display=editMode?'flex':'none');
   // re-render tags to show/hide edit controls
   rerenderAllTags();
-  ['contact-bilibili','contact-douyin'].forEach(id=>{
+  ['contact-douyin'].forEach(id=>{
     const el=document.getElementById(id);
     if(el) el.contentEditable = editMode;
   });
   // Edit mode: show edit fields for header social links
   const headerDouyin = document.getElementById('header-douyin');
-  const headerBilibili = document.getElementById('header-bilibili');
   if(editMode){
     if(headerDouyin) headerDouyin.style.display = 'flex';
-    if(headerBilibili) headerBilibili.style.display = 'flex';
   }
   // Re-render galleries so overlays update with editMode
   renderGallerySection('practice');
@@ -354,8 +354,7 @@ document.addEventListener('click', e=>{
 
 function exportData(){
   const data = {
-    portfolio: JSON.parse(localStorage.getItem('portfolio_v2_data')||'{}'),
-    gh_config: JSON.parse(localStorage.getItem('gh_config')||'{}')
+    portfolio: JSON.parse(localStorage.getItem('portfolio_v2_data')||'{}')
   };
   const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -374,9 +373,6 @@ function importData(file){
       const data = JSON.parse(reader.result);
       if(data.portfolio){
         localStorage.setItem('portfolio_v2_data', JSON.stringify(data.portfolio));
-      }
-      if(data.gh_config){
-        localStorage.setItem('gh_config', JSON.stringify(data.gh_config));
       }
       alert('导入成功！页面将刷新。');
       location.reload();
@@ -492,8 +488,9 @@ function makeMp4Card(item){
     card.querySelector('.card-media').addEventListener('click', e=>{
       if(e.target.closest('.upload-ov') || editMode) return;
       if(isAnim){
-        // webp/gif: open image zoom (shows animation looping)
-        openImgZoom(mediaSrc);
+        // webp/gif: open card-flip overlay
+        const img = document.createElement('img'); img.src = mediaSrc;
+        window.openMedia(card, img);
       } else {
         // mp4: open inline video player
         openInlinePlayer(item.media, card);
@@ -524,7 +521,10 @@ function makeImgCard(item){
   if(item.media){
     card.querySelector('.card-media').addEventListener('click', e=>{
       if(e.target.closest('.upload-ov') || editMode) return;
-      openImgZoom(item.media);
+      if(!isAnim){
+        const img = document.createElement('img'); img.src = item.media;
+        window.openMedia(card, img);
+      }
     });
   }
   setupEditableFields(card, item);
@@ -764,28 +764,18 @@ function restoreContact(){
       if(h > 0) rightCol.style.minHeight = h + 'px';
     }
   });
-  const biliEl = document.getElementById('contact-bilibili');
   const douyinEl = document.getElementById('contact-douyin');
-  if(biliEl && c.bilibili && c.bilibili!=='{{BILIBILI_UID}}'){
-    biliEl.href = c.bilibili;
-    biliEl.textContent = c.bilibili;
-  }
-  if(douyinEl && c.douyin && c.douyin!=='{{DOUYIN_ID}}'){
+  if(douyinEl && c.douyin){
     douyinEl.href = c.douyin;
     douyinEl.textContent = c.douyin;
   }
   // Social links: update header icons
   const headerDouyin = document.getElementById('header-douyin');
-  const headerBilibili = document.getElementById('header-bilibili');
-  if(headerDouyin && c.douyin && c.douyin!=='{{DOUYIN_ID}}' && c.douyin!==''){
+  if(headerDouyin && c.douyin && c.douyin!==''){
     headerDouyin.onclick = function(){ window.open(c.douyin, '_blank', 'noopener'); };
     headerDouyin.style.display = 'flex';
     const douyinLabel = document.getElementById('douyin-label');
     if(douyinLabel) douyinLabel.style.display = '';
-  }
-  if(headerBilibili && c.bilibili && c.bilibili!=='{{BILIBILI_UID}}' && c.bilibili!==''){
-    headerBilibili.href = c.bilibili;
-    headerBilibili.style.display = 'flex';
   }
   if(c.email && c.email!=='{{EMAIL}}'){
     const a=document.querySelector('a[href^="mailto"]');
@@ -830,37 +820,21 @@ function restoreContact(){
   if(!DATA.contact.resumeName) DATA.contact.resumeName='';
   if(!DATA.contact.resumeUrl) DATA.contact.resumeUrl='';
   updateResumeUI();
-  [biliEl, douyinEl].forEach(el=>{
+  [douyinEl].forEach(el=>{
     if(!el) return;
     el.contentEditable = editMode;
     el.onblur=()=>{
       const url = el.textContent.trim();
       el.href = url || '#';
-      if(el.id==='contact-bilibili') DATA.contact.bilibili = url;
-      else DATA.contact.douyin = url;
+      DATA.contact.douyin = url;
       saveData();
     };
   });
 }
 
-function openQrZoom(src){
-  if(!src) return;
-  const img = document.getElementById('qrZoomImg');
-  img.src = src;
-  document.getElementById('qrZoom').classList.add('open');
-}
-function closeQrZoom(){ document.getElementById('qrZoom').classList.remove('open'); }
 
-function openImgZoom(src){
-  if(!src) return;
-  const img = document.getElementById('imgZoomImg');
-  img.src = src;
-  document.getElementById('imgZoom').classList.add('open');
-}
-function closeImgZoom(){
-  document.getElementById('imgZoom').classList.remove('open');
-  document.getElementById('imgZoomImg').src = '';
-}
+
+
 
 function deleteQR(){
   DATA.contact.wechatQr = '';
@@ -887,7 +861,7 @@ function triggerResumeUpload(){
     saveData();
     updateResumeUI();
     // try upload to GitHub
-    const result = await uploadToGitHub(file);
+    const result = await uploadToCloudStorage(file);
     if(result){
       URL.revokeObjectURL(blobUrl);
       DATA.contact.resumeUrl = result.url;
@@ -1126,7 +1100,7 @@ fileInput.addEventListener('change', async ()=>{
   rerenderItemSection(_uploadTarget);
   
   // 上传媒体文件到云存储
-  const result = await uploadToGitHub(uploadFile);
+  const result = await uploadToCloudStorage(uploadFile);
   if(result){
     URL.revokeObjectURL(blobUrl);
     item.media = result.url;
@@ -1269,7 +1243,7 @@ function closeInlinePlayer(){
   document.getElementById('playerBackdrop').classList.remove('open');
 }
 
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeInlinePlayer(); closeImgZoom(); closeQrZoom(); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeInlinePlayer(); } });
 
 function triggerQRUpload(){
   const inp=document.createElement('input');
@@ -1287,7 +1261,7 @@ function triggerQRUpload(){
     if(actions) actions.style.display='flex';
     DATA.contact.wechatQr=blobUrl;
     saveData();
-    const result=await uploadToGitHub(file);
+    const result=await uploadToCloudStorage(file);
     if(result){
       URL.revokeObjectURL(blobUrl);
       if(img) img.src=result.url;
@@ -1351,9 +1325,7 @@ async function uploadToCloudStorage(file) {
 }
 
 // 兼容旧代码的别名
-async function uploadToGitHub(file) {
-  return uploadToCloudStorage(file);
-}
+
 
 /* ════════════════════════════════════════════
    DRAG & DROP SORT (edit mode only)
@@ -1616,7 +1588,7 @@ function makeGalleryCard(item, rowH, galKey){
     mediaDiv.onclick=function(){
       if(editMode) return;
       if(isVideo) openInlinePlayer(item.media);
-      else openImgZoom(item.media);
+      else { const img=document.createElement('img'); img.src=item.media; window.openMedia(cardEl,img); }
     };
   }
   if(editMode){

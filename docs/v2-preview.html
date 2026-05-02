@@ -712,7 +712,7 @@
     }
 
     /* ── Bilibili / Douyin contact links ── */
-    #contact-bilibili, #contact-douyin {
+    #contact-douyin {
       color: var(--accent); font-size: .78rem;
       font-family: 'Space Mono', monospace;
       word-break: break-all;
@@ -901,7 +901,7 @@
 <div id="app" class="light">
 
 <!-- ── Sidebar ── -->
-<!-- v1-app.js bindings: sidebar-name, sidebar-role, sidebar-bio kept hidden -->
+<!-- sidebar data bindings (hidden) -->
 <span id="sidebar-name" style="display:none" contenteditable="false">张峻烨</span>
 <span id="sidebar-role" style="display:none" contenteditable="false">Motion × AIGC Designer</span>
 <p id="sidebar-bio" style="display:none" contenteditable="false"></p>
@@ -957,8 +957,7 @@
 
   <!-- 导航下方：社交链接 + 简历（小圆图标形式） -->
   <div class="sidebar-links" id="sidebar-social-links">
-    <!-- B站已移除，改为GitHub；header-bilibili id 保留给v1-app.js -->
-    <a id="header-bilibili" href="#" style="display:none"></a>
+    <!-- GitHub + Douyin social link icons -->
     <div class="sidebar-link-item">
       <button id="header-github" onclick="window.open('https://github.com/erem1ka','_blank','noopener')" class="sidebar-btn magnetic" title="GitHub">
         <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.635.87 1.875 1.23 1.095 1.845 2.88 1.305 3.585.99.105-.78.42-1.305.765-1.605-2.7-.3-5.52-1.35-5.52-6.015 0-1.35.48-2.46 1.23-3.345-.12-.3-.54-1.62.12-3.36 0 0 1.005-.315 3.3 1.275.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.59 3.3-1.275 3.3-1.275.66 1.74.24 3.06.12 3.36.765.885 1.23 1.995 1.23 3.345 0 4.68-2.835 5.715-5.55 6.015.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -985,7 +984,7 @@
     </div>
   </div>
 
-  <!-- sidebar-bottom: id绑定供v1-app.js + copyright -->
+  <!-- sidebar-bottom: copyright -->
   <div class="sidebar-bottom" style="display:none">
     <button id="themeBtnSidebar" onclick="toggleTheme()"></button>
     <svg id="themeIconSidebar" viewBox="0 0 24 24"></svg>
@@ -1007,7 +1006,7 @@
 
 <!-- ── Header（精简版，顶部只保留移动端汉堡菜单按钮；桌面端导航已移入 sidebar）── -->
 <header class="content-offset" style="display:none" aria-hidden="true">
-  <!-- navLinks id 仍须保留，供 v1-app.js 绑定 -->
+  <!-- navLinks (hidden, bound by JS) -->
   <div id="navLinks" style="display:none">
     <a id="nav-practice"></a><a id="nav-mg"></a><a id="nav-aigc"></a>
     <a id="nav-agent"></a><a id="nav-contact"></a>
@@ -1245,14 +1244,11 @@
 
 <!-- footer 已移除，copyright 在 sidebar -->
 
-<!-- ── Overlays — use exact same IDs as v1-app.js expects ── -->
+<!-- ── Overlays ── -->
 <div id="playerBackdrop" onclick="closeInlinePlayer()" style="display:none;position:fixed;inset:0;z-index:199;background:rgba(28,24,20,.85)"></div>
 <div class="inline-player" id="inlinePlayer" style="display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:200;background:var(--bg-card);border-radius:12px 12px 0 0;padding:16px;max-width:700px;width:100%">
   <button class="inline-player-close" onclick="closeInlinePlayer()" style="position:absolute;top:12px;right:16px;font-family:'Space Mono',monospace;font-size:.7rem;color:var(--color-sub);background:none;border:none;cursor:pointer">✕ 关闭</button>
   <video id="inlineVideo" controls playsinline style="width:100%;border-radius:8px"></video>
-</div>
-<div id="imgZoom" onclick="closeImgZoom()" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(28,24,20,.92);align-items:center;justify-content:center">
-  <img id="imgZoomImg" src="" alt="" style="max-width:90vw;max-height:90vh;border-radius:8px">
 </div>
 
 
