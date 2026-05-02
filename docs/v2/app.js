@@ -77,7 +77,14 @@ function loadData(){
       // 深度替换：用本地缓存完全替换各数组，防止浅合并残留旧数据
       const SECTIONS = ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
       SECTIONS.forEach(sec=>{ DATA[sec] = d[sec] || []; });
-      if(d.contact) DATA.contact = Object.assign(DATA.contact, d.contact);
+      if(d.contact){
+        // 合并时跳过空字符串，避免空值覆盖默认链接（如 douyin）
+        Object.keys(d.contact).forEach(k=>{
+          if(d.contact[k] !== '' && d.contact[k] !== null && d.contact[k] !== undefined){
+            DATA.contact[k] = d.contact[k];
+          }
+        });
+      }
       if(d.sectionTitles) DATA.sectionTitles = d.sectionTitles;
       if(d.heroNav) DATA.heroNav = d.heroNav;
       if(d.tags) DATA.tags = d.tags;
@@ -109,11 +116,6 @@ function loadData(){
       if(cleaned) try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); }catch(e){}
     }
   } catch(e){}
-}
-
-// 兼容旧代码的别名
-async function publishDataToGitHub() {
-  return publishDataToCloud();
 }
 
 // 从云端加载数据
@@ -189,11 +191,6 @@ async function publishDataToCloud() {
   }
 }
 
-// 兼容旧代码的别名
-async function publishDataToGitHub() {
-  return publishDataToCloud();
-}
-
 // 从云端加载数据
 async function loadDataFromCloud(forceLoad) {
   if (!db) return;
@@ -263,8 +260,6 @@ async function loadDataFromCloud(forceLoad) {
     console.error('从云端加载失败:', e);
   }
 }
-
-// 兼容旧代码的别名
 
 function toggleTheme(){
   darkMode = !darkMode;
@@ -1323,9 +1318,6 @@ async function uploadToCloudStorage(file) {
     return null;
   }
 }
-
-// 兼容旧代码的别名
-
 
 /* ════════════════════════════════════════════
    DRAG & DROP SORT (edit mode only)
