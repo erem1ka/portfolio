@@ -778,7 +778,7 @@ function restoreContact(){
   const headerDouyin = document.getElementById('header-douyin');
   const headerBilibili = document.getElementById('header-bilibili');
   if(headerDouyin && c.douyin && c.douyin!=='{{DOUYIN_ID}}' && c.douyin!==''){
-    headerDouyin.href = c.douyin;
+    headerDouyin.onclick = function(){ window.open(c.douyin, '_blank', 'noopener'); };
     headerDouyin.style.display = 'flex';
     const douyinLabel = document.getElementById('douyin-label');
     if(douyinLabel) douyinLabel.style.display = '';
@@ -908,7 +908,7 @@ function deleteResume(){
 
 async function downloadResume(e){
   e.preventDefault();
-  const url = e.currentTarget.href;
+  const url = e.currentTarget.dataset.url || e.currentTarget.href || DATA.contact.resumeUrl;
   const fn = e.currentTarget.dataset.filename || '张峻烨简历';
   // Try to get the extension from the original filename
   const origName = DATA.contact.resumeName || '';
@@ -945,7 +945,7 @@ function updateResumeUI(){
   const navBtn = document.getElementById('nav-resume-btn');
   const navDel = document.getElementById('nav-resume-del');
   if(navBtn){
-    if(url){ navBtn.href=url; navBtn.dataset.filename='张峻烨简历'; navBtn.style.display='flex'; navBtn.onclick=downloadResume; }
+    if(url){ navBtn.dataset.url=url; navBtn.dataset.filename='张峻烨简历'; navBtn.style.display='flex'; navBtn.onclick=downloadResume; }
     else navBtn.style.display='none';
   }
   if(navDel) navDel.style.display = url ? '' : 'none';
