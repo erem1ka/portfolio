@@ -1215,10 +1215,11 @@
     <div style="display:flex;justify-content:center;gap:120px" id="contact-grid">
       <div id="contact-left-col">
         <p style="font-family:'Noto Sans SC',sans-serif;font-size:.68rem;font-weight:200;letter-spacing:.2em;text-transform:uppercase;color:var(--color-dim);margin-bottom:16px">微信</p>
-        <div id="wechat-qr-wrap" style="position:relative;display:inline-block">
+        <div id="wechat-qr-wrap" style="position:relative;display:inline-block;cursor:pointer;transition:transform .22s,box-shadow .22s" onmouseenter="this.style.transform='scale(1.04) translateY(-3px)';this.style.boxShadow='0 16px 40px rgba(200,145,122,.22),0 4px 12px rgba(0,0,0,.08)';this.style.borderColor='var(--accent-light)'"
+ onmouseleave="this.style.transform='';this.style.boxShadow='';this.style.borderColor='var(--color-sep)'">
           <img id="wechat-qr-img" src="" alt="微信二维码" onerror="this.style.display='none'"
             style="max-width:140px;width:auto;height:auto;display:none;border-radius:3px;border:1px solid var(--color-sep);cursor:zoom-in">
-          <div id="wechat-qr-placeholder" onclick="editMode&&triggerQRUpload()" style="width:140px;height:140px;border:1px solid var(--color-sep);display:flex;align-items:center;justify-content:center;font-family:'Noto Sans SC',sans-serif;font-size:.48rem;font-weight:200;color:var(--color-dim)">上传二维码</div>
+          <div id="wechat-qr-placeholder" onclick="editMode&&triggerQRUpload()" style="width:140px;height:140px;border-radius:6px;border:1px solid var(--color-sep);display:flex;align-items:center;justify-content:center;font-family:'Noto Sans SC',sans-serif;font-size:.48rem;font-weight:200;color:var(--color-dim);background:var(--bg-card);transition:border-color .22s,background .22s">上传二维码</div>
           <div id="wechat-qr-actions" style="display:none;margin-top:6px;gap:8px">
             <button style="font-family:'Noto Sans SC',sans-serif;font-size:.44rem;font-weight:200;color:var(--color-sub);background:none;border:none;cursor:pointer" onclick="triggerQRUpload()">替换</button>
             <span style="color:var(--color-dim);font-size:.44rem">·</span>
@@ -1743,12 +1744,13 @@ document.addEventListener('click', e=>{
 
 // ── 微信二维码：使用卡片翻转放大交互 ──
 (function(){
-  document.getElementById('wechat-qr-img').addEventListener('click', function(e){
-    if(editMode) return;
-    const wrap = document.getElementById('wechat-qr-wrap');
-    if(!this.src || this.style.display==='none') return;
+  const wrap = document.getElementById('wechat-qr-wrap');
+  wrap.addEventListener('click', function(e){
+    if(editMode) { triggerQRUpload(); return; }
+    const img = document.getElementById('wechat-qr-img');
+    if(!img.src || img.style.display==='none') return;
     e.preventDefault(); e.stopPropagation();
-    openMedia(wrap, this);
+    openMedia(wrap, img);
   });
 })();
 
