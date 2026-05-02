@@ -1283,13 +1283,13 @@
 </div><!-- #app -->
 
 <!-- ── Scripts ── -->
-<script src="./v1-app.js"></script>
+<script src="./v2-preview-app.js"></script>
 
 <script>
 // v2 theme init & toggleTheme override
 (function(){
   const app = document.getElementById('app');
-  const saved = localStorage.getItem('v1_theme');
+  const saved = localStorage.getItem('v2_theme');
   function applyTheme(isDark){
     document.body.classList.toggle('dark', isDark);
     document.body.classList.toggle('light', !isDark);
@@ -1312,7 +1312,7 @@
   window.toggleTheme = function(){
     const isDark = app.classList.contains('dark');
     applyTheme(!isDark);
-    localStorage.setItem('v1_theme', !isDark ? 'dark' : 'light');
+    localStorage.setItem('v2_theme', !isDark ? 'dark' : 'light');
     syncThemeIcon(!isDark);
   };
 
