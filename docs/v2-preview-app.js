@@ -49,7 +49,7 @@ let DATA = {
     qq: '{{QQ}}',
     phone: '{{PHONE}}',
     bilibili: '',
-    douyin: '',
+    douyin: 'https://www.douyin.com/user/MS4wLjABAAAA3JxwUq5D1epmpu-ZVxnAm6JzOTQzohLG4oUqFH09aiZPN8xeokgwXIA3A2H5wZFg',
     wechatQr: ''
   },
   sectionTitles: {
