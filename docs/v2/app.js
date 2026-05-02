@@ -1666,6 +1666,7 @@ function initGalleryLoop(key, track, realItems){
   const galleryOuter=document.getElementById(key+'-gallery-outer');
   const onWheel=(e)=>{
     if(!galleryOuter||!galleryOuter.contains(e.target)) return;
+    if(editMode) return; // 编辑模式：不拦截滚轮，让页面正常滚动
     inst.wheeling=true;
     const delta=e.deltaY!==0?e.deltaY:e.deltaX;
     inst.boost=Math.max(-22,Math.min(22,inst.boost+delta*0.07));
@@ -1673,6 +1674,30 @@ function initGalleryLoop(key, track, realItems){
   };
   galleryOuter?.addEventListener('wheel',onWheel,{passive:false});
   galleryOuter?.addEventListener('mouseleave',()=>{inst.wheeling=false;});
+
+  // 编辑模式：鼠标拖拽横向滚动画廊
+  let _dragStartX=0, _dragStartPos=0, _dragging=false;
+  galleryOuter?.addEventListener('mousedown',(e)=>{
+    if(!editMode) return;
+    if(e.target.closest('button,input,[contenteditable]')) return;
+    _dragging=true; _dragStartX=e.clientX; _dragStartPos=inst.pos;
+    galleryOuter.style.cursor='grabbing';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove',(e)=>{
+    if(!_dragging) return;
+    const dx=e.clientX-_dragStartX;
+    inst.pos=_dragStartPos-dx;
+    // 边界跳转（无限循环）
+    if(inst.pos<=-(2*totalW)) inst.pos+=totalW;
+    if(inst.pos>=0) inst.pos-=totalW;
+    track.style.transform=`translate3d(${inst.pos}px,0,0)`;
+  });
+  document.addEventListener('mouseup',()=>{
+    if(!_dragging) return;
+    _dragging=false;
+    if(galleryOuter) galleryOuter.style.cursor='';
+  });
 
   const hint=document.getElementById(key+'-gallery-hint');
   if(hint){

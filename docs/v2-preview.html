@@ -535,6 +535,10 @@
     .gallery-card .gc-media, .gallery-card-clone .gc-media { position: relative; }
     .editing .vcard:hover .upload-ov { display: flex; }
     .editing .vcard .card-media.empty-card .upload-ov { display: flex !important; }
+    /* 编辑模式：画廊显示拖拽光标 */
+    .editing .gallery-outer { cursor: grab; }
+    .editing .gallery-outer .gallery-card,
+    .editing .gallery-outer .gallery-card-clone { cursor: grab; }
     .upload-ov-btn {
       font-family: 'Space Mono', monospace; font-size: .56rem;
       color: var(--accent); border: 1px solid var(--accent-light);
