@@ -1232,10 +1232,20 @@ function getImageAR(url){
   });
 }
 
-function openInlinePlayer(src, cardEl){
+async function openInlinePlayer(src, cardEl){
   const player=document.getElementById('inlinePlayer');
   const video=document.getElementById('inlineVideo');
-  video.src=src;
+  // 尝试获取临时鉴权 URL，解决 CORS 问题
+  let playUrl = src;
+  if(tcbApp && src && src.includes('tcb.qcloud.la')){
+    try {
+      const result = await tcbApp.getTempFileURL({ fileList: [src] });
+      if(result && result.fileList && result.fileList[0] && result.fileList[0].tempFileURL){
+        playUrl = result.fileList[0].tempFileURL;
+      }
+    } catch(e){ console.warn('getTempFileURL failed, using original URL:', e); }
+  }
+  video.src=playUrl;
   const vw=window.innerWidth;
   const vh=window.innerHeight;
   const w=Math.min(Math.round(vw*.82),1200);
