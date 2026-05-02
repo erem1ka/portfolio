@@ -780,6 +780,8 @@ function restoreContact(){
   if(headerDouyin && c.douyin && c.douyin!=='{{DOUYIN_ID}}' && c.douyin!==''){
     headerDouyin.href = c.douyin;
     headerDouyin.style.display = 'flex';
+    const douyinLabel = document.getElementById('douyin-label');
+    if(douyinLabel) douyinLabel.style.display = '';
   }
   if(headerBilibili && c.bilibili && c.bilibili!=='{{BILIBILI_UID}}' && c.bilibili!==''){
     headerBilibili.href = c.bilibili;
@@ -947,6 +949,8 @@ function updateResumeUI(){
     else navBtn.style.display='none';
   }
   if(navDel) navDel.style.display = url ? '' : 'none';
+  const resumeLabel = document.getElementById('resume-label');
+  if(resumeLabel) resumeLabel.style.display = url ? '' : 'none';
 }
 
 /* ════════════════════════════════════════════

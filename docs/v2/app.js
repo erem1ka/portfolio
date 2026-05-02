@@ -674,10 +674,7 @@ function renderSection(sectionKey, gridId, type){
   },{threshold:0.05});
   container.querySelectorAll('.vcard').forEach(c=>lazyVis.observe(c));
 
-  // AIGC / Agent 卡片较少，从左边开始排列
-  const leftAlignSections = ['aigc-img','aigc-vid','aigc-prompt','agent'];
-  const justifyContent = leftAlignSections.includes(sectionKey) ? 'flex-start' : 'center';
-  container.style.cssText = `display:flex;flex-wrap:wrap;gap:${gap}px;justify-content:${justifyContent};align-items:flex-start;position:static;height:auto;width:auto;margin-left:0`;
+  container.style.cssText = `display:flex;flex-wrap:wrap;gap:${gap}px;justify-content:center;align-items:flex-start;position:static;height:auto;width:auto;margin-left:0`;
 
   // Initialize drag-sort if in edit mode
   if (editMode) initDragSort(container, sectionKey);
@@ -783,6 +780,8 @@ function restoreContact(){
   if(headerDouyin && c.douyin && c.douyin!=='{{DOUYIN_ID}}' && c.douyin!==''){
     headerDouyin.href = c.douyin;
     headerDouyin.style.display = 'flex';
+    const douyinLabel = document.getElementById('douyin-label');
+    if(douyinLabel) douyinLabel.style.display = '';
   }
   if(headerBilibili && c.bilibili && c.bilibili!=='{{BILIBILI_UID}}' && c.bilibili!==''){
     headerBilibili.href = c.bilibili;
@@ -950,6 +949,8 @@ function updateResumeUI(){
     else navBtn.style.display='none';
   }
   if(navDel) navDel.style.display = url ? '' : 'none';
+  const resumeLabel = document.getElementById('resume-label');
+  if(resumeLabel) resumeLabel.style.display = url ? '' : 'none';
 }
 
 /* ════════════════════════════════════════════
@@ -1235,20 +1236,10 @@ function getImageAR(url){
   });
 }
 
-async function openInlinePlayer(src, cardEl){
+function openInlinePlayer(src, cardEl){
   const player=document.getElementById('inlinePlayer');
   const video=document.getElementById('inlineVideo');
-  // 尝试获取临时鉴权 URL，解决 CORS 问题
-  let playUrl = src;
-  if(tcbApp && src && src.includes('tcb.qcloud.la')){
-    try {
-      const result = await tcbApp.getTempFileURL({ fileList: [src] });
-      if(result && result.fileList && result.fileList[0] && result.fileList[0].tempFileURL){
-        playUrl = result.fileList[0].tempFileURL;
-      }
-    } catch(e){ console.warn('getTempFileURL failed, using original URL:', e); }
-  }
-  video.src=playUrl;
+  video.src=src;
   const vw=window.innerWidth;
   const vh=window.innerHeight;
   const w=Math.min(Math.round(vw*.82),1200);

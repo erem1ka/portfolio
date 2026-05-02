@@ -128,9 +128,19 @@
     .sidebar-links {
       display: flex; flex-direction: row;
       align-items: center; justify-content: center;
-      gap: 8px; width: 100%;
+      gap: 12px; width: 100%;
       padding: 0;
       margin-top: 20px;
+    }
+    .sidebar-link-item {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+    }
+    .sidebar-link-label {
+      font-family: 'Noto Sans SC', sans-serif;
+      font-size: .42rem; font-weight: 200;
+      letter-spacing: .08em; color: var(--color-dim);
+      text-align: center;
     }
 
     /* Sidebar: bottom buttons */
@@ -279,7 +289,7 @@
     .section-inner {
       position: relative;
       max-width: none; margin: 0;
-      padding: 96px 0 96px 72px;
+      padding: 96px 0 96px 96px;
     }
     /* 标题区自然铺开，不限宽 */
     .section-title-wrap {
@@ -948,16 +958,27 @@
   <div class="sidebar-links" id="sidebar-social-links">
     <!-- B站已移除，改为GitHub；header-bilibili id 保留给v1-app.js -->
     <a id="header-bilibili" href="#" style="display:none"></a>
-    <a id="header-github" href="https://github.com/erem1ka" target="_blank" rel="noopener" class="sidebar-btn magnetic" title="GitHub">
-      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.635.87 1.875 1.23 1.095 1.845 2.88 1.305 3.585.99.105-.78.42-1.305.765-1.605-2.7-.3-5.52-1.35-5.52-6.015 0-1.35.48-2.46 1.23-3.345-.12-.3-.54-1.62.12-3.36 0 0 1.005-.315 3.3 1.275.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.59 3.3-1.275 3.3-1.275.66 1.74.24 3.06.12 3.36.765.885 1.23 1.995 1.23 3.345 0 4.68-2.835 5.715-5.55 6.015.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-    </a>
-    <a id="header-douyin" href="#" target="_blank" rel="noopener" class="sidebar-btn magnetic" title="抖音主页" style="display:none">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg>
-    </a>
-    <div id="nav-resume-wrap" style="display:flex;align-items:center;gap:8px">
-      <a id="nav-resume-btn" href="#" download class="sidebar-btn magnetic" title="简历下载" style="display:none">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <div class="sidebar-link-item">
+      <a id="header-github" href="https://github.com/erem1ka" target="_blank" rel="noopener" class="sidebar-btn magnetic" title="GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.635.87 1.875 1.23 1.095 1.845 2.88 1.305 3.585.99.105-.78.42-1.305.765-1.605-2.7-.3-5.52-1.35-5.52-6.015 0-1.35.48-2.46 1.23-3.345-.12-.3-.54-1.62.12-3.36 0 0 1.005-.315 3.3 1.275.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.59 3.3-1.275 3.3-1.275.66 1.74.24 3.06.12 3.36.765.885 1.23 1.995 1.23 3.345 0 4.68-2.835 5.715-5.55 6.015.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
       </a>
+      <span class="sidebar-link-label">GitHub</span>
+    </div>
+    <div class="sidebar-link-item">
+      <a id="header-douyin" href="#" target="_blank" rel="noopener" class="sidebar-btn magnetic" title="抖音主页" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg>
+      </a>
+      <span class="sidebar-link-label" id="douyin-label" style="display:none">抖音主页</span>
+    </div>
+    <div class="sidebar-link-item">
+      <div id="nav-resume-wrap" style="display:flex;align-items:center;gap:8px">
+        <a id="nav-resume-btn" href="#" download class="sidebar-btn magnetic" title="简历下载" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </a>
+      </div>
+      <span class="sidebar-link-label" id="resume-label" style="display:none">简历下载</span>
+    </div>
+  </div>
       <div class="nav-resume-edit" style="display:none;flex-direction:column;gap:6px">
         <button onclick="triggerResumeUpload()" style="font-family:'Noto Sans SC',sans-serif;font-size:.52rem;font-weight:200;color:var(--color-sub);border:1px solid var(--color-sep);border-radius:4px;padding:3px 10px;background:transparent;cursor:pointer">上传简历</button>
         <button onclick="deleteResume()" id="nav-resume-del" style="display:none;color:rgba(200,80,60,.8);font-family:'Noto Sans SC',sans-serif;font-size:.52rem;border:1px solid var(--color-sep);border-radius:4px;padding:3px 10px;background:transparent;cursor:pointer">删除</button>
