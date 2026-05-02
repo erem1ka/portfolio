@@ -1643,29 +1643,58 @@ document.addEventListener('click', e=>{
     const app = document.getElementById('app');
     if(app.classList.contains('editing')) return;
     const rect = triggerEl.getBoundingClientRect();
-    const clone = mediaEl.cloneNode(true);
-    clone.removeAttribute('style');
+    // 检查是否是视频卡片：用真实视频 src 替代封面图
+    const cardType = triggerEl.dataset.type || '';
+    const isVideoCard = cardType==='mp4' || cardType==='video' || (triggerEl.dataset.id && DATA.mg?.find(i=>i.id===triggerEl.dataset.id && (i.type==='mp4'||i.type==='video')));
+    const videoSrc = isVideoCard ? (DATA.mg?.find(i=>i.id===triggerEl.dataset.id)?.media || '') : '';
+
     const vw = window.innerWidth, vh = window.innerHeight;
     const nw = Math.min(vw*.88, Math.max(rect.width*2.8, 480));
     const nh = Math.min(vh*.86, Math.max(rect.height*2.8, 320));
     const tx = (vw-nw)/2; const ty = (vh-nh)/2;
 
-    box.innerHTML=''; box.appendChild(closeBtn); box.appendChild(clone);
-    Object.assign(box.style, {
-      left:rect.left+'px', top:rect.top+'px',
-      width:rect.width+'px', height:rect.height+'px',
-      transform:'rotateY(0deg) scale(1)', opacity:'1', transition:'none'
-    });
-    ov.classList.add('active');
+    box.innerHTML=''; box.appendChild(closeBtn);
 
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      box.style.transition = 'left .5s cubic-bezier(.2,.8,.2,1), top .5s cubic-bezier(.2,.8,.2,1), width .5s, height .5s, transform .55s cubic-bezier(.2,.8,.2,1)';
-      box.style.left = tx+'px'; box.style.top = ty+'px';
-      box.style.width = nw+'px'; box.style.height = nh+'px';
-      box.style.transform = 'rotateY(360deg) scale(1)';
-      clone.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;display:block';
-      if(clone.tagName==='VIDEO'){ clone.controls=true; clone.play&&clone.play().catch(()=>{}); }
-    }));
+    if(isVideoCard && videoSrc){
+      // 视频卡片：创建 video 元素并播放
+      const video = document.createElement('video');
+      video.src = videoSrc;
+      video.controls = true;
+      video.playsInline = true;
+      video.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;display:block';
+      box.appendChild(video);
+      Object.assign(box.style, {
+        left:rect.left+'px', top:rect.top+'px',
+        width:rect.width+'px', height:rect.height+'px',
+        transform:'rotateY(0deg) scale(1)', opacity:'1', transition:'none'
+      });
+      ov.classList.add('active');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        box.style.transition = 'left .5s cubic-bezier(.2,.8,.2,1), top .5s cubic-bezier(.2,.8,.2,1), width .5s, height .5s, transform .55s cubic-bezier(.2,.8,.2,1)';
+        box.style.left = tx+'px'; box.style.top = ty+'px';
+        box.style.width = nw+'px'; box.style.height = nh+'px';
+        box.style.transform = 'rotateY(360deg) scale(1)';
+        video.play().catch(()=>{});
+      }));
+    } else {
+      // 图片卡片：克隆图片
+      const clone = mediaEl.cloneNode(true);
+      clone.removeAttribute('style');
+      box.appendChild(clone);
+      Object.assign(box.style, {
+        left:rect.left+'px', top:rect.top+'px',
+        width:rect.width+'px', height:rect.height+'px',
+        transform:'rotateY(0deg) scale(1)', opacity:'1', transition:'none'
+      });
+      ov.classList.add('active');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        box.style.transition = 'left .5s cubic-bezier(.2,.8,.2,1), top .5s cubic-bezier(.2,.8,.2,1), width .5s, height .5s, transform .55s cubic-bezier(.2,.8,.2,1)';
+        box.style.left = tx+'px'; box.style.top = ty+'px';
+        box.style.width = nw+'px'; box.style.height = nh+'px';
+        box.style.transform = 'rotateY(360deg) scale(1)';
+        clone.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;display:block';
+      }));
+    }
   }
 
   document.addEventListener('click', e=>{
@@ -1675,9 +1704,6 @@ document.addEventListener('click', e=>{
     if(gcMedia){
       const card = e.target.closest('.gallery-card,.gallery-card-clone');
       if(!card) return;
-      // 画廊中的视频卡片：跳过拦截，让 openInlinePlayer 处理
-      const cardType = card.dataset.type || '';
-      if(cardType==='mp4' || cardType==='video') return;
       const m = gcMedia.querySelector('img,video');
       if(m){ e.preventDefault(); e.stopPropagation(); openMedia(card, m); }
       return;
@@ -1686,8 +1712,6 @@ document.addEventListener('click', e=>{
     if(cm){
       const vc = e.target.closest('.vcard');
       if(!vc) return;
-      // 视频/mp4卡片：跳过拦截，让 openInlinePlayer 处理
-      if(vc.dataset.type==='mp4' || vc.dataset.type==='video') return;
       const m = cm.querySelector('img,video');
       if(m){ e.preventDefault(); e.stopPropagation(); openMedia(vc, m); }
     }
