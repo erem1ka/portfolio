@@ -1541,22 +1541,21 @@ async function init(){
   renderAll();
   
   if (cloudReady) {
-    // Always pull latest data from cloud first, then decide whether to push
-    const isEditor = !!localStorage.getItem('portfolio_editor_token');
-    const localVersion = DATA._version || 0;
-    
-    // First: load cloud data to see what version is there
+    // 优先从云端拉取最新数据，防止新设备的空数据覆盖云端
     const cloudResult = await loadCloudDataVersion();
     const cloudVersion = cloudResult || 0;
     
-    if (localVersion > 0 && localVersion >= cloudVersion && isEditor) {
-      // Local data is newer or same version — push to cloud
-      publishDataToCloud();
-    } else if (cloudVersion > 0) {
-      // Cloud data is newer — load from cloud (overwrites local)
+    if (cloudVersion > 0) {
+      // 云端有数据 → 拉取云端覆盖本地（无论本地是否有数据）
       await loadDataFromCloud(true);
+    } else {
+      // 云端没有数据（首次部署），只有编辑者设备才推送
+      const isEditor = !!localStorage.getItem('portfolio_editor_token');
+      const localVersion = DATA._version || 0;
+      if (localVersion > 0 && isEditor) {
+        publishDataToCloud();
+      }
     }
-    // If both are 0 (first time, no data anywhere), nothing to sync
   }
 }
 
