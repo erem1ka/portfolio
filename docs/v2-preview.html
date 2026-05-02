@@ -1665,29 +1665,70 @@ document.addEventListener('click', e=>{
     const app = document.getElementById('app');
     if(app.classList.contains('editing')) return;
     const rect = triggerEl.getBoundingClientRect();
-    const clone = mediaEl.cloneNode(true);
-    clone.removeAttribute('style');
+    // 检查是否是视频卡片
+    const cardType = triggerEl.dataset.type || '';
+    const isVideoCard = cardType==='mp4' || cardType==='video';
+    // 查找视频数据源
+    const videoSrc = isVideoCard ? findVideoSrc(triggerEl) : '';
+
     const vw = window.innerWidth, vh = window.innerHeight;
     const nw = Math.min(vw*.88, Math.max(rect.width*2.8, 480));
     const nh = Math.min(vh*.86, Math.max(rect.height*2.8, 320));
     const tx = (vw-nw)/2; const ty = (vh-nh)/2;
 
-    box.innerHTML=''; box.appendChild(closeBtn); box.appendChild(clone);
-    Object.assign(box.style, {
-      left:rect.left+'px', top:rect.top+'px',
-      width:rect.width+'px', height:rect.height+'px',
-      transform:'rotateY(0deg) scale(1)', opacity:'1', transition:'none'
-    });
-    ov.classList.add('active');
+    box.innerHTML=''; box.appendChild(closeBtn);
 
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      box.style.transition = 'left .5s cubic-bezier(.2,.8,.2,1), top .5s cubic-bezier(.2,.8,.2,1), width .5s, height .5s, transform .55s cubic-bezier(.2,.8,.2,1)';
-      box.style.left = tx+'px'; box.style.top = ty+'px';
-      box.style.width = nw+'px'; box.style.height = nh+'px';
-      box.style.transform = 'rotateY(360deg) scale(1)';
-      clone.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;display:block';
-      if(clone.tagName==='VIDEO'){ clone.controls=true; clone.play&&clone.play().catch(()=>{}); }
-    }));
+    if(isVideoCard && videoSrc){
+      // 视频卡片：创建 video 元素并播放
+      const video = document.createElement('video');
+      video.src = videoSrc;
+      video.controls = true;
+      video.playsInline = true;
+      video.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;display:block';
+      box.appendChild(video);
+      Object.assign(box.style, {
+        left:rect.left+'px', top:rect.top+'px',
+        width:rect.width+'px', height:rect.height+'px',
+        transform:'rotateY(0deg) scale(1)', opacity:'1', transition:'none'
+      });
+      ov.classList.add('active');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        box.style.transition = 'left .5s cubic-bezier(.2,.8,.2,1), top .5s cubic-bezier(.2,.8,.2,1), width .5s, height .5s, transform .55s cubic-bezier(.2,.8,.2,1)';
+        box.style.left = tx+'px'; box.style.top = ty+'px';
+        box.style.width = nw+'px'; box.style.height = nh+'px';
+        box.style.transform = 'rotateY(360deg) scale(1)';
+        video.play().catch(()=>{});
+      }));
+    } else {
+      // 图片卡片：克隆图片
+      const clone = mediaEl.cloneNode(true);
+      clone.removeAttribute('style');
+      box.appendChild(clone);
+      Object.assign(box.style, {
+        left:rect.left+'px', top:rect.top+'px',
+        width:rect.width+'px', height:rect.height+'px',
+        transform:'rotateY(0deg) scale(1)', opacity:'1', transition:'none'
+      });
+      ov.classList.add('active');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        box.style.transition = 'left .5s cubic-bezier(.2,.8,.2,1), top .5s cubic-bezier(.2,.8,.2,1), width .5s, height .5s, transform .55s cubic-bezier(.2,.8,.2,1)';
+        box.style.left = tx+'px'; box.style.top = ty+'px';
+        box.style.width = nw+'px'; box.style.height = nh+'px';
+        box.style.transform = 'rotateY(360deg) scale(1)';
+        clone.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;display:block';
+      }));
+    }
+  }
+
+  // 从卡片元素或 DATA 中查找视频 URL
+  function findVideoSrc(cardEl){
+    const id = cardEl.dataset.id;
+    if(!id) return '';
+    for(const sec of ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent']){
+      const item = (DATA[sec]||[]).find(x=>x.id===id);
+      if(item && item.media) return item.media;
+    }
+    return '';
   }
 
   document.addEventListener('click', e=>{
