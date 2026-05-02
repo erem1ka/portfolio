@@ -1651,7 +1651,7 @@ document.addEventListener('click', e=>{
   closeBtn.addEventListener('click', closeOverlay);
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeOverlay(); });
 
-  function openMedia(triggerEl, mediaEl){
+  window.openMedia = function openMedia(triggerEl, mediaEl){
     const app = document.getElementById('app');
     if(app.classList.contains('editing')) return;
     const rect = triggerEl.getBoundingClientRect();
