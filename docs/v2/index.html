@@ -960,22 +960,22 @@
     <!-- B站已移除，改为GitHub；header-bilibili id 保留给v1-app.js -->
     <a id="header-bilibili" href="#" style="display:none"></a>
     <div class="sidebar-link-item">
-      <a id="header-github" href="https://github.com/erem1ka" target="_blank" rel="noopener" class="sidebar-btn magnetic" title="GitHub">
+      <button id="header-github" onclick="window.open('https://github.com/erem1ka','_blank','noopener')" class="sidebar-btn magnetic" title="GitHub">
         <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.635.87 1.875 1.23 1.095 1.845 2.88 1.305 3.585.99.105-.78.42-1.305.765-1.605-2.7-.3-5.52-1.35-5.52-6.015 0-1.35.48-2.46 1.23-3.345-.12-.3-.54-1.62.12-3.36 0 0 1.005-.315 3.3 1.275.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.59 3.3-1.275 3.3-1.275.66 1.74.24 3.06.12 3.36.765.885 1.23 1.995 1.23 3.345 0 4.68-2.835 5.715-5.55 6.015.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-      </a>
+      </button>
       <span class="sidebar-link-label">GitHub</span>
     </div>
     <div class="sidebar-link-item">
-      <a id="header-douyin" href="#" target="_blank" rel="noopener" class="sidebar-btn magnetic" title="抖音主页" style="display:none">
+      <button id="header-douyin" onclick="window.open('#','_blank','noopener')" class="sidebar-btn magnetic" title="抖音主页" style="display:none">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12a4 4 0 104 4V4a5 5 0 005 5"/></svg>
-      </a>
+      </button>
       <span class="sidebar-link-label" id="douyin-label">抖音主页</span>
     </div>
     <div class="sidebar-link-item">
       <div id="nav-resume-wrap" style="display:flex;align-items:center;gap:8px">
-        <a id="nav-resume-btn" href="#" download class="sidebar-btn magnetic" title="简历下载" style="display:none">
+        <button id="nav-resume-btn" onclick="window.open('#','_blank')" class="sidebar-btn magnetic" title="简历下载" style="display:none">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </a>
+        </button>
       </div>
       <span class="sidebar-link-label" id="resume-label">简历下载</span>
     </div>
