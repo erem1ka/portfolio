@@ -1675,6 +1675,9 @@ document.addEventListener('click', e=>{
     if(gcMedia){
       const card = e.target.closest('.gallery-card,.gallery-card-clone');
       if(!card) return;
+      // 画廊中的视频卡片：跳过拦截，让 openInlinePlayer 处理
+      const cardType = card.dataset.type || '';
+      if(cardType==='mp4' || cardType==='video') return;
       const m = gcMedia.querySelector('img,video');
       if(m){ e.preventDefault(); e.stopPropagation(); openMedia(card, m); }
       return;
@@ -1683,6 +1686,8 @@ document.addEventListener('click', e=>{
     if(cm){
       const vc = e.target.closest('.vcard');
       if(!vc) return;
+      // 视频/mp4卡片：跳过拦截，让 openInlinePlayer 处理
+      if(vc.dataset.type==='mp4' || vc.dataset.type==='video') return;
       const m = cm.querySelector('img,video');
       if(m){ e.preventDefault(); e.stopPropagation(); openMedia(vc, m); }
     }
