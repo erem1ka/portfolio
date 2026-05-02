@@ -1471,11 +1471,12 @@ function sidebarNavClick(e, sectionKey) {
 }
 
 function updateSidebarActive() {
-  const sections = ['practice','mg','aigc','agent','contact'];
+  const sections = ['about','practice','mg','aigc','agent','contact'];
   const scrollY = window.scrollY + 120;
-  let active = 'practice';
+  let active = 'about';
   sections.forEach(sec => {
-    const el = document.getElementById('mod-' + sec) || document.getElementById(sec);
+    const elId = sec === 'about' ? 'hero-section' : (document.getElementById('mod-' + sec) ? 'mod-' + sec : sec);
+    const el = document.getElementById(elId);
     if(el && el.offsetTop <= scrollY) active = sec;
   });
   document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
@@ -1681,43 +1682,17 @@ function initGalleryLoop(key, track, realItems){
   }
 
   realItems.forEach(item=>track.appendChild(makeGalleryCard(item, rowH, key)));
-  // 轻量克隆：只用图片元素，不绑定事件/编辑器，减少DOM复杂度
-  const makeLightClone=(item)=>{
-    const ar=item.ar||(9/16);
-    const cardW=Math.round(rowH*ar);
-    const c=document.createElement('div');
-    c.className='gallery-card';
-    c.style.width=cardW+'px';
-    const m=document.createElement('div');
-    m.className='gc-media'+(!item.media?' empty-card':'');
-    m.style.height=rowH+'px';
-    m.style.width='100%';
-    const isVideo=item.type==='mp4'||item.type==='video'||item.mediaType==='mp4';
-    const isAnim=item.type==='webp'||item.type==='gif'||item.type==='anim'||item.mediaType==='webp'||item.mediaType==='gif';
-    if(item.media){
-      if(isVideo) m.innerHTML=`<img src="${item.cover||''}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover">`;
-      else if(isAnim) m.innerHTML=`<img src="${item.media}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover">`;
-      else m.innerHTML=`<img src="${item.media}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`;
-    }
-    c.appendChild(m);
-    // 克隆也要显示标题，否则滚一圈后看不到
-    const t=document.createElement('div');
-    t.className='gc-title';
-    t.textContent=item.title||'';
-    t.style.backfaceVisibility='hidden';
-    c.appendChild(t);
-    return c;
-  };
-  const clonesBefore=realItems.map(makeLightClone);
-  const clonesAfter=realItems.map(makeLightClone);
-  clonesBefore.slice().reverse().forEach(c=>track.insertBefore(c,track.firstChild));
-  clonesAfter.forEach(c=>track.appendChild(c));
 
   const GAP=10;
   const totalW=realItems.reduce((sum,item)=>{
     const ar=item.ar||(9/16);
     return sum+Math.round(rowH*ar)+GAP;
   },0);
+  // 所有卡片放完后，在前后各复制一组实现无限滚动
+  const allCards = Array.from(track.children);
+  allCards.slice().reverse().forEach(c=>track.insertBefore(c.cloneNode(true),track.firstChild));
+  allCards.forEach(c=>track.appendChild(c.cloneNode(true)));
+
   inst.pos=-totalW;
   track.style.willChange='transform';
 
@@ -1744,15 +1719,14 @@ function initGalleryLoop(key, track, realItems){
     if(!lastT) lastT=t;
     const dt=Math.min((t-lastT)/(1000/60),3);
     lastT=t;
-    const speed=inst.wheeling?inst.boost:(inst.base+Math.abs(inst.boost));
+    const speed=editMode ? 0 : (inst.wheeling ? inst.boost : (inst.base + Math.abs(inst.boost)));
     inst.pos-=speed*dt;
     inst.boost*=0.88;
     if(Math.abs(inst.boost)<0.05) inst.boost=0;
     if(!inst.wheeling&&Math.abs(inst.boost)<0.05) inst.wheeling=false;
     if(inst.pos<=-(2*totalW)) inst.pos+=totalW;
     if(inst.pos>=0) inst.pos-=totalW;
-    track.style.transform=`translateX(${inst.pos}px)`;
-    // 节流UI更新：每200ms才更新进度条和计数器，避免每帧DOM查询
+    track.style.transform=`translate3d(${inst.pos}px,0,0)`;
     if(t-lastUI>200){
       lastUI=t;
       const progress=Math.abs((inst.pos+totalW)%totalW)/totalW;

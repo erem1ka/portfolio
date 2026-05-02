@@ -1,1209 +1,1794 @@
-/* ================================================================
-   app.js — 张峻烨作品集 v2
-   Modules: Data · Cloud · Cursor · Hero · HGallery · Marquee · Archive · Modal · Edit
-   ================================================================ */
-'use strict';
-
-/* ────────────────────────────────────────────────
-   1. CONSTANTS & DATA
-──────────────────────────────────────────────── */
-const APP_KEY      = 'portfolio_v2_data';
+const APP_KEY = 'portfolio_data_v3';
 const CLOUD_ENV_ID = 'my-web-d5gsldm9ha36297d1';
-const CLOUD_CDN    = 'https://6d79-my-web-d5gsldm9ha36297d1-1424382234.tcb.qcloud.la';
 
-const CATEGORIES = {
-  all:    { label: '全部',     cls: '' },
-  motion: { label: '动态特效', cls: 'motion' },
-  video:  { label: '视频模板', cls: 'video' },
-  aigc:   { label: 'AIGC 创意',cls: 'aigc' },
-  mg:     { label: 'MG 动画',  cls: 'mg' },
-  agent:  { label: '工具开发', cls: 'agent' },
-};
+let editMode = false;
+let darkMode = true;
 
-// Default placeholder data (3 selected + archive)
-let DATA = {
-  works: [
-    { id: 'p1', title: '短视频平台特效素材', category: 'motion', tools: ['AE','剪映'], desc: '参与短视频平台全链路特效素材设计，独立完成动态特效、画面转场制作。', media: '', cover: '', mediaType: 'webp', year: '2024' },
-    { id: 'p2', title: 'Seedream × AE 骨骼动效', category: 'aigc', tools: ['AE','Seedream','AIGC'], desc: 'AI 生成原画 → 骨骼点位绑定 → 循环动态打磨 → 抖音特效模板适配。', media: '', cover: '', mediaType: 'mp4', year: '2024' },
-    { id: 'p3', title: '无畏契约 LOGO · MG 动画', category: 'mg', tools: ['AE','PS'], desc: '全程 AE 矢量形状图层原创手搓，LOGO 图形拆解、形变动画、节奏卡点。', media: '', cover: '', mediaType: 'mp4', year: '2023' },
-    { id: 'p4', title: 'AIGC 工作流工具集', category: 'agent', tools: ['JS','API','Agent'], desc: '自主搭建网页端设计辅助工具，整合素材生成、Prompt 管理、流程自动化。', media: '', cover: '', mediaType: 'img', year: '2024' },
-  ],
-  archive: [], // bulk works
-  hero: [
-    { title: '动态特效 × 创意设计', desc: '参与短视频平台全链路特效素材设计', media: '', cover: '', mediaType: 'mp4', tag: '业务作品' },
-    { title: 'AI 全链路创作工作流', desc: 'Seedream 生图 → AE 骨骼动画 → 抖音特效模板', media: '', cover: '', mediaType: 'mp4', tag: 'AIGC' },
-    { title: 'MG 动画 × 运动设计', desc: '矢量形状图层原创手搓制作', media: '', cover: '', mediaType: 'mp4', tag: 'Motion' },
-  ],
-  contact: { email: '', phone: '', douyin: '', bilibili: '', resumeUrl: '' },
-  _version: 0,
-};
+// 初始化腾讯云开发
+let tcbApp = null;
+let db = null;
 
-/* ────────────────────────────────────────────────
-   2. CLOUDBASE
-──────────────────────────────────────────────── */
-let tcbApp = null, db = null;
-
-async function initCloud() {
+async function initCloudBase() {
   try {
     const sdk = window.cloudbaseSDK;
-    if (!sdk || !sdk.default) return false;
+    if (!sdk || !sdk.default) {
+      console.warn('CloudBase SDK 未加载');
+      showToast('云存储 SDK 加载失败，数据仅保存在本地');
+      return false;
+    }
     tcbApp = sdk.default.init({ env: CLOUD_ENV_ID });
     const auth = tcbApp.auth();
-    if (auth.signInAnonymously) await auth.signInAnonymously();
-    else await auth.anonymousAuthProvider().signIn();
-    db = tcbApp.database();
-    return true;
-  } catch(e) { console.warn('Cloud init failed', e); return false; }
-}
-
-function loadLocal() {
-  try {
-    const s = localStorage.getItem(APP_KEY);
-    if (!s) return;
-    const d = JSON.parse(s);
-    if (d.works)   DATA.works   = d.works;
-    if (d.archive) DATA.archive = d.archive;
-    if (d.hero)    DATA.hero    = d.hero;
-    if (d.contact) DATA.contact = Object.assign(DATA.contact, d.contact);
-    if (d._version) DATA._version = d._version;
-    [DATA.works, DATA.archive, DATA.hero].forEach(arr => {
-      (arr||[]).forEach(item => { item.media = fixUrl(item.media); item.cover = fixUrl(item.cover); });
-    });
-  } catch(e) {}
-}
-
-function saveLocal() {
-  DATA._version = Date.now();
-  try { localStorage.setItem(APP_KEY, JSON.stringify(DATA)); } catch(e) {}
-  clearTimeout(_pubTimer);
-  _pubTimer = setTimeout(() => { if (db) syncCloud(); }, 3000);
-}
-let _pubTimer = null;
-
-async function syncCloud() {
-  if (!db) return;
-  try {
-    const clean = JSON.parse(JSON.stringify(DATA));
-    [clean.works, clean.archive||[], clean.hero].forEach(arr => {
-      (arr||[]).forEach(w => {
-        if (w.media?.startsWith('blob:')) w.media = '';
-        if (w.cover?.startsWith('blob:')) w.cover = '';
-      });
-    });
-    const col = db.collection('portfolio_v2');
-    try { await col.doc('main').remove(); } catch(e) {}
-    await col.add({ _id: 'main', data: clean, updatedAt: new Date() });
-  } catch(e) { console.warn('Cloud sync failed', e); }
-}
-
-async function loadCloud() {
-  if (!db) return;
-  try {
-    const r = await db.collection('portfolio_v2').doc('main').get();
-    if (r.data && r.data.length > 0) {
-      const d = r.data[0].data;
-      if (!d || (d._version||0) <= (DATA._version||0)) return;
-      if (d.works)   DATA.works   = d.works;
-      if (d.archive) DATA.archive = d.archive;
-      if (d.hero)    DATA.hero    = d.hero;
-      if (d.contact) DATA.contact = Object.assign(DATA.contact, d.contact);
-      DATA._version = d._version;
-      [DATA.works, DATA.archive||[], DATA.hero].forEach(arr => {
-        (arr||[]).forEach(item => { item.media = fixUrl(item.media); item.cover = fixUrl(item.cover); });
-      });
-      saveLocal();
-      renderAll();
+    if (auth.signInAnonymously) {
+      await auth.signInAnonymously();
+    } else {
+      await auth.anonymousAuthProvider().signIn();
     }
-  } catch(e) {}
+    db = tcbApp.database();
+    console.log('✓ 云开发初始化成功');
+    return true;
+  } catch (e) {
+    console.error('云开发初始化失败:', e);
+    showToast('云存储连接失败，数据仅保存在本地');
+    return false;
+  }
 }
 
-function fixUrl(url) {
-  if (!url) return url || '';
-  if (url.includes('tcb.qcloud.la') && !url.includes('6d79-'))
-    return url.replace('https://', 'https://6d79-');
-  if (url.includes('cos-website') || url.includes('myqcloud.com')) {
-    const p = url.split('/portfolio/').pop();
-    if (p) return `${CLOUD_CDN}/portfolio/${p}`;
-  }
-  return url;
-}
-
-async function uploadFile(file) {
-  if (!tcbApp) return null;
-  try {
-    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
-    const cloudPath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const result = await tcbApp.uploadFile({ cloudPath, filePath: file });
-    if (result.fileID) return { url: `${CLOUD_CDN}/${cloudPath}`, fileID: result.fileID };
-    return null;
-  } catch(e) { console.error('Upload fail', e); return null; }
-}
-
-/* ────────────────────────────────────────────────
-   3. CUSTOM CURSOR
-──────────────────────────────────────────────── */
-const $cursor = document.getElementById('cursor');
-const $cursorRing = document.getElementById('cursor-ring');
-const $cursorLbl = document.getElementById('cursor-label');
-let _mx = 0, _my = 0, _cx = 0, _cy = 0, _rx = 0, _ry = 0;
-
-// Update CSS variables for ambient lighting
-function updateLightPos() {
-  document.body.style.setProperty('--mx', _mx + 'px');
-  document.body.style.setProperty('--my', _my + 'px');
-}
-
-document.addEventListener('mousemove', e => { _mx = e.clientX; _my = e.clientY; updateLightPos(); });
-
-(function animCursor() {
-  // Inner dot: lerp 0.18 (fast follow)
-  _cx += (_mx - _cx) * 0.18;
-  _cy += (_my - _cy) * 0.18;
-  if ($cursor) { $cursor.style.left = _cx + 'px'; $cursor.style.top = _cy + 'px'; }
-  // Outer ring: lerp 0.08 (slow follow, creates trail)
-  _rx += (_mx - _rx) * 0.08;
-  _ry += (_my - _ry) * 0.08;
-  if ($cursorRing) { $cursorRing.style.left = _rx + 'px'; $cursorRing.style.top = _ry + 'px'; }
-  if ($cursorLbl) { $cursorLbl.style.left = _mx + 'px'; $cursorLbl.style.top = (_my + 28) + 'px'; }
-  requestAnimationFrame(animCursor);
-})();
-
-// Contextual cursor morph
-const CURSOR_RESET = ['hover','play','link','btn','text-cursor'];
-function resetCursor() { $cursor?.classList.remove(...CURSOR_RESET); $cursorRing?.classList.remove(...CURSOR_RESET); $cursorLbl?.classList.remove('show'); }
-
-document.addEventListener('mouseenter', e => {
-  const t = e.target;
-  resetCursor();
-  if (t.closest('.gallery-card, .arc-card')) {
-    $cursor?.classList.add('play'); $cursorRing?.classList.add('play');
-    $cursorLbl?.classList.add('show'); if ($cursorLbl) $cursorLbl.textContent = 'PLAY';
-    return;
-  }
-  if (t.closest('a')) { $cursor?.classList.add('link'); return; }
-  if (t.closest('button, .resume-btn, .filter-btn, .modal-nav-btn, .modal-close, .hero-dot, .load-more-btn')) {
-    $cursor?.classList.add('btn'); $cursorLbl?.classList.add('show'); if ($cursorLbl) $cursorLbl.textContent = 'CLICK'; return;
-  }
-  if (t.closest('.s-bio, .ab-text, .tl-desc, .philosophy-block, .modal-desc, p')) {
-    $cursor?.classList.add('text-cursor'); return;
-  }
-}, true);
-document.addEventListener('mouseleave', e => {
-  const t = e.target;
-  if (t.closest('.gallery-card, .arc-card, a, button, .s-bio, .ab-text, p')) resetCursor();
-}, true);
-
-/* ────────────────────────────────────────────────
-   4. SCROLL PROGRESS
-──────────────────────────────────────────────── */
-const $scrollBar = document.getElementById('scroll-bar');
-
-// ── Scroll Velocity Sensitivity ──
-let _scrollVel = 0, _lastScrollY = 0, _scrollVelTimer = null;
-const $speedLines = document.querySelectorAll('.speed-line');
-
-window.addEventListener('scroll', () => {
-  const pct = (window.scrollY / (document.documentElement.scrollHeight - innerHeight)) * 100;
-  if ($scrollBar) $scrollBar.style.height = Math.min(100, pct) + '%';
-  updateNavActive();
-
-  // Velocity
-  const now = Date.now();
-  const dt = now - (_lastScrollTime || now);
-  _lastScrollTime = now;
-  const dy = window.scrollY - _lastScrollY;
-  _lastScrollY = window.scrollY;
-  _scrollVel = Math.abs(dy / Math.max(dt, 1)) * 1000; // px/s
-
-  applyVelocityEffects();
-}, { passive: true });
-
-let _lastScrollTime = 0;
-
-function applyVelocityEffects() {
-  const cards = document.querySelectorAll('.gallery-card, .arc-card');
-  const v = _scrollVel;
-  let skew = 0, scale = 1, blur = 0, hue = 0;
-
-  if (v > 100 && v <= 500) {
-    skew = -2; scale = 0.98;
-  } else if (v > 500 && v <= 1500) {
-    skew = -4; blur = 0.5;
-  } else if (v > 1500) {
-    blur = 1; hue = 3;
-    document.body.classList.add('speed-lines-visible');
-  } else {
-    document.body.classList.remove('speed-lines-visible');
-  }
-
-  cards.forEach(c => {
-    c.style.transform = `skewY(${skew}deg) scale(${scale})`;
-    c.style.filter = blur ? `blur(${blur}px) hue-rotate(${hue}deg)` : 'none';
-  });
-
-  // Recovery timer: reset after scroll stops
-  clearTimeout(_scrollVelTimer);
-  _scrollVelTimer = setTimeout(() => {
-    _scrollVel = 0;
-    cards.forEach(c => { c.style.transform = ''; c.style.filter = ''; });
-    document.body.classList.remove('speed-lines-visible');
-  }, 300);
-}
-
-/* ── Page Section Switcher ── */
-const SECTION_MAP = {
-  'hero':           'hero',
-  '#works':         'gallery-section',
-  '#gallery-section': 'gallery-section',
-  '#archive':       'archive',
-  '#about':         'about',
-  '#contact':       'contact',
+let DATA = {
+  practice: [],
+  practice2: [],
+  mg: [],
+  'aigc-img': [],
+  'aigc-vid': [],
+  'aigc-prompt': [],
+  agent: [],
+  contact: {
+    name: '张峻烨',
+    bio: '效果创意设计 × AIGC 全链路创作者。实习期间参与短视频平台全链路特效素材设计，熟练掌握 AE 动态设计、Seedream 生图、骨骼木偶动画。持续探索 AI 工具与视觉创作的融合边界，自主搭建创意工作流工具集，具备 AI Agent 应用思维与全链路创意基建能力。',
+    tags: ['After Effects','Seedream','MG 图形动效','骨骼木偶动画','AIGC 工作流','Agent 基建','剪映'],
+    email: '{{EMAIL}}',
+    qq: '{{QQ}}',
+    phone: '{{PHONE}}',
+    bilibili: '',
+    douyin: '',
+    wechatQr: ''
+  },
+  sectionTitles: {
+    practice: { title:'短视频平台 · 业务作品', desc:'参与短视频平台全链路特效素材设计，独立完成动态特效、画面转场、轻量化动画素材的 AE 全流程制作与方案输出' },
+    mg: { title:'无畏契约 LOGO · 原创 MG 动画', desc:'基于 IP 原生视觉体系，全程 AE 矢量形状图层原创手搓制作，独立完成 LOGO 图形拆解、形变动画、版式动态延展、节奏卡点与氛围光效设计' },
+    aigc: { title:'Seedream 生图 + AE 木偶骨骼动效', desc:'AI 生成原画素材 → 透明抠图 → AE 骨骼点位绑定 → 循环动态打磨 → 抖音特效模板适配，完整「AI 素材生成→后期动态设计」全链路工作流' },
+    agent: { title:'AI 智能体创意工作流工具集', desc:'基于 AIGC 开放 API 与智能体调度逻辑，自主搭建网页端设计辅助工具，整合素材生成、Prompt 管理、设计流程自动化能力' }
+  },
+  cols: { practice:180, mg:180, 'aigc-img':180, 'aigc-vid':180, 'aigc-prompt':180, agent:180 }
 };
 
-let _activePage = 'hero';
-
-function switchPage(targetId) {
-  const sections = document.querySelectorAll('.page-section');
-  sections.forEach(s => {
-    const isTarget = s.id === targetId;
-    s.classList.toggle('active', isTarget);
-  });
-  _activePage = targetId;
-
-  // Update nav active state
-  document.querySelectorAll('#s-nav a').forEach(a => {
-    const h = a.getAttribute('href');
-    const mapped = SECTION_MAP[h] || h.replace('#','');
-    a.classList.toggle('active', mapped === targetId);
-  });
-
-  // Scroll content to top
-  const content = document.getElementById('content');
-  if (content) content.scrollTop = 0;
-
-  // Re-init gallery if switching to gallery page
-  if (targetId === 'gallery-section') {
-    setTimeout(() => initHorizontalScroll(), 100);
-  }
+let _publishTimer = null;
+function saveData(){
+  DATA._version = Date.now();
+  try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); } catch(e){}
+  // Auto-publish to cloud with 3s debounce
+  clearTimeout(_publishTimer);
+  _publishTimer = setTimeout(()=>{ if(db) publishDataToCloud(); }, 3000);
 }
-
-// Nav click → page switch
-document.querySelectorAll('#s-nav a').forEach(a => {
-  a.addEventListener('click', e => {
-    const h = a.getAttribute('href');
-    if (!h.startsWith('#')) return;
-    e.preventDefault();
-    const targetId = SECTION_MAP[h] || h.replace('#','');
-    switchPage(targetId);
-  });
-});
-
-// Make content scrollable (not the whole page)
-function setupContentScroll() {
-  const content = document.getElementById('content');
-  if (content) {
-    content.style.overflowY = 'auto';
-    content.style.height = '100vh';
-  }
-}
-
-/* ────────────────────────────────────────────────
-   5. HERO CAROUSEL
-──────────────────────────────────────────────── */
-let _heroIdx = 0, _heroTimer = null;
-
-function renderHero() {
-  const wrap = document.getElementById('hero-slides');
-  const dots = document.getElementById('hero-dots');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  if (dots) dots.innerHTML = '';
-
-  DATA.hero.forEach((h, i) => {
-    const slide = document.createElement('div');
-    slide.className = 'hero-slide' + (i === _heroIdx ? ' active' : '');
-    let mediaHtml = '';
-    if (h.media && h.mediaType === 'mp4') {
-      mediaHtml = `<video src="${h.media}" poster="${h.cover||''}" autoplay muted loop playsinline></video>`;
-    } else if (h.media || h.cover) {
-      mediaHtml = `<img src="${h.media||h.cover}" alt="${h.title||''}">`;
-    } else {
-      mediaHtml = `<div style="width:100%;height:100%;background:#141414;display:flex;align-items:center;justify-content:center"><span style="font-family:monospace;font-size:12px;color:#333;letter-spacing:0.1em">待上传</span></div>`;
-    }
-    slide.innerHTML = mediaHtml + `
-      <div class="hero-overlay">
-        <div class="hero-tag">${h.tag||'Motion'}</div>
-        <div class="hero-title">${h.title||''}</div>
-        <div class="hero-desc">${h.desc||''}</div>
-      </div>`;
-    if (editMode) {
-      const ov = document.createElement('div');
-      ov.style.cssText = 'position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center';
-      ov.innerHTML = `<button class="work-upload-btn" onclick="event.stopPropagation();triggerHeroUpload(${i})">上传 Hero ${i+1}</button>`;
-      slide.appendChild(ov);
-    }
-    wrap.appendChild(slide);
-
-    if (dots) {
-      const dot = document.createElement('button');
-      dot.className = 'hero-dot' + (i === _heroIdx ? ' active' : '');
-      dot.addEventListener('click', () => goHero(i));
-      dots.appendChild(dot);
-    }
-  });
-  const counter = document.getElementById('hero-counter');
-  if (counter) counter.textContent = `${String(_heroIdx+1).padStart(2,'0')} / ${String(DATA.hero.length).padStart(2,'0')}`;
-}
-
-function goHero(i) {
-  _heroIdx = i;
-  clearInterval(_heroTimer);
-  document.querySelectorAll('.hero-slide').forEach((s,j) => s.classList.toggle('active', j===i));
-  document.querySelectorAll('.hero-dot').forEach((d,j)   => d.classList.toggle('active', j===i));
-  const counter = document.getElementById('hero-counter');
-  if (counter) counter.textContent = `${String(i+1).padStart(2,'0')} / ${String(DATA.hero.length).padStart(2,'0')}`;
-  _heroTimer = setInterval(() => goHero((_heroIdx+1) % DATA.hero.length), 5500);
-}
-
-function startHeroAuto() {
-  clearInterval(_heroTimer);
-  _heroTimer = setInterval(() => goHero((_heroIdx+1) % DATA.hero.length), 5500);
-}
-
-/* ────────────────────────────────────────────────
-   6. HORIZONTAL GALLERY (GSAP ScrollTrigger)
-──────────────────────────────────────────────── */
-let activeFilter = 'all';
-let _galleryTrigger = null;
-
-function getFilteredWorks() {
-  return activeFilter === 'all' ? DATA.works : DATA.works.filter(w => w.category === activeFilter);
-}
-
-function renderGallery() {
-  const track = document.getElementById('gallery-track');
-  if (!track) return;
-  track.innerHTML = '';
-
-  const works = getFilteredWorks();
-
-  works.forEach((w, i) => {
-    const card = makeGalleryCard(w, i);
-    track.appendChild(card);
-  });
-
-  // Add card (edit mode)
-  const addBtn = document.createElement('button');
-  addBtn.className = 'gallery-add-card';
-  addBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,59,92,.6)" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>添加作品</span>`;
-  addBtn.addEventListener('click', () => addWork());
-  track.appendChild(addBtn);
-
-  // Gallery progress label
-  const label = document.getElementById('gallery-counter-label');
-  if (label && works.length) label.textContent = `01 / ${String(works.length).padStart(2,'0')}`;
-
-  initHorizontalScroll();
-}
-
-function makeGalleryCard(w, idx) {
-  const card = document.createElement('div');
-  card.className = 'gallery-card';
-  card.dataset.id = w.id;
-
-  const catInfo = CATEGORIES[w.category] || CATEGORIES.motion;
-  const isAnim = w.mediaType === 'webp' || w.mediaType === 'gif';
-  const isVideo = w.mediaType === 'mp4';
-  const BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
-
-  let mediaHtml = '';
-  if (!w.media && !w.cover) {
-    mediaHtml = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"><span style="font-family:monospace;font-size:11px;color:#333;letter-spacing:0.1em">待上传</span></div>`;
-  } else if (isAnim && w.media) {
-    mediaHtml = `<img class="anim-img" src="${w.media}" alt="${w.title||''}" style="animation-play-state:running">`;
-  } else if (isVideo) {
-    mediaHtml = `<video src="${w.media}" muted loop playsinline autoplay poster="${w.cover||''}" style="width:100%;height:100%;object-fit:cover"></video>`;
-  } else {
-    mediaHtml = `<img src="${w.media||w.cover}" alt="${w.title||''}">`;
-  }
-
-  card.innerHTML = `
-    <div class="gc-index">${String(idx+1).padStart(2,'0')}</div>
-    <div class="gc-media">
-      ${mediaHtml}
-      <span class="work-badge ${catInfo.cls}">${catInfo.label}</span>
-      <div class="work-upload-overlay">
-        <button class="work-upload-btn" onclick="event.stopPropagation();triggerWorkUpload('${w.id}')">上传媒体</button>
-        <button class="work-del-btn" onclick="event.stopPropagation();deleteWork('${w.id}')">删除</button>
-      </div>
-    </div>
-    <div class="gc-info">
-      <div class="gc-title" data-field="title">${escHtml(w.title||'作品标题')}</div>
-      <div class="gc-meta">
-        <div class="gc-tags">${(w.tools||[]).map(t=>`<span class="work-tag">${t}</span>`).join('')}</div>
-        <span class="gc-year">${w.year||'2024'}</span>
-      </div>
-    </div>`;
-
-  // Anim cards: already auto-playing (src set directly, no hover logic)
-
-  // Edit title
-  const titleEl = card.querySelector('[data-field="title"]');
-  if (titleEl) {
-    titleEl.contentEditable = editMode ? 'true' : 'false';
-    titleEl.addEventListener('blur', () => { w.title = titleEl.textContent.trim(); saveLocal(); });
-  }
-
-  // Click → modal
-  card.addEventListener('click', e => {
-    if (e.target.closest('.work-upload-overlay') || editMode) return;
-    openModal(w.id, 'works');
-  });
-
-  return card;
-}
-
-/* ────────────────────────────────────────────────
-   AUTO-SCROLL GALLERY ENGINE
-   - Constant auto speed (px/frame)
-   - Wheel/trackpad delta boosts speed, decays after
-   - Loops seamlessly (clones leading/trailing cards)
-   - Pause on hover / focus
-──────────────────────────────────────────────── */
-let _galRAF = null;
-let _galPaused = false;
-let _galPos = 0;          // current translateX (negative = scroll left)
-let _galBoost = 0;        // extra speed from manual scroll (decays)
-let _galBaseSpeed = 0.8;  // px per frame at 60fps
-let _galDir = 1;          // 1 = left  -1 = right
-
-function initHorizontalScroll() {
-  // Cancel previous loop
-  if (_galRAF) { cancelAnimationFrame(_galRAF); _galRAF = null; }
-  if (_galleryTrigger) { _galleryTrigger.kill(); _galleryTrigger = null; }
-
-  // Mobile: use native scroll
-  if (window.innerWidth <= 1023) return;
-
-  const track = document.getElementById('gallery-track');
-  const outer = document.getElementById('gallery-outer');
-  const sticky = document.querySelector('.gallery-sticky');
-  if (!track || !outer || !sticky) return;
-
-  // ── Make outer just a normal-height container (not scroll-distance tall) ──
-  outer.style.height = '';
-
-  const cards = Array.from(track.querySelectorAll('.gallery-card'));
-  if (!cards.length) return;
-
-  const CARD_W = 280 + 24; // width + gap
-  const PADDING = 40;
-  const totalW = cards.length * CARD_W + PADDING * 2;
-
-  // ── Seamless loop: duplicate cards ──
-  // Remove old clones first
-  track.querySelectorAll('.gallery-card-clone').forEach(c => c.remove());
-  // Clone set A (prepended) + set B (appended)
-  const clonesBefore = cards.map(c => { const cl = c.cloneNode(true); cl.classList.add('gallery-card-clone'); return cl; });
-  const clonesAfter  = cards.map(c => { const cl = c.cloneNode(true); cl.classList.add('gallery-card-clone'); return cl; });
-  clonesBefore.reverse().forEach(c => track.insertBefore(c, track.firstChild));
-  clonesAfter.forEach(c => track.appendChild(c));
-
-  // Clones already have auto-playing media (cloned from originals), no extra binding needed
-
-  // Start position: at the real set (offset past clones)
-  const loopStart = -(totalW - PADDING);
-  _galPos = loopStart;
-  track.style.willChange = 'transform';
-
-  // ── Sticky: make gallery-sticky fixed inside outer ──
-  // No GSAP pin needed; we handle transform directly
-  sticky.style.position = 'sticky';
-  sticky.style.top = '0';
-
-  // ── Wheel event: boost speed only when mouse is over gallery ──
-  let _galWheelActive = false;
-  const onWheel = (e) => {
-    _galWheelActive = true;
-    const delta = e.deltaY || e.deltaX;
-    _galBoost = Math.max(-25, Math.min(25, _galBoost + delta * 0.08));
-    e.preventDefault(); // prevent page scroll while over gallery
-  };
-  // Only intercept wheel when mouse is over the gallery area
-  const gallerySection = document.getElementById('gallery-section');
-  gallerySection?.addEventListener('wheel', onWheel, { passive: false });
-  gallerySection?.addEventListener('mouseleave', () => { _galWheelActive = false; });
-
-  // ── Pause on hover ──
-  track.addEventListener('mouseenter', () => { /* don't pause — auto-scroll continues */ });
-  track.addEventListener('mouseleave', () => { });
-
-  // ── RAF loop ──
-  let lastT = null;
-  const loop = (t) => {
-    if (!lastT) lastT = t;
-    const dt = Math.min((t - lastT) / (1000/60), 3); // normalize to 60fps, cap spike
-    lastT = t;
-
-    if (!_galPaused) {
-      // If user is actively wheeling inside gallery, don't auto-scroll (they control)
-      const speed = _galWheelActive
-        ? _galBoost * _galDir  // manual wheel: user controls directly
-        : (_galBaseSpeed + Math.abs(_galBoost)) * _galDir;  // idle: auto-scroll + residual boost
-
-      _galPos -= speed * dt;
-
-      // Boost decay
-      _galBoost *= 0.88;
-      if (Math.abs(_galBoost) < 0.05) _galBoost = 0;
-
-      // Seamless loop: when we've scrolled one full set, jump back
-      const loopEnd = loopStart - totalW;
-      if (_galPos <= loopEnd) _galPos += totalW;
-      if (_galPos >= loopStart) _galPos -= totalW;
-
-      track.style.transform = `translateX(${_galPos}px)`;
-
-      // ── Card scale + opacity (centre focus) ──
-      const allCards = track.querySelectorAll('.gallery-card, .gallery-card-clone');
-      const midX = window.innerWidth / 2;
-      const maxDist = window.innerWidth * 0.55;
-      let closestIdx = 0, closestDist = Infinity;
-
-      allCards.forEach((c, i) => {
-        const rect = c.getBoundingClientRect();
-        const cardMid = rect.left + rect.width / 2;
-        const dist = Math.abs(cardMid - midX);
-        const scale   = dist > maxDist ? 0.88 : 0.88 + (1.05 - 0.88) * Math.pow(1 - dist / maxDist, 2);
-        const opacity = dist > maxDist ? 0.45 : 0.45 + (1.0 - 0.45) * Math.pow(1 - dist / maxDist, 2);
-        c.style.transform = `scale(${scale.toFixed(3)})`;
-        c.style.opacity = opacity.toFixed(3);
-        if (dist < closestDist) { closestDist = dist; closestIdx = i; }
+function loadData(){
+  try{
+    const s = localStorage.getItem(APP_KEY);
+    if(s){
+      const d=JSON.parse(s);
+      // 深度替换：用本地缓存完全替换各数组，防止浅合并残留旧数据
+      const SECTIONS = ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+      SECTIONS.forEach(sec=>{ DATA[sec] = d[sec] || []; });
+      if(d.contact) DATA.contact = Object.assign(DATA.contact, d.contact);
+      if(d.sectionTitles) DATA.sectionTitles = d.sectionTitles;
+      if(d.heroNav) DATA.heroNav = d.heroNav;
+      if(d.tags) DATA.tags = d.tags;
+      if(d.cols) {
+        DATA.cols = d.cols;
+        // Migrate old col-count values (1-8) or old default 100 to new default 180
+        const SECTIONS = ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+        SECTIONS.forEach(sec=>{
+          if(DATA.cols[sec] !== undefined && (DATA.cols[sec] <= 8 || DATA.cols[sec] === 100)){
+            DATA.cols[sec] = 180;
+          }
+        });
+      }
+      if(d.skills) DATA.skills = d.skills;
+      if(d.toolCards) DATA.toolCards = d.toolCards;
+      DATA._version = d._version;
+      let cleaned = false;
+      ['practice','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec => {
+        DATA[sec].forEach(item => {
+          if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) { item.media=''; cleaned=true; }
+          if(item.cover && (item.cover.startsWith('blob:') || item.cover.startsWith('data:'))) { item.cover=''; cleaned=true; }
+          item.media = fixCloudUrl(item.media);
+          item.cover = fixCloudUrl(item.cover);
+        });
       });
+      DATA.contact.wechatQr = fixCloudUrl(DATA.contact.wechatQr);
+      DATA.contact.resumeUrl = fixCloudUrl(DATA.contact.resumeUrl);
+      // 清理了 blob URL 则重新写回 localStorage，防止脏数据影响后续发布
+      if(cleaned) try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); }catch(e){}
+    }
+  } catch(e){}
+}
 
-      // ── Progress bar & counter (based on position within one loop) ──
-      const progress = Math.abs((_galPos - loopStart) % totalW) / totalW;
-      const progressBar = document.getElementById('gallery-progress-bar');
-      if (progressBar) progressBar.style.width = (progress * 100) + '%';
+// Push DATA.json to GitHub so any visitor can load it
+// Load only the version number from cloud (no data overwrite)
+async function loadCloudDataVersion() {
+  if (!db) return 0;
+  try {
+    const collection = db.collection('portfolio');
+    const result = await collection.doc('main').get();
+    if (result.data && result.data.length > 0) {
+      return result.data[0].data._version || 0;
+    }
+  } catch(e) {}
+  return 0;
+}
 
-      const label = document.getElementById('gallery-counter-label');
-      if (label) {
-        const nth = (Math.floor(progress * cards.length) % cards.length) + 1;
-        label.textContent = `${String(nth).padStart(2,'0')} / ${String(cards.length).padStart(2,'0')}`;
-      }
+async function publishDataToCloud() {
+  if (!db) {
+    console.warn('云数据库未初始化，跳过同步');
+    return;
+  }
+  
+  try {
+    // Safety check: only push if local version >= cloud version
+    const cloudVer = await loadCloudDataVersion();
+    const localVer = DATA._version || 0;
+    if (cloudVer > localVer) {
+      console.log('云端数据更新(local=' + localVer + ' cloud=' + cloudVer + ')，跳过推送，先拉取');
+      await loadDataFromCloud(true);
+      return;
+    }
+    
+    const collection = db.collection('portfolio');
+    const dataToSave = JSON.parse(JSON.stringify(DATA));
+    // 版本号：用时间戳，加载时比较，云端的更大则用云端的
+    const newVersion = Date.now();
+    dataToSave._version = newVersion;
+    
+    // 清理 blob/data URL（刷新后无效），直接置空而不是推迟发布
+    // 上传进行中的文件：用 fileID 还原云端 URL；无 fileID 则清空，等用户重新上传
+    ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec => {
+      if(!dataToSave[sec]) return;
+      dataToSave[sec].forEach(item => {
+        if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) item.media = '';
+        if(item.cover && (item.cover.startsWith('blob:') || item.cover.startsWith('data:'))) item.cover = '';
+      });
+    });
+    if(dataToSave.contact){
+      if(dataToSave.contact.wechatQr && (dataToSave.contact.wechatQr.startsWith('blob:') || dataToSave.contact.wechatQr.startsWith('data:'))) dataToSave.contact.wechatQr = '';
+      if(dataToSave.contact.resumeUrl && (dataToSave.contact.resumeUrl.startsWith('blob:') || dataToSave.contact.resumeUrl.startsWith('data:'))) dataToSave.contact.resumeUrl = '';
+    }
+    
+    let exists = false;
+    try {
+      const existing = await collection.doc('main').get();
+      if (existing.data && existing.data.length > 0) exists = true;
+    } catch(e) { exists = false; }
+    
+    if (exists) {
+      // 全量覆盖：先删除旧文档再写入新文档，确保云端数据完全替换
+      // set() 可能是合并而非替换，remove+add 确保万无一失
+      try { await collection.doc('main').remove(); } catch(e) {}
+      await collection.add({ _id: 'main', data: dataToSave, updatedAt: new Date() });
+    } else {
+      await collection.add({ _id: 'main', data: dataToSave, updatedAt: new Date() });
+    }
+    
+    DATA._version = newVersion;
+    console.log('✓ 数据已同步到云端');
+  } catch (e) {
+    console.error('同步失败:', e);
+    showToast('数据同步失败，请检查网络');
+  }
+}
 
-      // Easter egg passthrough (simulate progress 0→1)
-      if (window._easterUpdate) {
-        window._easterUpdate({ progress });
+// 兼容旧代码的别名
+async function publishDataToGitHub() {
+  return publishDataToCloud();
+}
+
+// 从云端加载数据
+async function loadDataFromCloud(forceLoad) {
+  if (!db) return;
+  
+  try {
+    const collection = db.collection('portfolio');
+    const result = await collection.doc('main').get();
+    
+    if (result.data && result.data.length > 0) {
+      const cloudData = result.data[0].data;
+      if (cloudData) {
+        // 版本比较：如果本地数据比云端新（说明云端推送还未完成），跳过覆盖
+        // 正常情况下 init() 会先 push 再 pull，版本号应该相同或云端更新
+        const cloudVersion = cloudData._version || 0;
+        const localVersion = DATA._version || 0;
+        if (!forceLoad && localVersion > cloudVersion) {
+          console.log('本地数据更新，跳过云端加载 (local=' + localVersion + ' cloud=' + cloudVersion + ')');
+          return;
+        }
+        // 云端数据更新，用云端的
+        // 深度合并：确保所有子对象也被覆盖
+        // 清理 blob/data 链接 + 修复旧 URL
+        ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(sec=>{
+          if(!cloudData[sec]) cloudData[sec]=[];
+          cloudData[sec].forEach(item=>{
+            if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) item.media='';
+            if(item.cover && (item.cover.startsWith('blob:') || item.cover.startsWith('data:'))) item.cover='';
+            item.media = fixCloudUrl(item.media);
+            item.cover = fixCloudUrl(item.cover);
+          });
+        });
+        cloudData.contact && (cloudData.contact.wechatQr = fixCloudUrl(cloudData.contact.wechatQr));
+        cloudData.contact && (cloudData.contact.resumeUrl = fixCloudUrl(cloudData.contact.resumeUrl));
+        // Ensure heroNav/sectionTitles/tags exist even if cloud data is old
+        if(!cloudData.heroNav) cloudData.heroNav = DATA.heroNav || {};
+        if(!cloudData.sectionTitles) cloudData.sectionTitles = DATA.sectionTitles;
+        if(!cloudData.tags) cloudData.tags = DATA.tags;
+        if(!cloudData.cols) cloudData.cols = DATA.cols;
+        
+        // 深度替换：用云端数据完全替换本地数据，而不是浅合并
+        // 确保数组字段被完全替换（不会保留本地旧数组）
+        const SECTIONS = ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+        SECTIONS.forEach(sec=>{
+          DATA[sec] = cloudData[sec] || [];
+        });
+        // 替换 contact、sectionTitles、heroNav、tags、cols 等对象
+        if(cloudData.contact) DATA.contact = Object.assign(DATA.contact, cloudData.contact);
+        if(cloudData.sectionTitles) DATA.sectionTitles = cloudData.sectionTitles;
+        if(cloudData.heroNav) DATA.heroNav = cloudData.heroNav;
+        if(cloudData.tags) DATA.tags = cloudData.tags;
+        if(cloudData.cols) {
+          DATA.cols = cloudData.cols;
+          const SECTIONS2 = ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+          SECTIONS2.forEach(sec=>{
+            if(DATA.cols[sec] !== undefined && (DATA.cols[sec] <= 8 || DATA.cols[sec] === 100)) DATA.cols[sec] = 180;
+          });
+        }
+        if(cloudData.skills) DATA.skills = cloudData.skills;
+        if(cloudData.toolCards) DATA.toolCards = cloudData.toolCards;
+        DATA._version = cloudData._version;
+        try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); }catch(e){}
+        renderAll();
+        console.log('✓ 从云端加载数据成功');
       }
     }
-
-    _galRAF = requestAnimationFrame(loop);
-  };
-  _galRAF = requestAnimationFrame(loop);
-
-  // Cleanup on resize
-  const onResize = debounce(() => {
-    cancelAnimationFrame(_galRAF);
-    gallerySection?.removeEventListener('wheel', onWheel);
-    initHorizontalScroll();
-  }, 300);
-  window.addEventListener('resize', onResize, { once: true });
+  } catch (e) {
+    console.error('从云端加载失败:', e);
+  }
 }
 
-// Filter
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    activeFilter = btn.dataset.filter || 'all';
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b === btn));
-    const track = document.getElementById('gallery-track');
-    if (track) { track.style.opacity = '0'; track.style.transition = 'opacity 0.2s'; }
-    setTimeout(() => {
-      renderGallery();
-      if (track) { track.style.opacity = '1'; }
-    }, 200);
+// 兼容旧代码的别名
+async function loadDataFromGitHub() {
+  return loadDataFromCloud();
+}
+
+function toggleTheme(){
+  darkMode = !darkMode;
+  const app = document.getElementById('app');
+  app.classList.toggle('dark', darkMode);
+  app.classList.toggle('light', !darkMode);
+  // Update both sidebar and mobile theme icons
+  const icons = [document.getElementById('themeIconSidebar'), document.getElementById('themeIconMobile')];
+  const darkPath = '<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/>';
+  const lightPath = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  icons.forEach(icon => {
+    if(!icon) return;
+    icon.innerHTML = darkMode ? darkPath : lightPath;
   });
+}
+
+function toggleEdit(){
+  // When exiting edit mode, purge empty cards (no media uploaded)
+  if(editMode){
+    const sections = ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'];
+    let cleaned = false;
+    sections.forEach(sec=>{
+      const before = (DATA[sec]||[]).length;
+      DATA[sec] = (DATA[sec]||[]).filter(item=>item.media || item.type==='prompt');
+      if(DATA[sec].length !== before) cleaned = true;
+    });
+    if(cleaned){ saveData(); renderAll(); }
+  }
+  editMode = !editMode;
+  // 进入编辑模式时标记为编辑者设备（只有编辑者才能推送数据到云端）
+  if(editMode) localStorage.setItem('portfolio_editor_token', '1');
+  const app = document.getElementById('app');
+  app.classList.toggle('editing', editMode);
+  const btn = document.getElementById('editMenuBtn');
+  btn.textContent = editMode ? '退出编辑模式' : '进入编辑模式';
+  document.querySelectorAll('[contenteditable]').forEach(el=>{
+    el.contentEditable = editMode;
+  });
+  ['nav-practice','nav-mg','nav-aigc','nav-agent','nav-contact'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.pointerEvents = editMode ? 'none' : '';
+  });
+  const ph = document.getElementById('wechat-qr-placeholder');
+  if(ph) ph.style.cursor = editMode ? 'pointer' : 'default';
+  // show QR replace/delete actions if QR is uploaded
+  const qrImg = document.getElementById('wechat-qr-img');
+  const qrActions = document.getElementById('wechat-qr-actions');
+  if(qrActions) qrActions.style.display = (editMode && qrImg && qrImg.src && !qrImg.src.endsWith('/')) ? 'flex' : 'none';
+  // show/hide resume edit controls
+  document.querySelectorAll('.resume-edit-ctrl,.nav-resume-edit').forEach(el=>el.style.display=editMode?'flex':'none');
+  // re-render tags to show/hide edit controls
+  rerenderAllTags();
+  ['contact-bilibili','contact-douyin'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.contentEditable = editMode;
+  });
+  // Edit mode: show edit fields for header social links
+  const headerDouyin = document.getElementById('header-douyin');
+  const headerBilibili = document.getElementById('header-bilibili');
+  if(editMode){
+    if(headerDouyin) headerDouyin.style.display = 'flex';
+    if(headerBilibili) headerBilibili.style.display = 'flex';
+  }
+  // Re-render galleries so overlays update with editMode
+  renderGallerySection('practice');
+  renderGallerySection('practice2');
+  // Enable/disable drag-sort
+  if(editMode) {
+    enableDragSort();
+  } else {
+    disableDragSort();
+  }
+}
+
+function openEditMenu(){ document.getElementById('editMenu').classList.add('open'); }
+function closeEditMenu(){ document.getElementById('editMenu').classList.remove('open'); }
+
+function toggleMobileNav(){
+  const nav = document.getElementById('navLinks');
+  nav.classList.toggle('mobile-open');
+}
+// Close mobile nav when clicking a link
+document.addEventListener('click', e=>{
+  if(e.target.closest('#navLinks a') || e.target.closest('#themeBtn')){
+    const nav = document.getElementById('navLinks');
+    if(nav) nav.classList.remove('mobile-open');
+  }
 });
 
-/* ────────────────────────────────────────────────
-   7. INFINITE MARQUEE
-──────────────────────────────────────────────── */
-function initMarquee() {
-  const ITEMS = ['AE', 'PS', 'AIGC', 'Motion', 'Effect', 'Seedream', 'MG 动画', '骨骼动画'];
-  const rows = document.querySelectorAll('.marquee-row');
-  rows.forEach((row, ri) => {
-    const dir = ri % 2 === 0 ? 1 : -1;
-    // build items × 4 for seamless loop
-    const full = [...ITEMS, ...ITEMS, ...ITEMS, ...ITEMS];
-    row.innerHTML = full.map(t => `<span class="marquee-item">${t} ·</span>`).join('');
-    const totalW = row.scrollWidth / 2; // half because we duplicate
-    let paused = false;
-    row.addEventListener('mouseenter', () => { paused = true; });
-    row.addEventListener('mouseleave', () => { paused = false; });
+function exportData(){
+  const data = {
+    portfolio: JSON.parse(localStorage.getItem('portfolio_data_v3')||'{}'),
+    gh_config: JSON.parse(localStorage.getItem('gh_config')||'{}')
+  };
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'portfolio-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
-    let x = 0;
-    const speed = 0.9;
-    (function tick() {
-      if (!paused) {
-        x -= dir * speed;
-        if (Math.abs(x) >= totalW) x = 0;
-        row.style.transform = `translateX(${x}px)`;
+function importData(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      if(data.portfolio){
+        localStorage.setItem('portfolio_data_v3', JSON.stringify(data.portfolio));
       }
-      requestAnimationFrame(tick);
-    })();
+      if(data.gh_config){
+        localStorage.setItem('gh_config', JSON.stringify(data.gh_config));
+      }
+      alert('导入成功！页面将刷新。');
+      location.reload();
+    }catch(e){
+      alert('导入失败：文件格式错误');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function setGridCols(gridId, n){
+  // n here is row height in px
+  n = Math.max(60, Math.min(300, parseInt(n)||100));
+  const key = gridId.replace('-grid','');
+  DATA.cols[key] = n;
+  saveData();
+  renderSection(key, gridId);
+}
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+// Toast 提示
+function showToast(msg, duration=3000){
+  let t = document.getElementById('toast-msg');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'toast-msg';
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9999;padding:8px 20px;border-radius:6px;font-size:.75rem;font-family:sans-serif;pointer-events:none;transition:opacity .3s;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>{ t.style.opacity='0'; }, duration);
+}
+
+// 图片压缩：PNG/JPG 压缩到 500KB 以内
+function compressImage(file, maxKB=500){
+  return new Promise(resolve=>{
+    if(file.type==='image/webp' || file.type==='image/gif'){
+      // webp/gif 不压缩，直接返回
+      resolve(file);
+      return;
+    }
+    const img = new Image();
+    img.onload = ()=>{
+      let w = img.naturalWidth, h = img.naturalHeight;
+      // 限制最大边 1920px
+      const maxDim = 1920;
+      if(w > maxDim || h > maxDim){
+        const scale = maxDim / Math.max(w, h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      let quality = 0.85;
+      const tryCompress = ()=>{
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const sizeKB = Math.round((dataUrl.length - 'data:image/jpeg;base64,'.length) * 3/4 / 1024);
+        if(sizeKB > maxKB && quality > 0.3){
+          quality -= 0.1;
+          return tryCompress();
+        }
+        // 转 Blob
+        fetch(dataUrl).then(r=>r.blob()).then(blob=>{
+          resolve(new File([blob], file.name.replace(/\.\w+$/, '.jpg'), {type:'image/jpeg'}));
+        });
+      };
+      tryCompress();
+    };
+    img.onerror = ()=>resolve(file);
+    img.src = URL.createObjectURL(file);
   });
 }
 
-/* ────────────────────────────────────────────────
-   8. ARCHIVE — PARALLAX MASONRY
-──────────────────────────────────────────────── */
-const ARCHIVE_PAGE = 12;
-let _archiveLoaded = 0;
-
-function renderArchive(reset = false) {
-  if (reset) { _archiveLoaded = 0; }
-  const cols = document.querySelectorAll('.masonry-col');
-  if (!cols.length) return;
-  if (reset) { cols.forEach(c => c.innerHTML = ''); }
-
-  const src = DATA.archive.length ? DATA.archive : DATA.works;
-  const slice = src.slice(_archiveLoaded, _archiveLoaded + ARCHIVE_PAGE);
-  _archiveLoaded += slice.length;
-
-  slice.forEach((w, i) => {
-    const colIdx = i % cols.length;
-    const card = makeArchiveCard(w);
-    cols[colIdx].appendChild(card);
-  });
-
-  // Load more button
-  const loadMoreBtn = document.getElementById('load-more-btn');
-  if (loadMoreBtn) loadMoreBtn.style.display = _archiveLoaded < src.length ? '' : 'none';
-
-  initParallax();
-}
-
-function makeArchiveCard(w) {
+function makeMp4Card(item){
   const card = document.createElement('div');
-  card.className = 'arc-card';
-  card.dataset.id = w.id;
-
-  const catInfo = CATEGORIES[w.category] || CATEGORIES.motion;
-  const isAnim = w.mediaType === 'webp' || w.mediaType === 'gif';
-  const isVideo = w.mediaType === 'mp4';
-  const BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
-
-  let mediaHtml = '';
-  if (!w.media && !w.cover) {
-    mediaHtml = `<div style="aspect-ratio:1;background:#1c1c1c;display:flex;align-items:center;justify-content:center"><span style="font-family:monospace;font-size:10px;color:#333">待上传</span></div>`;
-  } else if (isAnim && w.media) {
-    mediaHtml = `<img class="anim-img" src="${BLANK}" data-anim-src="${w.media}" alt="${w.title||''}">`;
-  } else if (isVideo) {
-    mediaHtml = `<img src="${w.cover||''}" alt="${w.title||''}">`;
+  card.className = 'vcard bg-card border-card card-hover masonry-item';
+  card.dataset.id = item.id;
+  card.dataset.type = item.type || 'mp4';
+  const isAnim = item.type==='webp' || item.type==='gif' || item.type==='anim' || item.mediaType==='webp' || item.mediaType==='gif';
+  const coverSrc = item.cover || '';
+  const mediaSrc = item.media || '';
+  let mediaHtml;
+  if(!mediaSrc){
+    mediaHtml = `<div class="no-thumb">待上传</div>`;
+  } else if(isAnim){
+    // webp/gif: autoplay directly
+    mediaHtml = `<img class="anim-img" src="${mediaSrc}" alt="" style="width:100%;height:100%;object-fit:cover;pointer-events:none;display:block">`;
   } else {
-    mediaHtml = `<img src="${w.media||w.cover}" alt="${w.title||''}">`;
+    // mp4: show cover with always-visible play badge
+    mediaHtml = coverSrc
+      ? `<img src="${coverSrc}" alt=""><div class="play-badge"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>`
+      : `<div class="no-thumb">待上传</div>`;
   }
-
+  const uploadLabel = '上传视频 / 图片 / GIF';
   card.innerHTML = `
-    ${mediaHtml}
-    <span class="work-badge ${catInfo.cls}">${catInfo.label}</span>
-    <div class="arc-overlay">
-      <div class="arc-title">${escHtml(w.title||'作品')}</div>
-      <div class="arc-tag">${(w.tools||[]).join(' · ')}</div>
+    <div class="card-media${!mediaSrc?' empty-card':''}">
+      ${mediaHtml}
+      <div class="upload-ov">
+        <button class="upload-ov-btn" onclick="event.stopPropagation();triggerMediaUpload('${item.id}','mp4')">${uploadLabel}</button>
+        <button class="del-ov-btn" onclick="event.stopPropagation();deleteCard('${item.id}')">&#x2715; 删除</button>
+      </div>
     </div>
-    <div class="work-upload-overlay">
-      <button class="work-upload-btn" onclick="event.stopPropagation();triggerArchiveUpload('${w.id}')">上传</button>
-      <button class="work-del-btn" onclick="event.stopPropagation();deleteArchive('${w.id}')">删除</button>
+    <div class="p-2.5 pb-2">
+      <p class="font-sans font-medium text-main text-[.82rem] leading-snug mb-0.5" data-field="title">${escHtml(item.title||'作品标题')}</p>
+      <p class="text-sub font-light text-[.72rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
-
-  // Anim hover
-  if (isAnim && w.media) {
-    const aImg = card.querySelector('.anim-img');
-    extractAnimFirstFrame(w.media).then(f => { if(f && aImg) aImg.src = f; if(aImg) aImg.dataset.frameSrc = f||w.media; });
-    card.addEventListener('mouseenter', () => { if(aImg) aImg.src = aImg.dataset.animSrc; });
-    card.addEventListener('mouseleave', () => { if(aImg) aImg.src = aImg.dataset.frameSrc||BLANK; });
+  if(mediaSrc){
+    const mediaEl = card.querySelector('.card-media');
+    card.querySelector('.card-media').addEventListener('click', e=>{
+      if(e.target.closest('.upload-ov') || editMode) return;
+      if(isAnim){
+        // webp/gif: open image zoom (shows animation looping)
+        openImgZoom(mediaSrc);
+      } else {
+        // mp4: open inline video player
+        openInlinePlayer(item.media, card);
+      }
+    });
   }
-
-  // Click → modal
-  card.addEventListener('click', e => {
-    if (e.target.closest('.work-upload-overlay') || editMode) return;
-    openModal(w.id, 'archive');
-  });
-
+  setupEditableFields(card, item);
   return card;
 }
 
-// Parallax on scroll
-const PARALLAX_SPEEDS = [1.0, 0.85, 1.15, 0.92];
-function initParallax() {
-  const cols = document.querySelectorAll('.masonry-col');
-  if (!cols.length) return;
-  const archive = document.getElementById('archive');
-  if (!archive) return;
-
-  const onScroll = () => {
-    const archiveTop = archive.getBoundingClientRect().top;
-    const progress = -archiveTop / (archive.offsetHeight || 1);
-    cols.forEach((col, i) => {
-      const speed = PARALLAX_SPEEDS[i % PARALLAX_SPEEDS.length];
-      const offset = progress * 60 * (speed - 1.0); // ±offset
-      col.style.transform = `translateY(${offset}px)`;
+function makeImgCard(item){
+  const card = document.createElement('div');
+  card.className = 'vcard bg-card border-card card-hover';
+  card.dataset.id = item.id;
+  card.dataset.type = 'img';
+  card.innerHTML = `
+    <div class="card-media${!item.media?' empty-card':''}">
+      ${item.media ? `<img src="${item.media}" alt="" style="pointer-events:none">` : `<div class="no-thumb">待上传</div>`}
+      <div class="upload-ov">
+        <button class="upload-ov-btn" onclick="event.stopPropagation();triggerMediaUpload('${item.id}','img')">上传图片</button>
+        <button class="del-ov-btn" onclick="event.stopPropagation();deleteCard('${item.id}')">&#x2715; 删除</button>
+      </div>
+    </div>
+    <div class="p-2.5 pb-2">
+      <p class="font-sans font-medium text-main text-[.82rem] leading-snug mb-0.5" data-field="title">${escHtml(item.title||'作品标题')}</p>
+      <p class="text-sub font-light text-[.72rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
+    </div>`;
+  if(item.media){
+    card.querySelector('.card-media').addEventListener('click', e=>{
+      if(e.target.closest('.upload-ov') || editMode) return;
+      openImgZoom(item.media);
     });
+  }
+  setupEditableFields(card, item);
+  return card;
+}
+
+function makePromptCard(item){
+  const card = document.createElement('div');
+  card.className = 'vcard bg-card border-card';
+  card.dataset.id = item.id;
+  card.dataset.type = 'prompt';
+  const body = item.body || '';
+  const needFold = body.split('\n').length > 3 || body.length > 200;
+  const hasMedia = item.media;
+  let mediaHtml = '';
+  if(hasMedia){
+    const mt = item.mediaType || item.type;
+    if(mt==='webp'){
+      mediaHtml = `<img src="${item.media}" alt="" style="max-width:100%;border-radius:8px;pointer-events:none;margin-bottom:6px">`;
+    } else if(mt==='mp4'){
+      const coverSrc = item.cover || item.media;
+      mediaHtml = `<div class="prompt-media" style="cursor:pointer;position:relative;margin-bottom:6px">
+        <img src="${coverSrc}" alt="" style="max-width:100%;border-radius:8px">
+        <div class="play-badge" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+      </div>`;
+    } else {
+      mediaHtml = `<img src="${item.media}" alt="" style="max-width:100%;border-radius:8px;margin-bottom:6px">`;
+    }
+  }
+  card.innerHTML = `
+    <div class="p-3 pb-3.5 relative">
+      <div class="flex items-start justify-between gap-2 mb-2">
+        <p class="font-sans font-semibold text-main text-[.88rem] leading-snug flex-1" data-field="title">${escHtml(item.title||'Prompt 标题')}</p>
+        <div class="upload-ov" style="position:static;background:none;border:none;display:none;flex-direction:row;gap:4px;align-items:center;padding:0">
+          <button class="upload-ov-btn" onclick="event.stopPropagation();triggerMediaUpload('${item.id}','prompt')" style="font-size:.55rem;padding:3px 8px;border-radius:4px">上传媒体</button>
+          <button class="del-ov-btn" onclick="deleteCard('${item.id}')">✕</button>
+        </div>
+      </div>
+      ${hasMedia ? `<div class="mb-1 prompt-media-wrap">${mediaHtml}</div>` : ''}
+      <div class="prompt-body ${needFold?'collapsed':''}" data-field="body">${escHtml(body)}</div>
+      ${needFold ? `<button class="expand-btn mt-1.5" onclick="togglePrompt(this)" style="font-size:.6rem">展开全文 ▾</button>` : ''}
+    </div>`;
+  if(hasMedia && item.mediaType==='mp4'){
+    const pm = card.querySelector('.prompt-media');
+    if(pm) pm.addEventListener('click', e=>{
+      if(e.target.closest('.upload-ov') || editMode) return;
+      openInlinePlayer(item.media, card);
+    });
+  }
+  card.addEventListener('mouseenter',()=>{ if(editMode) card.querySelector('.upload-ov').style.display='flex'; });
+  card.addEventListener('mouseleave',()=>{ card.querySelector('.upload-ov').style.display='none'; });
+  setupEditableFields(card, item);
+  return card;
+}
+
+function togglePrompt(btn){
+  const body = btn.previousElementSibling;
+  const folded = body.classList.toggle('collapsed');
+  btn.textContent = folded ? '展开全文 ▾' : '收起 ▴';
+}
+
+function escHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+function setupEditableFields(card, item){
+  card.querySelectorAll('[data-field]').forEach(el=>{
+    el.contentEditable = editMode;
+    el.addEventListener('blur',()=>{
+      const f = el.dataset.field;
+      item[f] = el.textContent.trim();
+      saveData();
+    });
+  });
+}
+
+function renderSection(sectionKey, gridId, type){
+  const items = DATA[sectionKey] || [];
+  const container = document.getElementById(gridId);
+  if(!container) return;
+  container.innerHTML = '';
+
+  const isMobile = window.innerWidth <= 900;
+  const gap = 10;
+
+  // Prompt cards: flex wrap, responsive width
+  if(items.length && items[0].type==='prompt'){
+    items.forEach((item,i)=>{
+      const card = makePromptCard(item);
+      card.style.width = isMobile ? '100%' : '280px';
+      container.appendChild(card);
+    });
+    container.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;position:static;height:auto;width:auto;margin-left:0';
+    if (editMode) initDragSort(container, sectionKey);
+    return;
+  }
+
+  // Mobile: 2-column CSS grid
+  if(isMobile){
+    items.forEach((item,i)=>{
+      let card = item.type==='img' ? makeImgCard(item) : makeMp4Card(item);
+      card.style.position = 'static';
+      card.style.width = '100%';
+      card.style.height = 'auto';
+      const mediaEl = card.querySelector('.card-media');
+      if(mediaEl){
+        mediaEl.style.cssText = 'position:relative;height:0;padding-top:56.25%;overflow:hidden';
+        mediaEl.querySelectorAll('img,video,.no-thumb').forEach(el=>{
+          el.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
+        });
+      }
+      container.appendChild(card);
+    });
+    container.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:6px;position:static;height:auto;width:auto;margin-left:0';
+    if (editMode) initDragSort(container, sectionKey);
+    return;
+  }
+
+  // Desktop: Flex-wrap justified row layout
+  // Fixed image row height, card width = rowH * aspect ratio, last row centered
+  const rowH = DATA.cols[sectionKey] || 180; // stored value is row height in px
+
+  items.forEach((item,i)=>{
+    let card = item.type==='img' ? makeImgCard(item) : makeMp4Card(item);
+    const ratio = item.ar || (16/9);
+    const cardW = Math.round(rowH * ratio);
+
+    card.style.position = 'static';
+    card.style.width = cardW + 'px';
+    card.style.height = 'auto';
+    card.style.flexShrink = '0';
+    card.style.flexGrow = '0';
+
+    const mediaEl = card.querySelector('.card-media');
+    if(mediaEl){
+      mediaEl.style.height = rowH + 'px';
+      mediaEl.style.overflow = 'hidden';
+      mediaEl.querySelectorAll('img,video,.no-thumb').forEach(el=>{
+        el.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
+      });
+    }
+
+    container.appendChild(card);
+  });
+
+  // 懒动画：只有进入视口的卡片才加 vis
+  const lazyVis=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');lazyVis.unobserve(e.target);}});
+  },{threshold:0.05});
+  container.querySelectorAll('.vcard').forEach(c=>lazyVis.observe(c));
+
+  container.style.cssText = `display:flex;flex-wrap:wrap;gap:${gap}px;justify-content:center;align-items:flex-start;position:static;height:auto;width:auto;margin-left:0`;
+
+  // Initialize drag-sort if in edit mode
+  if (editMode) initDragSort(container, sectionKey);
+}
+
+function renderAll(){
+  renderGallerySection('practice');
+  renderGallerySection('practice2');
+  renderSection('mg', 'mg-grid', 'auto');
+  renderSection('aigc-img', 'aigc-img-grid', 'auto');
+  renderSection('aigc-vid', 'aigc-vid-grid', 'auto');
+  renderSection('aigc-prompt', 'aigc-prompt-grid', 'auto');
+  renderSection('agent', 'agent-grid', 'auto');
+  restoreCols();
+  restoreSectionTitles();
+  restoreContact();
+  restoreHeroNav();
+  renderTags('hero-tags','hero');
+  renderTags('contact-tags','contact');
+}
+
+let _resizeTimer = null;
+let _lastMobile = window.innerWidth <= 900;
+window.addEventListener('resize', ()=>{
+  clearTimeout(_resizeTimer);
+  const nowMobile = window.innerWidth <= 900;
+  if(nowMobile !== _lastMobile){ _lastMobile = nowMobile; _resizeTimer = setTimeout(renderAll, 200); }
+  else { applyLayoutByScreen(); }
+});
+
+function restoreCols(){
+  const map = {
+    'practice-cols':'practice','practice2-cols':'practice2', 'mg-cols':'mg', 'aigc-img-cols':'aigc-img',
+    'aigc-vid-cols':'aigc-vid', 'aigc-prompt-cols':'aigc-prompt', 'agent-cols':'agent'
   };
-  window.removeEventListener('scroll', _onScrollParallax);
-  _onScrollParallax = onScroll;
-  window.addEventListener('scroll', onScroll, { passive: true });
-}
-let _onScrollParallax = null;
-
-// Load more
-document.getElementById('load-more-btn')?.addEventListener('click', () => {
-  renderArchive(false);
-});
-
-/* ────────────────────────────────────────────────
-   9. MODAL
-──────────────────────────────────────────────── */
-let _modalId = null, _modalSrc = 'works';
-
-function openModal(id, src = 'works') {
-  _modalId = id; _modalSrc = src;
-  const arr = src === 'archive' ? (DATA.archive.length ? DATA.archive : DATA.works) : DATA.works;
-  const w = arr.find(x => x.id === id);
-  if (!w) return;
-
-  const catInfo = CATEGORIES[w.category] || CATEGORIES.motion;
-  const isVideo = w.mediaType === 'mp4';
-  const isAnim  = w.mediaType === 'webp' || w.mediaType === 'gif';
-
-  const mediaWrap = document.getElementById('modal-media');
-  if (mediaWrap) {
-    if (isVideo && w.media) {
-      mediaWrap.innerHTML = `<video src="${w.media}" poster="${w.cover||''}" controls autoplay muted playsinline></video>`;
-    } else if ((isAnim || w.mediaType === 'img') && w.media) {
-      mediaWrap.innerHTML = `<img src="${w.media}" alt="${w.title||''}">`;
-    } else if (w.cover) {
-      mediaWrap.innerHTML = `<img src="${w.cover}" alt="${w.title||''}">`;
-    } else {
-      mediaWrap.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#333;font-family:monospace;font-size:12px">暂无媒体</div>`;
-    }
-  }
-
-  setText('modal-cat', catInfo.label);
-  setText('modal-title', w.title||'作品标题');
-  setText('modal-desc', w.desc||'');
-  const toolsEl = document.getElementById('modal-tools');
-  if (toolsEl) toolsEl.innerHTML = (w.tools||[]).map(t=>`<span class="modal-tool">${t}</span>`).join('');
-
-  const idx = arr.findIndex(x => x.id === id);
-  const prevBtn = document.getElementById('modal-prev');
-  const nextBtn = document.getElementById('modal-next');
-  if (prevBtn) { prevBtn.disabled = idx <= 0; prevBtn.onclick = () => idx > 0 && openModal(arr[idx-1].id, src); }
-  if (nextBtn) { nextBtn.disabled = idx >= arr.length-1; nextBtn.onclick = () => idx < arr.length-1 && openModal(arr[idx+1].id, src); }
-
-  document.getElementById('modal-backdrop')?.classList.add('open');
-  document.getElementById('modal')?.classList.add('open');
-  document.body.style.overflow = 'hidden';
-
-  // Reset to Final tab on open
-  switchModalTab('final');
-
-  // Init Process view for this work
-  renderProcessView(w);
-}
-
-// ── Modal Tab Switch ──
-function switchModalTab(tab) {
-  const tabFinal   = document.getElementById('tab-final');
-  const tabProcess = document.getElementById('tab-process');
-  const viewFinal  = document.getElementById('modal-final');
-  const viewProcess = document.getElementById('modal-process');
-
-  if (tab === 'final') {
-    tabFinal?.classList.add('active');
-    tabProcess?.classList.remove('active');
-    viewFinal?.classList.remove('hidden');
-    viewProcess?.classList.remove('active');
-  } else {
-    tabFinal?.classList.remove('active');
-    tabProcess?.classList.add('active');
-    viewFinal?.classList.add('hidden');
-    viewProcess?.classList.add('active');
-  }
-}
-
-// ── Process View Rendering ──
-const DEFAULT_PROCESS_STEPS = [
-  { label: 'Sketch',  desc: '创意构思与草稿绘制', media: '' },
-  { label: 'Style',   desc: '视觉风格定调与设计稿', media: '' },
-  { label: 'Animate', desc: 'AE 动态制作与节奏卡点', media: '' },
-  { label: 'Render',  desc: '渲染输出与格式适配', media: '' },
-  { label: 'Final',   desc: '最终成品上线', media: '' },
-];
-
-let _processStep = 0;
-
-function renderProcessView(w) {
-  _processStep = 0;
-
-  // Use work's processSteps if defined, otherwise default template
-  const steps = w.processSteps || DEFAULT_PROCESS_STEPS;
-
-  const timeline = document.getElementById('process-timeline');
-  if (!timeline) return;
-  timeline.innerHTML = '';
-
-  steps.forEach((step, i) => {
-    const node = document.createElement('div');
-    node.className = 'process-node' + (i === 0 ? ' active' : '');
-    node.innerHTML = `
-      <div class="process-node-dot"></div>
-      <div class="process-node-label">${step.label}</div>`;
-    node.addEventListener('click', () => selectProcessStep(i, steps));
-    timeline.appendChild(node);
+  Object.entries(map).forEach(([inputId, key])=>{
+    const inp = document.getElementById(inputId);
+    const n = DATA.cols[key] || 180; // now stores row height
+    if(inp) inp.value = n;
   });
-
-  // Show first step preview
-  updateProcessPreview(steps, 0);
-
-  // Progress fill
-  const fill = document.getElementById('process-progress-fill');
-  if (fill) fill.style.width = (1 / steps.length * 100) + '%';
 }
 
-function selectProcessStep(idx, steps) {
-  _processStep = idx;
-
-  // Update node active state
-  document.querySelectorAll('.process-node').forEach((n, i) => {
-    n.classList.toggle('active', i === idx);
+function restoreSectionTitles(){
+  const st = DATA.sectionTitles;
+  ['practice','mg','aigc','agent'].forEach(k=>{
+    const t = document.getElementById(`${k}-title`);
+    const d = document.getElementById(`${k}-desc`);
+    if(t && st[k]) t.textContent = st[k].title;
+    if(d && st[k]) d.textContent = st[k].desc;
   });
-
-  // Progress fill
-  const fill = document.getElementById('process-progress-fill');
-  if (fill) fill.style.width = ((idx + 1) / steps.length * 100) + '%';
-
-  updateProcessPreview(steps, idx);
+  ['practice','mg','aigc','agent'].forEach(k=>{
+    const t = document.getElementById(`${k}-title`);
+    const d = document.getElementById(`${k}-desc`);
+    if(t) t.onblur=()=>{ DATA.sectionTitles[k].title = t.textContent; saveData(); };
+    if(d) d.onblur=()=>{ DATA.sectionTitles[k].desc = d.textContent; saveData(); };
+  });
 }
 
-function updateProcessPreview(steps, idx) {
-  const preview = document.getElementById('process-preview-content');
-  const descEl  = document.getElementById('process-desc');
-
-  if (!preview) return;
-
-  const step = steps[idx];
-  if (step.media) {
-    if (step.mediaType === 'mp4') {
-      preview.innerHTML = `<video src="${step.media}" controls muted playsinline style="width:100%;height:100%;object-fit:contain"></video>`;
-    } else {
-      preview.innerHTML = `<img src="${step.media}" alt="${step.label}" style="width:100%;height:100%;object-fit:contain">`;
-    }
-  } else {
-    preview.innerHTML = `<div class="process-empty">${step.label} — 待上传</div>`;
-  }
-
-  if (descEl) descEl.textContent = step.desc || '';
-}
-
-function closeModal() {
-  document.getElementById('modal-backdrop')?.classList.remove('open');
-  document.getElementById('modal')?.classList.remove('open');
-  document.body.style.overflow = '';
-  const vid = document.querySelector('#modal-media video');
-  if (vid) { vid.pause(); vid.src = ''; }
-  // Also stop process preview video
-  const pvid = document.querySelector('#process-preview-content video');
-  if (pvid) { pvid.pause(); pvid.src = ''; }
-  _modalId = null;
-}
-
-document.getElementById('modal-close')?.addEventListener('click', closeModal);
-document.getElementById('modal-backdrop')?.addEventListener('click', closeModal);
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-/* ────────────────────────────────────────────────
-   10. CONTACT
-──────────────────────────────────────────────── */
-function renderContact() {
+function restoreContact(){
   const c = DATA.contact;
-  const emailEl = document.getElementById('contact-email');
-  if (emailEl) {
-    if (c.email) {
-      emailEl.textContent = c.email;
-      emailEl.href = `mailto:${c.email}`;
-      emailEl.onclick = e => { e.preventDefault(); navigator.clipboard.writeText(c.email).then(() => showToast('邮箱已复制')); };
+  const setEl = (id, val)=>{ const el=document.getElementById(id); if(el&&val) el.textContent=val; };
+  setEl('contact-name', c.name);
+  setEl('contact-bio', c.bio);
+  // 同步 sidebar 关于我区块
+  setEl('sidebar-name', c.name);
+  setEl('sidebar-bio', c.bio);
+  if(c.role) setEl('sidebar-role', c.role);
+  setEl('contact-email', c.email);
+  setEl('contact-qq', c.qq);
+  setEl('contact-phone', c.phone);
+  if(c.wechatQr){
+    const img = document.getElementById('wechat-qr-img');
+    const ph = document.getElementById('wechat-qr-placeholder');
+    const hint = document.getElementById('wechat-qr-hint');
+    if(img){ img.src=c.wechatQr; img.style.display='block'; }
+    if(ph) ph.style.display='none';
+    if(hint) hint.style.display='';
+    const actions = document.getElementById('wechat-qr-actions');
+    if(actions && editMode) actions.style.display='flex';
+  }
+  // Sync right column height with left column for justify-between distribution
+  requestAnimationFrame(()=>{
+    const leftCol = document.getElementById('contact-left-col');
+    const rightCol = document.getElementById('contact-right-col');
+    if(leftCol && rightCol){
+      const h = leftCol.offsetHeight;
+      if(h > 0) rightCol.style.minHeight = h + 'px';
+    }
+  });
+  const biliEl = document.getElementById('contact-bilibili');
+  const douyinEl = document.getElementById('contact-douyin');
+  if(biliEl && c.bilibili && c.bilibili!=='{{BILIBILI_UID}}'){
+    biliEl.href = c.bilibili;
+    biliEl.textContent = c.bilibili;
+  }
+  if(douyinEl && c.douyin && c.douyin!=='{{DOUYIN_ID}}'){
+    douyinEl.href = c.douyin;
+    douyinEl.textContent = c.douyin;
+  }
+  // Social links: update header icons
+  const headerDouyin = document.getElementById('header-douyin');
+  const headerBilibili = document.getElementById('header-bilibili');
+  if(headerDouyin && c.douyin && c.douyin!=='{{DOUYIN_ID}}' && c.douyin!==''){
+    headerDouyin.href = c.douyin;
+    headerDouyin.style.display = 'flex';
+  }
+  if(headerBilibili && c.bilibili && c.bilibili!=='{{BILIBILI_UID}}' && c.bilibili!==''){
+    headerBilibili.href = c.bilibili;
+    headerBilibili.style.display = 'flex';
+  }
+  if(c.email && c.email!=='{{EMAIL}}'){
+    const a=document.querySelector('a[href^="mailto"]');
+    if(a){ a.href=`mailto:${c.email}`; a.textContent=c.email; }
+  }
+  ['contact-name','contact-bio','contact-email','contact-qq','contact-phone'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.onblur=()=>{
+      const key=id.replace('contact-','');
+      DATA.contact[key]=el.textContent.trim(); saveData();
+      if(key==='name'){const s=document.getElementById('sidebar-name');if(s) s.textContent=el.textContent.trim();}
+      if(key==='bio'){const s=document.getElementById('sidebar-bio');if(s) s.textContent=el.textContent.trim();}
+    };
+  });
+  // sidebar 字段编辑同步保存到 DATA 并更新 contact 区块
+  const sidebarName=document.getElementById('sidebar-name');
+  const sidebarRole=document.getElementById('sidebar-role');
+  const sidebarBio=document.getElementById('sidebar-bio');
+  if(sidebarName) sidebarName.onblur=()=>{
+    DATA.contact.name=sidebarName.textContent.trim();saveData();
+    const cn=document.getElementById('contact-name');if(cn) cn.textContent=sidebarName.textContent.trim();
+  };
+  if(sidebarRole) sidebarRole.onblur=()=>{
+    if(!DATA.contact)DATA.contact={};DATA.contact.role=sidebarRole.textContent.trim();saveData();
+  };
+  if(sidebarBio) sidebarBio.onblur=()=>{
+    DATA.contact.bio=sidebarBio.textContent.trim();saveData();
+    const cb=document.getElementById('contact-bio');if(cb) cb.textContent=sidebarBio.textContent.trim();
+  };
+
+
+  // ── Tool card fields ──
+  const TOOL_FIELDS = ['tool1-title','tool1-desc','tool2-title','tool2-desc','tool3-title','tool3-desc'];
+  if(!DATA.toolCards) DATA.toolCards = {};
+  TOOL_FIELDS.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(DATA.toolCards[id]) el.textContent = DATA.toolCards[id];
+    el.onblur=()=>{ DATA.toolCards[id]=el.textContent.trim(); saveData(); };
+  });
+  // restore resume
+  if(!DATA.contact.resumeName) DATA.contact.resumeName='';
+  if(!DATA.contact.resumeUrl) DATA.contact.resumeUrl='';
+  updateResumeUI();
+  [biliEl, douyinEl].forEach(el=>{
+    if(!el) return;
+    el.contentEditable = editMode;
+    el.onblur=()=>{
+      const url = el.textContent.trim();
+      el.href = url || '#';
+      if(el.id==='contact-bilibili') DATA.contact.bilibili = url;
+      else DATA.contact.douyin = url;
+      saveData();
+    };
+  });
+}
+
+function openQrZoom(src){
+  if(!src) return;
+  const img = document.getElementById('qrZoomImg');
+  img.src = src;
+  document.getElementById('qrZoom').classList.add('open');
+}
+function closeQrZoom(){ document.getElementById('qrZoom').classList.remove('open'); }
+
+function openImgZoom(src){
+  if(!src) return;
+  const img = document.getElementById('imgZoomImg');
+  img.src = src;
+  document.getElementById('imgZoom').classList.add('open');
+}
+function closeImgZoom(){
+  document.getElementById('imgZoom').classList.remove('open');
+  document.getElementById('imgZoomImg').src = '';
+}
+
+function deleteQR(){
+  DATA.contact.wechatQr = '';
+  saveData();
+  const img = document.getElementById('wechat-qr-img');
+  const ph = document.getElementById('wechat-qr-placeholder');
+  const hint = document.getElementById('wechat-qr-hint');
+  const actions = document.getElementById('wechat-qr-actions');
+  if(img){ img.src=''; img.style.display='none'; }
+  if(ph) ph.style.display='flex';
+  if(hint) hint.style.display='none';
+  if(actions) actions.style.display='none';
+}
+
+/* ── Resume ── */
+function triggerResumeUpload(){
+  const inp = document.createElement('input');
+  inp.type='file'; inp.accept='.pdf,.doc,.docx';
+  inp.addEventListener('change', async ()=>{
+    const file = inp.files[0]; if(!file) return;
+    const blobUrl = URL.createObjectURL(file);
+    DATA.contact.resumeName = file.name;
+    DATA.contact.resumeUrl = blobUrl;
+    saveData();
+    updateResumeUI();
+    // try upload to GitHub
+    const result = await uploadToGitHub(file);
+    if(result){
+      URL.revokeObjectURL(blobUrl);
+      DATA.contact.resumeUrl = result.url;
+      DATA.contact.resumeFileID = result.fileID;
+      saveData();
+      updateResumeUI();
+    }
+  });
+  inp.click();
+}
+
+function deleteResume(){
+  DATA.contact.resumeName = '';
+  DATA.contact.resumeUrl = '';
+  saveData();
+  updateResumeUI();
+}
+
+async function downloadResume(e){
+  e.preventDefault();
+  const url = e.currentTarget.href;
+  const fn = e.currentTarget.dataset.filename || '张峻烨简历';
+  // Try to get the extension from the original filename
+  const origName = DATA.contact.resumeName || '';
+  const ext = origName.split('.').pop() || 'pdf';
+  const fullFn = fn + '.' + ext;
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fullFn;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch(err) {
+    // Fallback: open in new tab
+    window.open(url, '_blank');
+  }
+}
+
+function updateResumeUI(){
+  const name = DATA.contact.resumeName || '';
+  const url = DATA.contact.resumeUrl || '';
+  // contact section buttons
+  const fnEl = document.getElementById('resume-filename');
+  const dlEl = document.getElementById('resume-download');
+  const delBtn = document.getElementById('resume-del-btn');
+  if(fnEl) fnEl.textContent = name || '未上传';
+  if(dlEl){
+    if(url){ dlEl.href=url; dlEl.dataset.filename='张峻烨简历'; dlEl.style.display='flex'; dlEl.onclick=downloadResume; }
+    else dlEl.style.display='none';
+  }
+  if(delBtn) delBtn.style.display = url ? '' : 'none';
+  // nav bar button
+  const navBtn = document.getElementById('nav-resume-btn');
+  const navDel = document.getElementById('nav-resume-del');
+  if(navBtn){
+    if(url){ navBtn.href=url; navBtn.dataset.filename='张峻烨简历'; navBtn.style.display='flex'; navBtn.onclick=downloadResume; }
+    else navBtn.style.display='none';
+  }
+  if(navDel) navDel.style.display = url ? '' : 'none';
+}
+
+/* ════════════════════════════════════════════
+   TAGS SYSTEM (editable pills)
+════════════════════════════════════════════ */
+const DEFAULT_TAGS = ['After Effects','Seedream','MG 动效','骨骼动画','AIGC 工作流','Agent 基建'];
+
+function renderTags(containerId, tagsKey){
+  if(!DATA.tags) DATA.tags = {};
+  if(!DATA.tags[tagsKey]) DATA.tags[tagsKey] = [...DEFAULT_TAGS];
+  const wrap = document.getElementById(containerId);
+  if(!wrap) return;
+  wrap.innerHTML='';
+  DATA.tags[tagsKey].forEach((text,i)=>{
+    const sp = document.createElement('span');
+    sp.className='tag-pill';
+    sp.style.position='relative';
+    const tEl = document.createElement('span');
+    tEl.textContent = text;
+    tEl.contentEditable = editMode ? 'true' : 'false';
+    tEl.addEventListener('blur',()=>{ DATA.tags[tagsKey][i]=tEl.textContent.trim(); saveData(); });
+    sp.appendChild(tEl);
+    if(editMode){
+      const delBtn = document.createElement('button');
+      delBtn.innerHTML='✕';
+      delBtn.style.cssText='position:absolute;top:-5px;right:-5px;width:14px;height:14px;border-radius:50%;background:rgba(200,70,60,.9);border:none;color:#fff;font-size:8px;line-height:14px;text-align:center;cursor:pointer;padding:0;z-index:2';
+      delBtn.onclick=()=>{ DATA.tags[tagsKey].splice(i,1); saveData(); renderTags(containerId,tagsKey); };
+      sp.appendChild(delBtn);
+    }
+    wrap.appendChild(sp);
+  });
+  if(editMode){
+    const addBtn = document.createElement('button');
+    addBtn.className='tag-pill';
+    addBtn.style.cssText='opacity:.5;cursor:pointer;border-style:dashed;background:none';
+    addBtn.textContent='+ 添加';
+    addBtn.onclick=()=>{ DATA.tags[tagsKey].push('新标签'); saveData(); renderTags(containerId,tagsKey); };
+    wrap.appendChild(addBtn);
+  }
+}
+
+function rerenderAllTags(){
+  renderTags('hero-tags','hero');
+  renderTags('contact-tags','contact');
+}
+
+function restoreHeroNav(){
+  if(!DATA.heroNav) DATA.heroNav = {};
+  const fields = {
+    'hero-sub': '效果创意设计 · 短视频特效素材 · AIGC 全链路工作流 · AI 智能体工具基建',
+    'header-name': '张峻烨',
+    'header-role': '效果创意设计 · AIGC',
+    'nav-practice': '业务作品',
+    'nav-mg': 'MG',
+    'nav-aigc': 'AIGC',
+    'nav-agent': '工具集',
+    'nav-contact': '联系',
+    'aigc-img-label': 'AI 生成原画素材',
+    'aigc-vid-label': 'AE 木偶骨骼绑定动效',
+    'aigc-prompt-label': 'Prompt 工程',
+    'practice-vid-label': '特效 / 转场 / 模板'
+  };
+  Object.entries(fields).forEach(([id, def])=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(DATA.heroNav[id]) el.textContent = DATA.heroNav[id];
+    el.onblur=()=>{ DATA.heroNav[id]=el.textContent.trim(); saveData(); };
+  });
+  // hero hint editable
+  const hintEl = document.querySelector('[data-field="heroHint"]');
+  if(hintEl){
+    if(!DATA.heroNav) DATA.heroNav={};
+    if(DATA.heroNav['heroHint']) hintEl.textContent = DATA.heroNav['heroHint'];
+    hintEl.onblur=()=>{ DATA.heroNav['heroHint']=hintEl.textContent.trim(); saveData(); };
+  }
+}
+
+function addWorkCard(section, forceType){
+  const item = { id: uid(), type: forceType, title:'', desc:'', media:'', cover:'', ar:0 };
+  DATA[section].push(item);
+  saveData();
+  if(section==='practice'||section==='practice2') renderGallerySection(section);
+  else renderSection(section, section+'-grid', forceType);
+  setTimeout(()=>triggerMediaUpload(item.id, forceType), 100);
+}
+
+function addPromptCard(){
+  const item = { id: uid(), type:'prompt', title:'Prompt 标题', body:'' };
+  DATA['aigc-prompt'].push(item);
+  saveData();
+  renderSection('aigc-prompt','aigc-prompt-grid',null,'prompt');
+}
+
+async function deleteCard(id){
+  // Find the item first to get its fileIDs for cloud storage cleanup
+  let sec = '';
+  let fileIDs = [];
+  ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent'].forEach(s=>{
+    const idx = DATA[s].findIndex(x=>x.id===id);
+    if(idx>-1){
+      sec = s;
+      const item = DATA[s][idx];
+      if(item.fileID) fileIDs.push(item.fileID);
+      if(item.coverFileID && item.coverFileID !== item.fileID) fileIDs.push(item.coverFileID);
+    }
+  });
+  if(sec){
+    const idx = DATA[sec].findIndex(x=>x.id===id);
+    DATA[sec].splice(idx,1);
+    saveData();
+    if(sec==='practice'||sec==='practice2') renderGallerySection(sec);
+    else renderSection(sec, sec+'-grid');
+    // Delete files from cloud storage using fileID
+    if(tcbApp && fileIDs.length){
+      tcbApp.deleteFile({ fileList: fileIDs }).then(()=>{
+        console.log('✓ 云存储文件已删除:', fileIDs);
+      }).catch(e=>{
+        console.warn('云存储文件删除失败:', e);
+      });
     }
   }
-  const resumeEl = document.getElementById('resume-download');
-  const resumeEl2 = document.getElementById('sidebar-resume');
-  [resumeEl, resumeEl2].forEach(el => {
-    if (!el) return;
-    if (c.resumeUrl) { el.href = c.resumeUrl; el.style.display = ''; }
-    else el.style.display = 'none';
-  });
-  const dEl = document.getElementById('contact-douyin');
-  const bEl = document.getElementById('contact-bilibili');
-  if (dEl && c.douyin) { dEl.href = c.douyin; dEl.style.display = ''; }
-  if (bEl && c.bilibili) { bEl.href = c.bilibili; bEl.style.display = ''; }
 }
 
-/* ────────────────────────────────────────────────
-   11. EDIT MODE
-──────────────────────────────────────────────── */
-let editMode = false;
+let _uploadTarget = null;
+let _uploadType = null;
+const fileInput = document.createElement('input');
+fileInput.type='file';
 
-function toggleEdit() {
-  editMode = !editMode;
-  document.getElementById('app')?.classList.toggle('editing', editMode);
-  renderAll();
-  showToast(editMode ? '已进入编辑模式' : '已退出编辑模式');
+function triggerMediaUpload(itemId, type){
+  _uploadTarget = itemId;
+  _uploadType = type;
+  // Prompt cards also accept video + images
+  if(type==='prompt') fileInput.accept='video/mp4,video/webm,video/*,image/webp,image/gif,image/jpeg,image/png';
+  else if(type==='img') fileInput.accept='image/jpeg,image/png,image/webp,image/gif';
+  else fileInput.accept='video/mp4,video/webm,video/*,image/webp,image/gif,image/jpeg,image/png';
+  fileInput.value='';
+  fileInput.click();
 }
 
-// Double-press 'e' key to toggle edit mode
-let _ePresses = 0, _eTimer = null;
-document.addEventListener('keydown', e => {
-  if (e.key !== 'e' && e.key !== 'E') return;
-  // Skip if user is typing in an input/textarea
-  const tag = e.target.tagName;
-  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-  // Skip if actively editing a contentEditable field
-  if (e.target.isContentEditable) return;
-  _ePresses++;
-  clearTimeout(_eTimer);
-  _eTimer = setTimeout(() => { _ePresses = 0; }, 400);
-  if (_ePresses >= 2) { _ePresses = 0; clearTimeout(_eTimer); toggleEdit(); }
-});
-
-// Work upload (gallery)
-function triggerWorkUpload(id) {
-  const inp = createFileInput();
-  inp.addEventListener('change', async () => {
-    const file = inp.files[0]; if (!file) return;
-    const w = DATA.works.find(x => x.id === id); if (!w) return;
-    await handleMediaUpload(file, w, () => { saveLocal(); renderGallery(); });
-  });
-  inp.click();
-}
-
-// Archive upload
-function triggerArchiveUpload(id) {
-  const inp = createFileInput();
-  inp.addEventListener('change', async () => {
-    const file = inp.files[0]; if (!file) return;
-    const src = DATA.archive.length ? DATA.archive : DATA.works;
-    const w = src.find(x => x.id === id); if (!w) return;
-    await handleMediaUpload(file, w, () => { saveLocal(); renderArchive(true); });
-  });
-  inp.click();
-}
-
-function triggerHeroUpload(idx) {
-  const inp = createFileInput();
-  inp.addEventListener('change', async () => {
-    const file = inp.files[0]; if (!file) return;
-    const h = DATA.hero[idx]; if (!h) return;
-    const isVideo = file.type.startsWith('video/');
-    h.mediaType = isVideo ? 'mp4' : 'img';
-    const blob = URL.createObjectURL(file);
-    h.media = blob;
-    if (isVideo) h.cover = await extractFirstFrameFile(file);
-    saveLocal(); renderHero();
-    const result = await uploadFile(file);
-    if (result) { URL.revokeObjectURL(blob); h.media = result.url; saveLocal(); renderHero(); }
-  });
-  inp.click();
-}
-
-function deleteWork(id) {
-  DATA.works = DATA.works.filter(w => w.id !== id); saveLocal(); renderGallery();
-}
-function deleteArchive(id) {
-  if (DATA.archive.length) DATA.archive = DATA.archive.filter(w => w.id !== id);
-  else DATA.works = DATA.works.filter(w => w.id !== id);
-  saveLocal(); renderArchive(true);
-}
-
-function addWork(cat = 'motion') {
-  DATA.works.push({ id: uid(), title: '作品标题', category: cat, tools: [], desc: '', media: '', cover: '', mediaType: 'webp', year: '2024' });
-  saveLocal(); renderGallery();
-}
-
-async function handleMediaUpload(file, item, onLocal) {
+fileInput.addEventListener('change', async ()=>{
+  const file = fileInput.files[0];
+  if(!file || !_uploadTarget) return;
+  const item = findItem(_uploadTarget);
+  if(!item) return;
   const isVideo = file.type.startsWith('video/');
-  const isWebpGif = file.type === 'image/webp' || file.type === 'image/gif';
-  item.mediaType = isVideo ? 'mp4' : (isWebpGif ? 'webp' : 'img');
-  const blob = URL.createObjectURL(file);
-  item.media = blob;
-  if (isVideo) { item.cover = await extractFirstFrameFile(file); item.ar = await getVideoAR(file); }
-  else { item.ar = await getImageAR(blob); }
-  onLocal();
-  const result = await uploadFile(file);
-  if (result) {
-    URL.revokeObjectURL(blob);
+  const isWebpGif = file.type==='image/webp' || file.type==='image/gif';
+  const isImg = file.type.startsWith('image/') && !isWebpGif;
+  const isPrompt = item.type==='prompt';
+  // For prompt cards, keep type='prompt' but set mediaType sub-field
+  if(!isPrompt){
+    if(isVideo) item.type='mp4';
+    else if(isWebpGif) item.type='webp';
+    else if(isImg) item.type='img';
+  }
+  if(isVideo) item.mediaType='mp4';
+  else if(isWebpGif) item.mediaType='webp';
+  else if(isImg) item.mediaType='img';
+  
+  // 压缩图片（webp/gif 不压缩）
+  let uploadFile = file;
+  if(isImg) uploadFile = await compressImage(file);
+  
+  const blobUrl = URL.createObjectURL(uploadFile);
+  item.media = blobUrl;
+  if(isVideo){
+    const cover = await extractFirstFrame(file);
+    item.cover = cover;
+    item.ar = await getVideoAR(file);
+  } else if(isWebpGif || isImg){
+    item.ar = await getImageAR(blobUrl);
+  }
+  saveData();
+  rerenderItemSection(_uploadTarget);
+  
+  // 上传媒体文件到云存储
+  const result = await uploadToGitHub(uploadFile);
+  if(result){
+    URL.revokeObjectURL(blobUrl);
     item.media = result.url;
     item.fileID = result.fileID;
-    if (isVideo && item.cover?.startsWith('data:')) {
-      const cb = await fetch(item.cover).then(r=>r.blob());
-      const cf = new File([cb], 'cover.jpg', {type:'image/jpeg'});
-      const cr = await uploadFile(cf);
-      if (cr) { item.cover = cr.url; item.coverFileID = cr.fileID; }
+    // 视频封面也上传到云存储
+    if(isVideo && item.cover && item.cover.startsWith('data:')){
+      try{
+        const coverBlob = await fetch(item.cover).then(r=>r.blob());
+        const coverFile = new File([coverBlob], 'cover.jpg', {type:'image/jpeg'});
+        const coverResult = await uploadToCloudStorage(coverFile);
+        if(coverResult){
+          item.cover = coverResult.url;
+          item.coverFileID = coverResult.fileID;
+        }
+      }catch(e){ console.warn('封面上传失败:', e); }
     }
-    onLocal();
-    clearTimeout(_pubTimer);
-    if (db) syncCloud();
+    saveData();
+    rerenderItemSection(_uploadTarget);
+    // 上传完成后立刻发布到云端（取消防抖，确保云端拿到真实URL而不是blob）
+    clearTimeout(_publishTimer);
+    if(db) publishDataToCloud();
   }
+});
+
+function findItem(id){
+  for(const sec of ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent']){
+    const it = DATA[sec].find(x=>x.id===id);
+    if(it) return it;
+  }
+  return null;
 }
 
-/* ────────────────────────────────────────────────
-   12. HELPERS
-──────────────────────────────────────────────── */
-function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,5); }
-function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
-function createFileInput() { const i = document.createElement('input'); i.type = 'file'; i.accept = 'video/mp4,video/webm,image/webp,image/gif,image/jpeg,image/png'; return i; }
-
-function showToast(msg, dur = 2800) {
-  const t = document.getElementById('toast'); if (!t) return;
-  t.textContent = msg; t.classList.add('show');
-  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), dur);
+function findSection(id){
+  for(const sec of ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent']){
+    if(DATA[sec].find(x=>x.id===id)) return sec;
+  }
+  return null;
 }
 
-function extractAnimFirstFrame(src) {
-  return new Promise(resolve => {
-    const img = new Image(); img.crossOrigin = 'anonymous';
-    img.onload = () => { try { const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext('2d').drawImage(img,0,0); resolve(c.toDataURL('image/jpeg',0.88)); } catch(e){ resolve(null); } };
-    img.onerror = () => resolve(null);
+function rerenderItemSection(id){
+  const sec = findSection(id);
+  if(!sec) return;
+  if(sec==='practice'||sec==='practice2') renderGallerySection(sec);
+  else renderSection(sec, sec+'-grid');
+}
+
+// Extract first frame of animated webp/gif from a URL via canvas
+function extractAnimFirstFrame(src){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=>{
+      try{
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg', 0.88));
+      } catch(e){
+        // CORS or other error: fall back to using src directly
+        resolve(null);
+      }
+    };
+    img.onerror = ()=>resolve(null);
     img.src = src;
   });
 }
 
-function extractFirstFrameFile(file) {
-  return new Promise(resolve => {
+function extractFirstFrame(file){
+  return new Promise(resolve=>{
     const url = URL.createObjectURL(file);
-    const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.preload = 'metadata'; v.src = url;
-    v.addEventListener('loadeddata', () => { v.currentTime = 0.01; });
-    v.addEventListener('seeked', () => { const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v,0,0); resolve(c.toDataURL('image/jpeg',0.82)); URL.revokeObjectURL(url); });
-    v.addEventListener('error', () => { resolve(''); URL.revokeObjectURL(url); });
+    const video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'metadata';
+    video.src = url;
+    video.addEventListener('loadeddata',()=>{ video.currentTime = 0.01; });
+    video.addEventListener('seeked',()=>{
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video,0,0);
+      resolve(canvas.toDataURL('image/jpeg',.82));
+      URL.revokeObjectURL(url);
+    });
+    video.addEventListener('error',()=>resolve(''));
   });
 }
-function getVideoAR(file) { return new Promise(r => { const url = URL.createObjectURL(file); const v = document.createElement('video'); v.preload='metadata'; v.src=url; v.addEventListener('loadedmetadata', () => { r(v.videoWidth/v.videoHeight||1.78); URL.revokeObjectURL(url); }); v.addEventListener('error', () => { r(1.78); URL.revokeObjectURL(url); }); }); }
-function getImageAR(url) { return new Promise(r => { const i = new Image(); i.onload = () => r(i.naturalWidth/i.naturalHeight||1); i.onerror = () => r(1); i.src = url; }); }
 
-/* ────────────────────────────────────────────────
-   13. RENDER ALL + INIT
-──────────────────────────────────────────────── */
-function renderAll() {
-  renderHero();
-  renderGallery();
-  renderArchive(true);
-  renderContact();
+function getVideoAR(file){
+  return new Promise(resolve=>{
+    const url=URL.createObjectURL(file);
+    const v=document.createElement('video');
+    v.preload='metadata';
+    v.src=url;
+    v.addEventListener('loadedmetadata',()=>{ resolve(v.videoWidth/v.videoHeight||1.78); URL.revokeObjectURL(url); });
+    v.addEventListener('error',()=>{ resolve(1.78); URL.revokeObjectURL(url); });
+  });
 }
 
-async function init() {
-  // ── Loading Sequence ──
-  if (!sessionStorage.getItem('_loader_done')) {
-    await runLoader();
-    sessionStorage.setItem('_loader_done', '1');
-  }
-  const loader = document.getElementById('loader');
-  if (loader) { loader.classList.add('done'); setTimeout(() => loader.remove(), 500); }
-
-  loadLocal();
-  renderAll();
-  initMarquee();
-  startHeroAuto();
-
-  // ── Page switcher setup ──
-  setupContentScroll();
-  switchPage('hero'); // default: show hero
-
-  // Wait for GSAP
-  if (!window.gsap || !window.ScrollTrigger) {
-    const waitGSAP = setInterval(() => {
-      if (window.gsap && window.ScrollTrigger) {
-        clearInterval(waitGSAP);
-        initHorizontalScroll();
-        const track = document.getElementById('gallery-track');
-        if (window.initTimeCapsule && _galleryTrigger && track) window.initTimeCapsule(_galleryTrigger, track);
-      }
-    }, 200);
-  } else {
-    initHorizontalScroll();
-  }
-
-  const cloudOk = await initCloud();
-  if (cloudOk) await loadCloud();
+function getImageAR(url){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>resolve(img.naturalWidth/img.naturalHeight||1);
+    img.onerror=()=>resolve(1);
+    img.src=url;
+  });
 }
 
-// ── Loader Animation ──
-function runLoader() {
-  return new Promise(resolve => {
-    const gsap = window.gsap;
-    if (!gsap) { resolve(); return; }
+function openInlinePlayer(src, cardEl){
+  const player=document.getElementById('inlinePlayer');
+  const video=document.getElementById('inlineVideo');
+  video.src=src;
+  const vw=window.innerWidth;
+  const vh=window.innerHeight;
+  const w=Math.min(Math.round(vw*.82),1200);
+  const loadHandler=()=>{
+    const ar=video.videoWidth/video.videoHeight;
+    let h=Math.round(w/ar);
+    if(h>vh*.82) h=Math.round(vh*.82);
+    player.style.width=w+'px';
+    player.style.height=h+'px';
+    player.style.left='50%';
+    player.style.top='50%';
+    player.style.transform=`translate(-50%,-50%)`;
+    video.removeEventListener('loadedmetadata',loadHandler);
+  };
+  video.addEventListener('loadedmetadata',loadHandler);
+  player.classList.add('open');
+  document.getElementById('playerBackdrop').classList.add('open');
+  video.play().catch(()=>{});
+}
 
-    const svg = document.getElementById('loader-svg');
-    const pctEl = document.getElementById('loader-pct');
-    if (!svg) { resolve(); return; }
+function closeInlinePlayer(){
+  const player=document.getElementById('inlinePlayer');
+  const video=document.getElementById('inlineVideo');
+  video.pause();
+  video.src='';
+  player.classList.remove('open');
+  document.getElementById('playerBackdrop').classList.remove('open');
+}
 
-    // Build SVG elements
-    svg.innerHTML = '';
-    const ns = 'http://www.w3.org/2000/svg';
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeInlinePlayer(); closeImgZoom(); closeQrZoom(); } });
 
-    // Pixel
-    const pixel = document.createElementNS(ns, 'rect');
-    pixel.setAttribute('x', '196'); pixel.setAttribute('y', '196');
-    pixel.setAttribute('width', '4'); pixel.setAttribute('height', '4');
-    pixel.setAttribute('fill', '#FF3B5C');
-    svg.appendChild(pixel);
-
-    // Line
-    const line = document.createElementNS(ns, 'rect');
-    line.setAttribute('x', '0'); line.setAttribute('y', '198');
-    line.setAttribute('width', '400'); line.setAttribute('height', '2');
-    line.setAttribute('fill', '#FF3B5C');
-    line.style.opacity = '0';
-    svg.appendChild(line);
-
-    // Rect
-    const rect = document.createElementNS(ns, 'rect');
-    rect.setAttribute('x', '100'); rect.setAttribute('y', '140');
-    rect.setAttribute('width', '200'); rect.setAttribute('height', '120');
-    rect.setAttribute('fill', 'none'); rect.setAttribute('stroke', '#FF3B5C'); rect.setAttribute('stroke-width', '2');
-    rect.style.opacity = '0';
-    svg.appendChild(rect);
-
-    // Cube (3D-flip approximation)
-    const cube = document.createElementNS(ns, 'rect');
-    cube.setAttribute('x', '100'); cube.setAttribute('y', '140');
-    cube.setAttribute('width', '200'); cube.setAttribute('height', '120');
-    cube.setAttribute('fill', '#141414'); cube.setAttribute('stroke', '#FF3B5C'); cube.setAttribute('stroke-width', '1');
-    cube.style.opacity = '0';
-    svg.appendChild(cube);
-
-    const tl = gsap.timeline({ onComplete: resolve });
-
-    // Stage 1: pixel breathing (0-450ms)
-    tl.fromTo(pixel, { opacity: 0 }, { opacity: 1, duration: 0.2, ease: 'power3.inOut' })
-      .to(pixel, { scaleX: 1.5, scaleY: 1.5, duration: 0.25, ease: 'power3.inOut', yoyo: true, repeat: 1 })
-      // Stage 2: pixel → line (450-900ms)
-      .to(pixel, { attr: { width: 400, x: 0, height: 2, y: 198 }, duration: 0.45, ease: 'power3.inOut' })
-      // Stage 3: line → rect (900-1350ms)
-      .to(pixel, { attr: { width: 200, x: 100, height: 120, y: 140 }, duration: 0.45, ease: 'power3.inOut' })
-      .set(pixel, { attr: { fill: 'none' }, strokeWidth: 2, stroke: '#FF3B5C' })
-      // Stage 4: rect → cube → fade (1350-1800ms)
-      .to(pixel, { scaleX: 1.05, scaleY: 1.05, duration: 0.15, ease: 'power3.inOut' })
-      .to(pixel, { opacity: 0, duration: 0.3, ease: 'power2.in' });
-
-    // Counter: 00 → 100
-    if (pctEl) {
-      tl.fromTo(pctEl, { textContent: '0' }, {
-        textContent: 100, duration: 1.8, ease: 'power3.inOut', snap: { textContent: 1 },
-        onUpdate() { pctEl.textContent = String(Math.round(parseFloat(pctEl.textContent))).padStart(2, '0'); }
-      }, 0);
+function triggerQRUpload(){
+  const inp=document.createElement('input');
+  inp.type='file'; inp.accept='image/*'; inp.value='';
+  inp.addEventListener('change',async()=>{
+    const file=inp.files[0]; if(!file) return;
+    const blobUrl=URL.createObjectURL(file);
+    const img=document.getElementById('wechat-qr-img');
+    const ph=document.getElementById('wechat-qr-placeholder');
+    const hint=document.getElementById('wechat-qr-hint');
+    if(img){ img.src=blobUrl; img.style.display='block'; }
+    if(ph) ph.style.display='none';
+    if(hint) hint.style.display='';
+    const actions=document.getElementById('wechat-qr-actions');
+    if(actions) actions.style.display='flex';
+    DATA.contact.wechatQr=blobUrl;
+    saveData();
+    const result=await uploadToGitHub(file);
+    if(result){
+      URL.revokeObjectURL(blobUrl);
+      if(img) img.src=result.url;
+      DATA.contact.wechatQr=result.url;
+      DATA.contact.wechatQrFileID=result.fileID;
+      saveData();
     }
   });
+  inp.click();
 }
 
-document.addEventListener('DOMContentLoaded', init);
+// 2024年后新建的 COS 桶默认域名无法在浏览器预览，改用 CloudBase CDN 域名
+const CLOUD_CDN = 'https://6d79-my-web-d5gsldm9ha36297d1-1424382234.tcb.qcloud.la';
+
+// 修复旧数据中无法访问的 URL
+function fixCloudUrl(url) {
+  if (!url) return url;
+  // 修复旧格式的 CDN URL（缺少 6d79 前缀）
+  if (url.includes('tcb.qcloud.la') && !url.includes('6d79-')) {
+    return url.replace('https://', 'https://6d79-');
+  }
+  // 修复缺少 -1424382234 后缀的旧域名（如 6d79-my-web-d5gsldm9ha36297d1.tcb.qcloud.la）
+  if (url.includes('6d79-my-web-d5gsldm9ha36297d1.tcb.qcloud.la') && !url.includes('-1424382234')) {
+    const cloudPath = url.split('/portfolio/').pop();
+    if (cloudPath) return `${CLOUD_CDN}/portfolio/${cloudPath}`;
+  }
+  // 修复 COS 默认域名（无法在浏览器预览）
+  if (url.includes('cos-website') || url.includes('myqcloud.com')) {
+    const cloudPath = url.split('/portfolio/').pop();
+    if (cloudPath) return `${CLOUD_CDN}/portfolio/${cloudPath}`;
+  }
+  return url;
+}
+
+async function uploadToCloudStorage(file) {
+  if (!tcbApp) {
+    console.error('云开发未初始化');
+    return null;
+  }
+  
+  try {
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+    const cloudPath = `portfolio/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    
+    const result = await tcbApp.uploadFile({
+      cloudPath,
+      filePath: file
+    });
+    
+    if (result.fileID) {
+      const url = `${CLOUD_CDN}/${cloudPath}`;
+      console.log('✓ 文件上传成功:', url);
+      // 返回对象包含 url 和 fileID，方便后续删除云存储文件
+      return { url, fileID: result.fileID };
+    }
+    return null;
+  } catch (e) {
+    console.error('上传失败:', e);
+    return null;
+  }
+}
+
+// 兼容旧代码的别名
+async function uploadToGitHub(file) {
+  return uploadToCloudStorage(file);
+}
+
+/* ════════════════════════════════════════════
+   DRAG & DROP SORT (edit mode only)
+════════════════════════════════════════════ */
+let _dragSrcId = null;
+let _dragSrcSection = null;
+
+function initDragSort(container, sectionKey) {
+  const cards = container.querySelectorAll('.vcard');
+  cards.forEach(card => {
+    card.setAttribute('draggable', 'true');
+    card.style.position = 'relative'; // needed for ::after pseudo
+
+    card.addEventListener('dragstart', e => {
+      _dragSrcId = card.dataset.id;
+      _dragSrcSection = sectionKey;
+      // slight delay so the ghost image renders before opacity change
+      setTimeout(() => card.classList.add('drag-src'), 0);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.dataset.id);
+    });
+
+    card.addEventListener('dragend', () => {
+      card.classList.remove('drag-src');
+      _clearDragIndicators(container);
+    });
+
+    card.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (!_dragSrcId || card.dataset.id === _dragSrcId) return;
+      _clearDragIndicators(container);
+      const rect = card.getBoundingClientRect();
+      const midX = rect.left + rect.width / 2;
+      if (e.clientX < midX) {
+        card.classList.add('drag-insert-before');
+      } else {
+        card.classList.add('drag-insert-after');
+      }
+    });
+
+    card.addEventListener('dragleave', () => {
+      card.classList.remove('drag-insert-before', 'drag-insert-after');
+    });
+
+    card.addEventListener('drop', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!_dragSrcId || card.dataset.id === _dragSrcId) return;
+      if (_dragSrcSection !== sectionKey) return; // no cross-section drag
+
+      const arr = DATA[sectionKey];
+      const fromIdx = arr.findIndex(x => x.id === _dragSrcId);
+      let toIdx = arr.findIndex(x => x.id === card.dataset.id);
+      if (fromIdx < 0 || toIdx < 0) return;
+
+      // determine insert position (before or after target)
+      const rect = card.getBoundingClientRect();
+      const insertAfter = e.clientX >= rect.left + rect.width / 2;
+      if (insertAfter) toIdx = toIdx + (fromIdx < toIdx ? 0 : 1);
+      else toIdx = toIdx + (fromIdx > toIdx ? 0 : -1);
+      toIdx = Math.max(0, Math.min(arr.length - 1, toIdx));
+
+      // splice
+      const [item] = arr.splice(fromIdx, 1);
+      arr.splice(toIdx, 0, item);
+
+      saveData();
+      renderSection(sectionKey, sectionKey + '-grid');
+    });
+  });
+
+  // also make the container itself a drop zone for dropping after last card
+  container.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  });
+}
+
+function _clearDragIndicators(container) {
+  container.querySelectorAll('.drag-insert-before,.drag-insert-after').forEach(el => {
+    el.classList.remove('drag-insert-before', 'drag-insert-after');
+  });
+}
+
+function enableDragSort() {
+  const GRIDS = [
+    ['practice-grid', 'practice'],
+    ['mg-grid', 'mg'],
+    ['aigc-img-grid', 'aigc-img'],
+    ['aigc-vid-grid', 'aigc-vid'],
+    ['aigc-prompt-grid', 'aigc-prompt'],
+    ['agent-grid', 'agent'],
+  ];
+  GRIDS.forEach(([gridId, key]) => {
+    const el = document.getElementById(gridId);
+    if (el) initDragSort(el, key);
+  });
+}
+
+function disableDragSort() {
+  document.querySelectorAll('.vcard[draggable="true"]').forEach(card => {
+    card.setAttribute('draggable', 'false');
+  });
+}
+
+/* ── Sidebar navigation ── */
+function sidebarNavClick(e, sectionKey) {
+  // close mobile nav if open
+  const nav = document.getElementById('navLinks');
+  if(nav) nav.classList.remove('mobile-open');
+  // 9. close mobile sidebar after clicking nav
+  const sidebar = document.getElementById('sidebar');
+  if(sidebar && window.innerWidth <= 900) sidebar.style.display = 'none';
+  // highlight active item
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  const item = document.querySelector(`.sidebar-item[data-section="${sectionKey}"]`);
+  if(item) item.classList.add('active');
+}
+
+function updateSidebarActive() {
+  const sections = ['about','practice','mg','aigc','agent','contact'];
+  const scrollY = window.scrollY + 120;
+  let active = 'about';
+  sections.forEach(sec => {
+    const elId = sec === 'about' ? 'hero-section' : (document.getElementById('mod-' + sec) ? 'mod-' + sec : sec);
+    const el = document.getElementById(elId);
+    if(el && el.offsetTop <= scrollY) active = sec;
+  });
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  const item = document.querySelector(`.sidebar-item[data-section="${active}"]`);
+  if(item) item.classList.add('active');
+}
+
+// Scroll listener for sidebar active state
+window.addEventListener('scroll', updateSidebarActive);
+
+// 2. Scroll reveal - IntersectionObserver
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+
+// Desktop: hide mobile nav links, show sidebar
+function applyLayoutByScreen() {
+  const isMobile = window.innerWidth <= 900;
+  const sidebar = document.getElementById('sidebar');
+  const navLinks = document.getElementById('navLinks');
+  const hamburger = document.getElementById('hamburgerBtn');
+  const mobileThemeBtn = document.getElementById('themeBtnMobile');
+
+  if (isMobile) {
+    if(sidebar) sidebar.style.display = 'none';
+    if(navLinks) navLinks.style.display = 'none'; // hidden by default, toggled by hamburger
+    if(hamburger) hamburger.style.display = 'flex';
+    // Remove content-offset on mobile
+    document.querySelectorAll('.content-offset').forEach(el => el.style.marginLeft = '0');
+    document.querySelector('header') && (document.querySelector('header').style.marginLeft = '0');
+  } else {
+    if(sidebar) sidebar.style.display = 'flex';
+    if(navLinks) navLinks.style.display = 'none'; // desktop: navLinks hidden, sidebar handles navigation
+    if(hamburger) hamburger.style.display = 'none';
+    // Apply content-offset on desktop
+    document.querySelectorAll('.content-offset').forEach(el => el.style.marginLeft = '240px');
+    document.querySelector('header') && (document.querySelector('header').style.marginLeft = '240px');
+  }
+}
+
+// Run on load and resize
+applyLayoutByScreen();
+window.addEventListener('resize', applyLayoutByScreen);
+
+async function init(){
+  // 初始化云开发
+  const cloudReady = await initCloudBase();
+  
+  // 先从本地加载数据
+  loadData();
+  renderAll();
+  
+  if (cloudReady) {
+    // Always pull latest data from cloud first, then decide whether to push
+    const isEditor = !!localStorage.getItem('portfolio_editor_token');
+    const localVersion = DATA._version || 0;
+    
+    // First: load cloud data to see what version is there
+    const cloudResult = await loadCloudDataVersion();
+    const cloudVersion = cloudResult || 0;
+    
+    if (localVersion > 0 && localVersion >= cloudVersion && isEditor) {
+      // Local data is newer or same version — push to cloud
+      publishDataToCloud();
+    } else if (cloudVersion > 0) {
+      // Cloud data is newer — load from cloud (overwrites local)
+      await loadDataFromCloud(true);
+    }
+    // If both are 0 (first time, no data anywhere), nothing to sync
+  }
+}
+
+init();
+
+
+// ── 画廊引擎（支持多条画廊）──
+const _galInst = {}; // per-key: {raf,pos,boost,wheeling,base}
+const GALLERY_ROW_H = 280;
+const GALLERY_ROW_H_MAP = { 'practice2': 200 }; // per-key overrides
+
+function renderGallerySection(key){
+  const rowH = GALLERY_ROW_H_MAP[key] || GALLERY_ROW_H;
+  const track=document.getElementById(key+'-gallery-track');
+  if(!track) return;
+  track.innerHTML='';
+  const items=(DATA[key]||[]).filter(i=>i.media||i.type==='prompt');
+  items.forEach(item=>{
+    const card=makeGalleryCard(item, rowH, key);
+    track.appendChild(card);
+  });
+  if(editMode){
+    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, rowH, key);
+    track.appendChild(empty);
+  }
+  initGalleryLoop(key, track, items);
+}
+
+// backwards compat alias
+function renderPracticeGallery(items){ renderGallerySection('practice'); }
+
+function makeGalleryCard(item, rowH, galKey){
+  rowH = rowH || GALLERY_ROW_H;
+  galKey = galKey || 'practice';
+  const ar = item.ar || (9/16);
+  const cardW = Math.round(rowH * ar);
+  const card=document.createElement('div');
+  card.className='gallery-card'+(editMode?' card-hover':'');
+  card.dataset.id=item.id||'';
+  card.style.width = cardW + 'px';
+  const mediaDiv=document.createElement('div');
+  mediaDiv.className='gc-media'+(!item.media?' empty-card':'');
+  mediaDiv.style.height = rowH + 'px';
+  mediaDiv.style.width = '100%';
+  if(item.media){
+    const isVideo=item.type==='mp4'||item.type==='video'||item.mediaType==='mp4';
+    const isAnim=item.type==='webp'||item.type==='gif'||item.type==='anim'||item.mediaType==='webp'||item.mediaType==='gif';
+    if(isVideo){
+      // 视频：只显示封面，点击播放
+      mediaDiv.innerHTML=`<img src="${item.cover||''}" alt="${item.title||''}" style="width:100%;height:100%;object-fit:cover"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><svg width="40" height="40" viewBox="0 0 24 24" fill="white" style="opacity:.85"><polygon points="5,3 19,12 5,21"/></svg></div>`;
+    } else if(isAnim){
+      // 动图：自动播放
+      mediaDiv.innerHTML=`<img src="${item.media}" alt="${item.title||''}" style="width:100%;height:100%;object-fit:cover">`;
+    } else {
+      mediaDiv.innerHTML=`<img src="${item.media}" alt="${item.title||''}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`;
+    }
+    mediaDiv.style.cursor='pointer';
+    mediaDiv.onclick=function(){
+      if(editMode) return;
+      if(isVideo) openInlinePlayer(item.media);
+      else openImgZoom(item.media);
+    };
+  }
+  if(editMode){
+    const ov=document.createElement('div');
+    ov.className='upload-ov';
+    const upBtn=document.createElement('button');
+    upBtn.className='upload-ov-btn';
+    if(item.id){
+      upBtn.textContent='上传';
+      upBtn.onclick=()=>triggerMediaUpload(item.id, item.type||'auto');
+    } else {
+      upBtn.textContent='上传';
+      upBtn.onclick=()=>addWorkCard(galKey,'auto');
+    }
+    const delBtn=document.createElement('button');
+    delBtn.className='del-ov-btn';
+    if(item.id){
+      delBtn.textContent='删除';
+      delBtn.onclick=()=>deleteCard(item.id);
+    } else {
+      delBtn.style.display='none';
+    }
+    ov.appendChild(upBtn);
+    ov.appendChild(delBtn);
+    mediaDiv.appendChild(ov);
+  }
+  card.appendChild(mediaDiv);
+  const titleDiv=document.createElement('div');
+  titleDiv.className='gc-title';
+  titleDiv.style.backfaceVisibility='hidden'; // force GPU layer to prevent text repaint flicker
+  titleDiv.textContent=item.title||'作品标题';
+  if(editMode){ titleDiv.contentEditable='true'; titleDiv.onblur=()=>{item.title=titleDiv.textContent.trim();saveData();}; }
+  card.appendChild(titleDiv);
+  const descDiv=document.createElement('div');
+  descDiv.className='gc-sub';
+  descDiv.textContent=item.desc||'';
+  if(editMode){ descDiv.contentEditable='true'; descDiv.onblur=()=>{item.desc=descDiv.textContent.trim();saveData();}; }
+  if(item.desc||editMode) card.appendChild(descDiv);
+  return card;
+}
+
+function initGalleryLoop(key, track, realItems){
+  if(_galInst[key]?.raf) cancelAnimationFrame(_galInst[key].raf);
+  _galInst[key] = {raf:null,pos:0,boost:0,base:0.8,wheeling:false};
+  const inst=_galInst[key];
+  const rowH = GALLERY_ROW_H_MAP[key] || GALLERY_ROW_H;
+  track.innerHTML='';
+  inst.boost=0; inst.wheeling=false;
+  const realCount = realItems.length;
+  if(editMode){
+    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, rowH, key);
+    track.appendChild(empty);
+  }
+
+  const MIN_LOOP=3;
+  if(realCount<MIN_LOOP){
+    realItems.forEach(item=>track.appendChild(makeGalleryCard(item, rowH, key)));
+    track.style.transform='translateX(0)';
+    track.style.willChange='auto';
+    updateGalleryCounter(key,1,realCount);
+    const bar=document.getElementById(key+'-gallery-progress-bar');
+    if(bar) bar.style.width=(realCount>0?'100':'0')+'%';
+    const hint=document.getElementById(key+'-gallery-hint');
+    if(hint) hint.classList.add('hide');
+    return;
+  }
+
+  realItems.forEach(item=>track.appendChild(makeGalleryCard(item, rowH, key)));
+
+  const GAP=10;
+  const totalW=realItems.reduce((sum,item)=>{
+    const ar=item.ar||(9/16);
+    return sum+Math.round(rowH*ar)+GAP;
+  },0);
+  // 所有卡片放完后，在前后各复制一组实现无限滚动
+  const allCards = Array.from(track.children);
+  allCards.slice().reverse().forEach(c=>track.insertBefore(c.cloneNode(true),track.firstChild));
+  allCards.forEach(c=>track.appendChild(c.cloneNode(true)));
+
+  inst.pos=-totalW;
+  track.style.willChange='transform';
+
+  const galleryOuter=document.getElementById(key+'-gallery-outer');
+  const onWheel=(e)=>{
+    if(!galleryOuter||!galleryOuter.contains(e.target)) return;
+    inst.wheeling=true;
+    const delta=e.deltaY!==0?e.deltaY:e.deltaX;
+    inst.boost=Math.max(-22,Math.min(22,inst.boost+delta*0.07));
+    e.preventDefault();
+  };
+  galleryOuter?.addEventListener('wheel',onWheel,{passive:false});
+  galleryOuter?.addEventListener('mouseleave',()=>{inst.wheeling=false;});
+
+  const hint=document.getElementById(key+'-gallery-hint');
+  if(hint){
+    hint.classList.remove('hide');
+    clearTimeout(hint._hideTimer);
+    hint._hideTimer=setTimeout(()=>hint.classList.add('hide'),4000);
+  }
+
+  let lastT=null, lastUI=0;
+  const loop=(t)=>{
+    if(!lastT) lastT=t;
+    const dt=Math.min((t-lastT)/(1000/60),3);
+    lastT=t;
+    const speed=editMode ? 0 : (inst.wheeling ? inst.boost : (inst.base + Math.abs(inst.boost)));
+    inst.pos-=speed*dt;
+    inst.boost*=0.88;
+    if(Math.abs(inst.boost)<0.05) inst.boost=0;
+    if(!inst.wheeling&&Math.abs(inst.boost)<0.05) inst.wheeling=false;
+    if(inst.pos<=-(2*totalW)) inst.pos+=totalW;
+    if(inst.pos>=0) inst.pos-=totalW;
+    track.style.transform=`translate3d(${inst.pos}px,0,0)`;
+    if(t-lastUI>200){
+      lastUI=t;
+      const progress=Math.abs((inst.pos+totalW)%totalW)/totalW;
+      const bar=document.getElementById(key+'-gallery-progress-bar');
+      if(bar) bar.style.width=(progress*100)+'%';
+      const nth=(Math.floor(progress*realCount)%realCount)+1;
+      updateGalleryCounter(key,nth,realCount);
+    }
+    inst.raf=requestAnimationFrame(loop);
+  };
+  inst.raf=requestAnimationFrame(loop);
+}
+
+function updateGalleryCounter(key,nth,total){
+  const el=document.getElementById(key+'-gallery-counter');
+  if(el) el.textContent=`${String(nth).padStart(2,'0')} / ${String(total).padStart(2,'0')}`;
+}
+
+// ── 性能优化：画廊离屏时暂停RAF ──
+(function(){
+  const galObs=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      const id=e.target.id;
+      const key=id.replace('-gallery-outer','');
+      if(!_galInst[key]) return;
+      const inst=_galInst[key];
+      if(!e.isIntersecting){
+        // 离屏：暂停RAF
+        if(inst.raf){cancelAnimationFrame(inst.raf);inst.raf=null;inst._paused=true;}
+      } else if(inst._paused){
+        // 回屏：恢复RAF循环
+        inst._paused=false;
+        const track=document.getElementById(key+'-gallery-track');
+        if(!track) return;
+        const items=(DATA[key]||[]).filter(i=>i.media||i.type==='prompt');
+        initGalleryLoop(key,track,items);
+      }
+    });
+  },{rootMargin:'-50px'});
+  document.querySelectorAll('[id$="-gallery-outer"]').forEach(el=>galObs.observe(el));
+})();
+
+// ── contenteditable 粘贴只保留纯文本 ──
+document.addEventListener('paste', e => {
+  if(e.target.isContentEditable){
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+  }
+});
+
+// ── 顶部滚动进度条 ──
+(function(){
+  const bar = document.getElementById('scroll-progress');
+  if(!bar) return;
+  function update(){
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docH > 0 ? Math.min(scrollTop / docH * 100, 100) : 0;
+    bar.style.width = pct + '%';
+  }
+  window.addEventListener('scroll', update, {passive: true});
+  update();
+})();
+
