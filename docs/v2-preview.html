@@ -52,13 +52,14 @@
 
     /* ── Reset / Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; overflow-x: hidden; }
     body {
       background: var(--bg-page);
       color: var(--color-main);
       font-family: 'Noto Sans SC', sans-serif;
       font-weight: 200;
       transition: background .3s, color .3s;
+      overflow-x: hidden;
     }
     /* 英文/数字统一用衬线体 */
     :lang(zh) { font-feature-settings: 'kern'; }
