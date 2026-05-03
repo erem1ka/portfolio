@@ -1166,6 +1166,12 @@
         </div>
       </div>
     </div>
+    <span class="cols-ctrl"><input class="cols-input" id="aigc-img-cols" type="number" min="60" max="300" value="100" onchange="setGridCols('aigc-img-grid',this.value)"></span>
+    <span id="aigc-img-label" style="display:none" contenteditable="false"></span>
+    <div class="work-grid" data-row-h="160" id="aigc-img-grid" style="--cols:8"></div>
+    <div class="add-card mt-2" id="aigc-img-add" onclick="addWorkCard('aigc-img','auto')">
+      <div class="add-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加图片</div>
+    </div>
     <!-- 装饰贴纸 -->
     <div class="section-sticker" style="right:20px;top:100px;width:90px;height:90px;transform:rotate(8deg)">
       <svg viewBox="0 0 100 100" fill="none" stroke="var(--accent)" stroke-width="1.5">
