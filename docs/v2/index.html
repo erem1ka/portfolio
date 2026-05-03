@@ -1754,6 +1754,20 @@ document.addEventListener('click', e=>{
       video.controls = true; video.playsInline = true;
       video.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;display:block';
       box.appendChild(video);
+      ov.classList.add('active');
+      requestAnimationFrame(()=>{
+        stage.getBoundingClientRect();
+        stage.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1), opacity .2s ease';
+        stage.style.transform = 'translate(0,0) scale(1)';
+        stage.style.opacity = '1';
+        if(_isVCard){
+          box.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1)';
+          box.style.transform = 'rotateY(0deg)';
+        }
+        const v = box.querySelector('video');
+        if(v) setTimeout(()=>v.play().catch(()=>{}), 300);
+        setTimeout(()=>{ closeBtn.style.display=''; }, 440);
+      });
     } else {
       // 如果图片还没加载完（刷新后首次点击），等加载完再动画
       const doShow = () => {
@@ -1770,20 +1784,16 @@ document.addEventListener('click', e=>{
             box.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1)';
             box.style.transform = 'rotateY(0deg)';
           }
-          if(isVideoCard && videoSrc){
-            const v = box.querySelector('video');
-            if(v) setTimeout(()=>v.play().catch(()=>{}), 300);
-          }
           setTimeout(()=>{ closeBtn.style.display=''; }, 440);
         });
       };
       if(mediaEl.tagName==='IMG' && !(mediaEl.complete && mediaEl.naturalWidth>0)){
         mediaEl.addEventListener('load', doShow, {once:true});
-        mediaEl.addEventListener('error', doShow, {once:true}); // 加载失败也显示，避免卡死
+        mediaEl.addEventListener('error', doShow, {once:true});
       } else {
         doShow();
       }
-      return; // doShow 内部会 ov.classList.add('active')
+    }
   };
 
   function findVideoSrc(cardEl){
