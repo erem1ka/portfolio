@@ -1614,6 +1614,7 @@ function makeGalleryCard(item, rowH, galKey){
   card.className='gallery-card'+(editMode?' card-hover':'');
   card.dataset.id=item.id||'';
   card.dataset.section=galKey;
+  card.dataset.type=item.type||'auto';
   card.style.width = cardW + 'px';
   const mediaDiv=document.createElement('div');
   mediaDiv.className='gc-media'+(!item.media?' empty-card':'');
@@ -1634,8 +1635,6 @@ function makeGalleryCard(item, rowH, galKey){
     mediaDiv.style.cursor='pointer';
     mediaDiv.onclick=function(){
       if(editMode) return;
-      const useFlip = galKey==='practice2' || galKey==='mg';
-      if(isVideo && !useFlip) { openInlinePlayer(item.media); return; }
       const img=document.createElement('img'); img.src=item.media; window.openMedia(card, img);
     };
   }

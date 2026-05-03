@@ -507,21 +507,11 @@ function makeMp4Card(item, section){
     </div>`;
   if(mediaSrc){
     const mediaEl = card.querySelector('.card-media');
-    const useFlip = section==='practice2' || section==='mg';
     card.querySelector('.card-media').addEventListener('click', e=>{
       if(e.target.closest('.upload-ov') || editMode) return;
-      if(useFlip){
-        // 个人作品/MG：全部使用卡片翻转 overlay
-        const img = document.createElement('img'); img.src = mediaSrc;
-        window.openMedia(card, img);
-      } else if(isAnim){
-        // 其他区段：webp/gif → 翻转放大
-        const img = document.createElement('img'); img.src = mediaSrc;
-        window.openMedia(card, img);
-      } else {
-        // 其他区段：mp4 → 内联播放器
-        openInlinePlayer(item.media, card);
-      }
+      // 所有卡片统一使用 openMedia（zoom overlay），video 在 overlay 内播放
+      const img = document.createElement('img'); img.src = mediaSrc;
+      window.openMedia(card, img);
     });
   }
   setupEditableFields(card, item);
@@ -1618,6 +1608,7 @@ function makeGalleryCard(item, rowH, galKey){
   card.className='gallery-card'+(editMode?' card-hover':'');
   card.dataset.id=item.id||'';
   card.dataset.section=galKey;
+  card.dataset.type=item.type||'auto';
   card.style.width = cardW + 'px';
   const mediaDiv=document.createElement('div');
   mediaDiv.className='gc-media'+(!item.media?' empty-card':'');
@@ -1638,8 +1629,7 @@ function makeGalleryCard(item, rowH, galKey){
     mediaDiv.style.cursor='pointer';
     mediaDiv.onclick=function(){
       if(editMode) return;
-      const useFlip = galKey==='practice2' || galKey==='mg';
-      if(isVideo && !useFlip) { openInlinePlayer(item.media); return; }
+      // 所有画廊卡片统一使用 openMedia（zoom overlay），video 在 overlay 内播放
       const img=document.createElement('img'); img.src=item.media; window.openMedia(card, img);
     };
   }

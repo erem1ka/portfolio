@@ -1811,17 +1811,13 @@ document.addEventListener('click', e=>{
   document.addEventListener('click', e=>{
     const app = document.getElementById('app');
     if(app.classList.contains('editing')) return;
-    // 仅拦截 practice2/mg 画廊卡片，其他画廊由各自 onclick 处理（视频→openInlinePlayer）
+    // 所有画廊卡片点击 → openMedia（zoom overlay）
     const gcMedia = e.target.closest('.gc-media');
     if(gcMedia){
       const card = e.target.closest('.gallery-card,.gallery-card-clone');
       if(!card) return;
-      const section = card.dataset.section || '';
-      if(section==='practice2' || section==='mg'){
-        const m = gcMedia.querySelector('img,video');
-        if(m){ e.preventDefault(); e.stopPropagation(); openMedia(card, m); }
-      }
-      // practice / 其他画廊 → 不拦截，让 makeGalleryCard onclick 走 openInlinePlayer 或 openMedia
+      const m = gcMedia.querySelector('img,video');
+      if(m){ e.preventDefault(); e.stopPropagation(); openMedia(card, m); }
       return;
     }
   }, true);
