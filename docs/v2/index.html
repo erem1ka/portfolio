@@ -1173,12 +1173,6 @@
     <div class="add-card mt-2" id="aigc-img-add" onclick="addWorkCard('aigc-img','auto')">
       <div class="add-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加图片</div>
     </div>
-    <div style="margin-top:48px">
-      <div class="sub-label">· Prompt 工程
-        <span class="cols-ctrl"><input class="cols-input" id="aigc-prompt-cols" type="number" min="60" max="300" value="100" onchange="setGridCols('aigc-prompt-grid',this.value)"></span>
-      </div>
-      <span id="aigc-prompt-label" style="display:none" contenteditable="false"></span>
-      <div class="masonry-grid" data-row-h="160" id="aigc-prompt-grid" style="--cols:8"></div>
     <!-- 装饰贴纸 -->
     <div class="section-sticker" style="right:20px;top:100px;width:90px;height:90px;transform:rotate(8deg)">
       <svg viewBox="0 0 100 100" fill="none" stroke="var(--accent)" stroke-width="1.5">
@@ -1191,7 +1185,7 @@
         <text x="50" y="55" text-anchor="middle" font-family="Cormorant Garamond" font-size="12" fill="var(--accent)" opacity=".4">AI</text>
       </svg>
     </div>
-      <div class="add-card mt-2" id="aigc-prompt-add" onclick="addWorkCard('aigc-prompt','prompt')">
+      <div class="add-card mt-2" id="-add" onclick="addWorkCard('','prompt')">
         <div class="add-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加 Prompt</div>
       </div>
     </div>
@@ -1789,7 +1783,7 @@ document.addEventListener('click', e=>{
   function findVideoSrc(cardEl){
     const id = cardEl.dataset.id;
     if(!id) return '';
-    for(const sec of ['practice','practice2','mg','aigc-img',,'aigc-prompt','agent']){
+    for(const sec of ['practice','practice2','mg','aigc-img',,'','agent']){
       const item = (DATA[sec]||[]).find(x=>x.id===id);
       if(item && item.media) return item.media;
     }

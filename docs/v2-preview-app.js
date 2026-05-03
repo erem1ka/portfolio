@@ -38,8 +38,6 @@ let DATA = {
   practice2: [],
   mg: [],
   'aigc-img': [],
-  '': [],
-  'aigc-prompt': [],
   agent: [],
   contact: {
     name: '张峻烨',
@@ -58,7 +56,7 @@ let DATA = {
     aigc: { title:'Seedream 生图 + AE 木偶骨骼动效', desc:'AI 生成原画素材 → 透明抠图 → AE 骨骼点位绑定 → 循环动态打磨 → 抖音特效模板适配，完整「AI 素材生成→后期动态设计」全链路工作流' },
     agent: { title:'AI 智能体创意工作流工具集', desc:'基于 AIGC 开放 API 与智能体调度逻辑，自主搭建网页端设计辅助工具，整合素材生成、Prompt 管理、设计流程自动化能力' }
   },
-  cols: { practice:180, mg:180, 'aigc-img':180, '':180, 'aigc-prompt':180, agent:180 }
+  cols: { practice:180, mg:180, 'aigc-img':180, agent:180 }
 };
 
 let _publishTimer = null;
@@ -75,7 +73,7 @@ function loadData(){
     if(s){
       const d=JSON.parse(s);
       // 深度替换：用本地缓存完全替换各数组，防止浅合并残留旧数据
-      const SECTIONS = ['practice','practice2','mg','aigc-img','aigc-prompt','agent'];
+      const SECTIONS = ['practice','practice2','mg','aigc-img','agent'];
       SECTIONS.forEach(sec=>{ DATA[sec] = d[sec] || []; });
       if(d.contact){
         // 合并时跳过空字符串，避免空值覆盖默认链接（如 douyin）
@@ -91,7 +89,7 @@ function loadData(){
       if(d.cols) {
         DATA.cols = d.cols;
         // Migrate old col-count values (1-8) or old default 100 to new default 180
-        const SECTIONS = ['practice','practice2','mg','aigc-img','aigc-prompt','agent'];
+        const SECTIONS = ['practice','practice2','mg','aigc-img','agent'];
         SECTIONS.forEach(sec=>{
           if(DATA.cols[sec] !== undefined && (DATA.cols[sec] <= 8 || DATA.cols[sec] === 100)){
             DATA.cols[sec] = 180;
@@ -102,7 +100,7 @@ function loadData(){
       if(d.toolCards) DATA.toolCards = d.toolCards;
       DATA._version = d._version;
       let cleaned = false;
-      ['practice','mg','aigc-img','aigc-prompt','agent'].forEach(sec => {
+      ['practice','mg','aigc-img','agent'].forEach(sec => {
         DATA[sec].forEach(item => {
           if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) { item.media=''; cleaned=true; }
           if(item.cover && (item.cover.startsWith('blob:') || item.cover.startsWith('data:'))) { item.cover=''; cleaned=true; }
@@ -163,7 +161,7 @@ async function publishDataToCloud() {
     
     // 清理 blob/data URL（刷新后无效），直接置空而不是推迟发布
     // 上传进行中的文件：用 fileID 还原云端 URL；无 fileID 则清空，等用户重新上传
-    ['practice','practice2','mg','aigc-img','aigc-prompt','agent'].forEach(sec => {
+    ['practice','practice2','mg','aigc-img','agent'].forEach(sec => {
       if(!dataToSave[sec]) return;
       dataToSave[sec].forEach(item => {
         if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) item.media = '';
@@ -220,7 +218,7 @@ async function loadDataFromCloud(forceLoad) {
         // 云端数据更新，用云端的
         // 深度合并：确保所有子对象也被覆盖
         // 清理 blob/data 链接 + 修复旧 URL
-        ['practice','practice2','mg','aigc-img','aigc-prompt','agent'].forEach(sec=>{
+        ['practice','practice2','mg','aigc-img','agent'].forEach(sec=>{
           if(!cloudData[sec]) cloudData[sec]=[];
           cloudData[sec].forEach(item=>{
             if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) item.media='';
@@ -239,7 +237,7 @@ async function loadDataFromCloud(forceLoad) {
         
         // 深度替换：用云端数据完全替换本地数据，而不是浅合并
         // 确保数组字段被完全替换（不会保留本地旧数组）
-        const SECTIONS = ['practice','practice2','mg','aigc-img','aigc-prompt','agent'];
+        const SECTIONS = ['practice','practice2','mg','aigc-img','agent'];
         SECTIONS.forEach(sec=>{
           DATA[sec] = cloudData[sec] || [];
         });
@@ -257,7 +255,7 @@ async function loadDataFromCloud(forceLoad) {
         if(cloudData.tags) DATA.tags = cloudData.tags;
         if(cloudData.cols) {
           DATA.cols = cloudData.cols;
-          const SECTIONS2 = ['practice','practice2','mg','aigc-img','aigc-prompt','agent'];
+          const SECTIONS2 = ['practice','practice2','mg','aigc-img','agent'];
           SECTIONS2.forEach(sec=>{
             if(DATA.cols[sec] !== undefined && (DATA.cols[sec] <= 8 || DATA.cols[sec] === 100)) DATA.cols[sec] = 180;
           });
@@ -293,11 +291,11 @@ function toggleTheme(){
 function toggleEdit(){
   // When exiting edit mode, purge empty cards (no media uploaded)
   if(editMode){
-    const sections = ['practice','practice2','mg','aigc-img','aigc-prompt','agent'];
+    const sections = ['practice','practice2','mg','aigc-img','agent'];
     let cleaned = false;
     sections.forEach(sec=>{
       const before = (DATA[sec]||[]).length;
-      DATA[sec] = (DATA[sec]||[]).filter(item=>item.media || item.type==='prompt');
+      DATA[sec] = (DATA[sec]||[]).filter(item=>item.media);
       if(DATA[sec].length !== before) cleaned = true;
     });
     if(cleaned){ saveData(); renderAll(); }
@@ -553,61 +551,6 @@ function makeImgCard(item, section){
   return card;
 }
 
-function makePromptCard(item){
-  const card = document.createElement('div');
-  card.className = 'vcard bg-card border-card';
-  card.dataset.id = item.id;
-  card.dataset.type = 'prompt';
-  const body = item.body || '';
-  const needFold = body.split('\n').length > 3 || body.length > 200;
-  const hasMedia = item.media;
-  let mediaHtml = '';
-  if(hasMedia){
-    const mt = item.mediaType || item.type;
-    if(mt==='webp'){
-      mediaHtml = `<img src="${item.media}" alt="" style="max-width:100%;border-radius:8px;pointer-events:none;margin-bottom:6px">`;
-    } else if(mt==='mp4'){
-      const coverSrc = item.cover || item.media;
-      mediaHtml = `<div class="prompt-media" style="cursor:pointer;position:relative;margin-bottom:6px">
-        <img src="${coverSrc}" alt="" style="max-width:100%;border-radius:8px">
-        <div class="play-badge" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
-      </div>`;
-    } else {
-      mediaHtml = `<img src="${item.media}" alt="" style="max-width:100%;border-radius:8px;margin-bottom:6px">`;
-    }
-  }
-  card.innerHTML = `
-    <div class="p-3 pb-3.5 relative">
-      <div class="flex items-start justify-between gap-2 mb-2">
-        <p class="font-sans font-semibold text-main text-[.88rem] leading-snug flex-1" data-field="title">${escHtml(item.title||'Prompt 标题')}</p>
-        <div class="upload-ov" style="position:static;background:none;border:none;display:none;flex-direction:row;gap:4px;align-items:center;padding:0">
-          <button class="upload-ov-btn" onclick="event.stopPropagation();triggerMediaUpload('${item.id}','prompt')" style="font-size:.55rem;padding:3px 8px;border-radius:4px">上传媒体</button>
-          <button class="del-ov-btn" onclick="deleteCard('${item.id}')">✕</button>
-        </div>
-      </div>
-      ${hasMedia ? `<div class="mb-1 prompt-media-wrap">${mediaHtml}</div>` : ''}
-      <div class="prompt-body ${needFold?'collapsed':''}" data-field="body">${escHtml(body)}</div>
-      ${needFold ? `<button class="expand-btn mt-1.5" onclick="togglePrompt(this)" style="font-size:.6rem">展开全文 ▾</button>` : ''}
-    </div>`;
-  if(hasMedia && item.mediaType==='mp4'){
-    const pm = card.querySelector('.prompt-media');
-    if(pm) pm.addEventListener('click', e=>{
-      if(e.target.closest('.upload-ov') || editMode) return;
-      openInlinePlayer(item.media, card);
-    });
-  }
-  card.addEventListener('mouseenter',()=>{ if(editMode) card.querySelector('.upload-ov').style.display='flex'; });
-  card.addEventListener('mouseleave',()=>{ card.querySelector('.upload-ov').style.display='none'; });
-  setupEditableFields(card, item);
-  return card;
-}
-
-function togglePrompt(btn){
-  const body = btn.previousElementSibling;
-  const folded = body.classList.toggle('collapsed');
-  btn.textContent = folded ? '展开全文 ▾' : '收起 ▴';
-}
-
 function escHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
 function setupEditableFields(card, item){
@@ -629,18 +572,6 @@ function renderSection(sectionKey, gridId, type){
 
   const isMobile = window.innerWidth <= 900;
   const gap = 10;
-
-  // Prompt cards: flex wrap, responsive width
-  if(items.length && items[0].type==='prompt'){
-    items.forEach((item,i)=>{
-      const card = makePromptCard(item);
-      card.style.width = isMobile ? '100%' : '280px';
-      container.appendChild(card);
-    });
-    container.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;position:static;height:auto;width:auto;margin-left:0';
-    if (editMode) initDragSort(container, sectionKey);
-    return;
-  }
 
   // Mobile: 2-column CSS grid
   if(isMobile){
@@ -707,8 +638,6 @@ function renderAll(){
   renderGallerySection('practice2');
   renderSection('mg', 'mg-grid', 'auto');
   renderSection('aigc-img', 'aigc-img-grid', 'auto');
-  renderSection('', '-grid', 'auto');
-  renderSection('aigc-prompt', 'aigc-prompt-grid', 'auto');
   renderSection('agent', 'agent-grid', 'auto');
   restoreCols();
   restoreSectionTitles();
@@ -730,7 +659,7 @@ window.addEventListener('resize', ()=>{
 function restoreCols(){
   const map = {
     'practice-cols':'practice','practice2-cols':'practice2', 'mg-cols':'mg', 'aigc-img-cols':'aigc-img',
-    '-cols':'', 'aigc-prompt-cols':'aigc-prompt', 'agent-cols':'agent'
+    'agent-cols':'agent'
   };
   Object.entries(map).forEach(([inputId, key])=>{
     const inp = document.getElementById(inputId);
@@ -1006,7 +935,6 @@ function restoreHeroNav(){
     'nav-contact': '联系',
     'aigc-img-label': 'AI 生成原画素材',
     '-label': 'AE 木偶骨骼绑定动效',
-    'aigc-prompt-label': 'Prompt 工程',
     'practice-vid-label': '特效 / 转场 / 模板'
   };
   Object.entries(fields).forEach(([id, def])=>{
@@ -1033,18 +961,11 @@ function addWorkCard(section, forceType){
   setTimeout(()=>triggerMediaUpload(item.id, forceType), 100);
 }
 
-function addPromptCard(){
-  const item = { id: uid(), type:'prompt', title:'Prompt 标题', body:'' };
-  DATA['aigc-prompt'].push(item);
-  saveData();
-  renderSection('aigc-prompt','aigc-prompt-grid',null,'prompt');
-}
-
 async function deleteCard(id){
   // Find the item first to get its fileIDs for cloud storage cleanup
   let sec = '';
   let fileIDs = [];
-  ['practice','practice2','mg','aigc-img','aigc-prompt','agent'].forEach(s=>{
+  ['practice','practice2','mg','aigc-img','agent'].forEach(s=>{
     const idx = DATA[s].findIndex(x=>x.id===id);
     if(idx>-1){
       sec = s;
@@ -1078,9 +999,7 @@ fileInput.type='file';
 function triggerMediaUpload(itemId, type){
   _uploadTarget = itemId;
   _uploadType = type;
-  // Prompt cards also accept video + images
-  if(type==='prompt') fileInput.accept='video/mp4,video/webm,video/*,image/webp,image/gif,image/jpeg,image/png';
-  else if(type==='img') fileInput.accept='image/jpeg,image/png,image/webp,image/gif';
+  if(type==='img') fileInput.accept='image/jpeg,image/png,image/webp,image/gif';
   else fileInput.accept='video/mp4,video/webm,video/*,image/webp,image/gif,image/jpeg,image/png';
   fileInput.value='';
   fileInput.click();
@@ -1094,13 +1013,9 @@ fileInput.addEventListener('change', async ()=>{
   const isVideo = file.type.startsWith('video/');
   const isWebpGif = file.type==='image/webp' || file.type==='image/gif';
   const isImg = file.type.startsWith('image/') && !isWebpGif;
-  const isPrompt = item.type==='prompt';
-  // For prompt cards, keep type='prompt' but set mediaType sub-field
-  if(!isPrompt){
-    if(isVideo) item.type='mp4';
-    else if(isWebpGif) item.type='webp';
-    else if(isImg) item.type='img';
-  }
+  if(isVideo) item.type='mp4';
+  else if(isWebpGif) item.type='webp';
+  else if(isImg) item.type='img';
   if(isVideo) item.mediaType='mp4';
   else if(isWebpGif) item.mediaType='webp';
   else if(isImg) item.mediaType='img';
@@ -1148,7 +1063,7 @@ fileInput.addEventListener('change', async ()=>{
 });
 
 function findItem(id){
-  for(const sec of ['practice','practice2','mg','aigc-img','aigc-prompt','agent']){
+  for(const sec of ['practice','practice2','mg','aigc-img','agent']){
     const it = DATA[sec].find(x=>x.id===id);
     if(it) return it;
   }
@@ -1156,7 +1071,7 @@ function findItem(id){
 }
 
 function findSection(id){
-  for(const sec of ['practice','practice2','mg','aigc-img','aigc-prompt','agent']){
+  for(const sec of ['practice','practice2','mg','aigc-img','agent']){
     if(DATA[sec].find(x=>x.id===id)) return sec;
   }
   return null;
@@ -1436,8 +1351,6 @@ function enableDragSort() {
     ['practice-grid', 'practice'],
     ['mg-grid', 'mg'],
     ['aigc-img-grid', 'aigc-img'],
-    ['-grid', ''],
-    ['aigc-prompt-grid', 'aigc-prompt'],
     ['agent-grid', 'agent'],
   ];
   GRIDS.forEach(([gridId, key]) => {
@@ -1590,7 +1503,7 @@ function renderGallerySection(key){
   const track=document.getElementById(key+'-gallery-track');
   if(!track) return;
   track.innerHTML='';
-  const items=(DATA[key]||[]).filter(i=>i.media||i.type==='prompt');
+  const items=(DATA[key]||[]).filter(i=>i.media);
   items.forEach(item=>{
     const card=makeGalleryCard(item, rowH, key);
     track.appendChild(card);
@@ -1808,7 +1721,7 @@ function updateGalleryCounter(key,nth,total){
         inst._paused=false;
         const track=document.getElementById(key+'-gallery-track');
         if(!track) return;
-        const items=(DATA[key]||[]).filter(i=>i.media||i.type==='prompt');
+        const items=(DATA[key]||[]).filter(i=>i.media);
         initGalleryLoop(key,track,items);
       }
     });
