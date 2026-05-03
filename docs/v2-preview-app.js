@@ -471,11 +471,12 @@ function compressImage(file, maxKB=500){
   });
 }
 
-function makeMp4Card(item){
+function makeMp4Card(item, section){
   const card = document.createElement('div');
   card.className = 'vcard bg-card border-card card-hover masonry-item';
   card.dataset.id = item.id;
   card.dataset.type = item.type || 'mp4';
+  card.dataset.section = section || '';
   const isAnim = item.type==='webp' || item.type==='gif' || item.type==='anim' || item.mediaType==='webp' || item.mediaType==='gif';
   const coverSrc = item.cover || '';
   const mediaSrc = item.media || '';
@@ -522,11 +523,12 @@ function makeMp4Card(item){
   return card;
 }
 
-function makeImgCard(item){
+function makeImgCard(item, section){
   const card = document.createElement('div');
   card.className = 'vcard bg-card border-card card-hover';
   card.dataset.id = item.id;
   card.dataset.type = 'img';
+  card.dataset.section = section || '';
   card.innerHTML = `
     <div class="card-media${!item.media?' empty-card':''}">
       ${item.media ? `<img src="${item.media}" alt="" style="pointer-events:none">` : `<div class="no-thumb">待上传</div>`}
@@ -540,12 +542,11 @@ function makeImgCard(item){
       <p class="text-sub font-light text-[.72rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
   if(item.media){
+    const useFlip = section==='practice2' || section==='mg';
     card.querySelector('.card-media').addEventListener('click', e=>{
       if(e.target.closest('.upload-ov') || editMode) return;
-      if(!isAnim){
-        const img = document.createElement('img'); img.src = item.media;
-        window.openMedia(card, img);
-      }
+      const img = document.createElement('img'); img.src = item.media;
+      window.openMedia(card, img);
     });
   }
   setupEditableFields(card, item);
@@ -644,7 +645,7 @@ function renderSection(sectionKey, gridId, type){
   // Mobile: 2-column CSS grid
   if(isMobile){
     items.forEach((item,i)=>{
-      let card = item.type==='img' ? makeImgCard(item) : makeMp4Card(item);
+      let card = item.type==='img' ? makeImgCard(item, sectionKey) : makeMp4Card(item, sectionKey);
       card.style.position = 'static';
       card.style.width = '100%';
       card.style.height = 'auto';
@@ -667,7 +668,7 @@ function renderSection(sectionKey, gridId, type){
   const rowH = DATA.cols[sectionKey] || 180; // stored value is row height in px
 
   items.forEach((item,i)=>{
-    let card = item.type==='img' ? makeImgCard(item) : makeMp4Card(item);
+    let card = item.type==='img' ? makeImgCard(item, sectionKey) : makeMp4Card(item, sectionKey);
     const ratio = item.ar || (16/9);
     const cardW = Math.round(rowH * ratio);
 
@@ -1612,6 +1613,7 @@ function makeGalleryCard(item, rowH, galKey){
   const card=document.createElement('div');
   card.className='gallery-card'+(editMode?' card-hover':'');
   card.dataset.id=item.id||'';
+  card.dataset.section=galKey;
   card.style.width = cardW + 'px';
   const mediaDiv=document.createElement('div');
   mediaDiv.className='gc-media'+(!item.media?' empty-card':'');
@@ -1632,8 +1634,9 @@ function makeGalleryCard(item, rowH, galKey){
     mediaDiv.style.cursor='pointer';
     mediaDiv.onclick=function(){
       if(editMode) return;
-      if(isVideo) openInlinePlayer(item.media);
-      else { const img=document.createElement('img'); img.src=item.media; window.openMedia(cardEl,img); }
+      const useFlip = galKey==='practice2' || galKey==='mg';
+      if(isVideo && !useFlip) { openInlinePlayer(item.media); return; }
+      const img=document.createElement('img'); img.src=item.media; window.openMedia(card, img);
     };
   }
   if(editMode){

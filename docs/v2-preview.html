@@ -1719,26 +1719,23 @@ document.addEventListener('click', e=>{
   window.openMedia = function openMedia(triggerEl, mediaEl){
     const app = document.getElementById('app');
     if(app.classList.contains('editing')) return;
-
+    // 防止快速双击/重复触发
+    if(ov.classList.contains('active')) return;
     const rect = triggerEl.getBoundingClientRect();
     _originRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
-    _isVCard = triggerEl.classList.contains('vcard');
-
+    // 只有个人作品(practice2)和MG动画(mg)才启用翻转动画
+    const sectionKey = triggerEl.dataset.section || '';
+    _isVCard = (sectionKey === 'practice2' || sectionKey === 'mg');
     const cardType = triggerEl.dataset.type || '';
     const isVideoCard = cardType==='mp4' || cardType==='video';
     const videoSrc = isVideoCard ? findVideoSrc(triggerEl) : '';
-
     const vw = window.innerWidth, vh = window.innerHeight;
     const nw = Math.min(vw * .88, Math.max(rect.width * 2.8, 480));
     const nh = Math.min(vh * .86, Math.max(rect.height * 2.8, 320));
     const tx = (vw - nw) / 2;
     const ty = (vh - nh) / 2;
-
-    // 清空 box 内容
     box.innerHTML=''; box.appendChild(closeBtn);
     box.removeAttribute('style');
-
-    // stage 定位到目标位置，初始 transform = 从卡片出发的 FLIP invert
     Object.assign(stage.style, {
       left: tx + 'px', top: ty + 'px',
       width: nw + 'px', height: nh + 'px',
@@ -1749,48 +1746,56 @@ document.addEventListener('click', e=>{
     const dx = (rect.left + rect.width/2) - (tx + nw/2);
     const dy = (rect.top  + rect.height/2) - (ty + nh/2);
     stage.style.transform = `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
-
-    // vcard: box 初始旋转 -180deg（背面），画廊: box 不旋转
     if(_isVCard){
       box.style.transition = 'none';
       box.style.transform = 'rotateY(-180deg)';
     }
-
-    // 填充内容
     if(isVideoCard && videoSrc){
       const video = document.createElement('video');
       video.src = videoSrc;
       video.controls = true; video.playsInline = true;
       video.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;display:block';
       box.appendChild(video);
-    } else {
-      const clone = mediaEl.cloneNode(true);
-      clone.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;display:block';
-      box.appendChild(clone);
-    }
-
-    ov.classList.add('active');
-
-    requestAnimationFrame(()=>{
-      stage.getBoundingClientRect(); // force reflow
-
-      // stage: FLIP 飞到中央
-      stage.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1), opacity .2s ease';
-      stage.style.transform = 'translate(0,0) scale(1)';
-      stage.style.opacity = '1';
-
-      if(_isVCard){
-        // box: 同步翻转 -180deg → 0deg，时长与 stage 相同
-        box.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1)';
-        box.style.transform = 'rotateY(0deg)';
-      }
-
-      if(isVideoCard && videoSrc){
+      ov.classList.add('active');
+      requestAnimationFrame(()=>{
+        stage.getBoundingClientRect();
+        stage.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1), opacity .2s ease';
+        stage.style.transform = 'translate(0,0) scale(1)';
+        stage.style.opacity = '1';
+        if(_isVCard){
+          box.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1)';
+          box.style.transform = 'rotateY(0deg)';
+        }
         const v = box.querySelector('video');
         if(v) setTimeout(()=>v.play().catch(()=>{}), 300);
+        setTimeout(()=>{ closeBtn.style.display=''; }, 440);
+      });
+    } else {
+      // 如果图片还没加载完（刷新后首次点击），等加载完再动画
+      const doShow = () => {
+        const clone = mediaEl.cloneNode(true);
+        clone.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;display:block';
+        box.appendChild(clone);
+        ov.classList.add('active');
+        requestAnimationFrame(()=>{
+          stage.getBoundingClientRect();
+          stage.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1), opacity .2s ease';
+          stage.style.transform = 'translate(0,0) scale(1)';
+          stage.style.opacity = '1';
+          if(_isVCard){
+            box.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1)';
+            box.style.transform = 'rotateY(0deg)';
+          }
+          setTimeout(()=>{ closeBtn.style.display=''; }, 440);
+        });
+      };
+      if(mediaEl.tagName==='IMG' && !(mediaEl.complete && mediaEl.naturalWidth>0)){
+        mediaEl.addEventListener('load', doShow, {once:true});
+        mediaEl.addEventListener('error', doShow, {once:true});
+      } else {
+        doShow();
       }
-      setTimeout(()=>{ closeBtn.style.display=''; }, 440);
-    });
+    }
   };
 
   function findVideoSrc(cardEl){
@@ -1806,6 +1811,7 @@ document.addEventListener('click', e=>{
   document.addEventListener('click', e=>{
     const app = document.getElementById('app');
     if(app.classList.contains('editing')) return;
+    // 仅处理画廊卡片点击（非编辑模式），vcard 的点击由 app.js 各自处理
     const gcMedia = e.target.closest('.gc-media');
     if(gcMedia){
       const card = e.target.closest('.gallery-card,.gallery-card-clone');
@@ -1813,13 +1819,6 @@ document.addEventListener('click', e=>{
       const m = gcMedia.querySelector('img,video');
       if(m){ e.preventDefault(); e.stopPropagation(); openMedia(card, m); }
       return;
-    }
-    const cm = e.target.closest('.card-media');
-    if(cm){
-      const vc = e.target.closest('.vcard');
-      if(!vc) return;
-      const m = cm.querySelector('img,video');
-      if(m){ e.preventDefault(); e.stopPropagation(); openMedia(vc, m); }
     }
   }, true);
 })();
