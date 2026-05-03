@@ -561,7 +561,10 @@
     .editing .vcard:hover .upload-ov { display: flex; }
     .editing .vcard .card-media.empty-card .upload-ov { display: flex !important; }
     /* 编辑模式：画廊显示拖拽光标 */
-    .editing .gallery-outer { cursor: grab; }
+    .editing .gallery-outer { cursor: default; overflow-x: auto; }
+    .editing .gallery-outer::-webkit-scrollbar { height: 4px; }
+    .editing .gallery-outer::-webkit-scrollbar-track { background: transparent; }
+    .editing .gallery-outer::-webkit-scrollbar-thumb { background: var(--color-sep); border-radius: 2px; }
     .editing .gallery-outer .gallery-card,
     .editing .gallery-outer .gallery-card-clone { cursor: grab; }
     .upload-ov-btn {

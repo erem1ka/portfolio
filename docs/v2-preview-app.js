@@ -1596,10 +1596,22 @@ function initGalleryLoop(key, track, realItems){
   track.innerHTML='';
   inst.boost=0; inst.wheeling=false;
   const realCount = realItems.length;
+
+  // 编辑模式：不克隆、不循环，用原生 overflow 横向滚动，方便编辑所有卡片
   if(editMode){
+    realItems.forEach(item=>track.appendChild(makeGalleryCard(item, rowH, key)));
     const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, rowH, key);
     track.appendChild(empty);
+    track.style.transform='translateX(0)';
+    track.style.willChange='auto';
+    const _go=document.getElementById(key+'-gallery-outer');
+    if(_go){ _go.style.overflowX='auto'; _go.style.cursor=''; }
+    const hint=document.getElementById(key+'-gallery-hint');
+    if(hint) hint.classList.add('hide');
+    return;
   }
+  const _goRestore=document.getElementById(key+'-gallery-outer');
+  if(_goRestore) _goRestore.style.overflowX='';
 
   const MIN_LOOP=3;
   if(realCount<MIN_LOOP){
