@@ -1,0 +1,235 @@
+/* ═══════════════════════════════════════════
+   background.css — 四层背景质感系统
+   
+   这是整站氛围的基础。每一层单独看不出区别，
+   但叠加形成"看不见但感觉得到"的质感。
+   拿掉任何一层都会让画面变得"扁平塑料感"。
+   
+   四层严格分层，z-index 严格管理：
+   Layer 1 (基础色) → Layer 2 (穹顶渐变) → 
+   Layer 3 (噪点纹理) → Layer 4 (光斑跟随)
+   
+   永远不要在此基础上再加扫描线、网格、星点等额外纹理。
+   ═══════════════════════════════════════════ */
+
+/* ─── Layer 1: 色温微偏的基础色 ───
+   拒绝 #000000 死黑。用略带冷调的深邃黑作为底色。
+   这个底色是所有后续叠加的基础，
+   它确保画面永远不会变成"无色调的死黑"。 */
+body {
+  background-color: var(--bg-base);  /* #0B0B0F — 略带冷调的深邃黑 */
+}
+
+/* ─── Layer 2: 穹顶渐变 ───
+   模拟"画廊穹顶光"的空间感。
+   顶部稍亮 (#131319) → 中部基础色 (#0B0B0F) → 底部最暗 (#08080B)
+   椭圆形径向渐变，圆心在屏幕顶部 50% 位置。
+   background-attachment: fixed，滚动时不变形。
+   
+   为什么用径向而非线性？
+   线性渐变会让画面感觉"被分割为几块色带"；
+   径向渐变创造一个从顶部中央散发微光的"穹顶"，
+   更接近真实画廊中顶部灯光的自然衰减。 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;          /* 铺满视口 */
+  z-index: 0;        /* 在 Layer 1 之上，内容之下 */
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 100% 80% at 50% 0%,
+    /* 从顶部中心向下辐射，椭圆形宽度100%、高度80%
+       模拟穹顶光从顶部中央自然扩散 */
+    #131319 0%,       /* 顶部 — 略亮，模拟穹顶反射光 */
+    #0B0B0F 40%,      /* 中部 — 回到基础色 */
+    #08080B 100%       /* 底部 — 最深处 */
+  );
+  background-attachment: fixed;
+}
+
+/* ─── Layer 3: 胶片噪点纹理 ───
+   全局覆盖一层极细噪点，opacity 0.04-0.05。
+   这是高级暗色站的核心秘密 — 看不见但感觉得到。
+   
+   为什么用 SVG feTurbulence 而非图片？
+   1. 零外部资源依赖，无需加载图片文件
+   2. SVG filter 生成的噪点是矢量级精细度
+   3. baseFrequency=0.9, numOctaves=2 模拟胶片颗粒
+   4. 通过 CSS 内联 data URI，一次定义全局复用
+   
+   为什么 mix-blend-mode: overlay？
+   overlay 模式让噪点在暗区"提亮微细节"、在亮区"加深质感",
+   而不会破坏下层渐变和基础色的色彩关系。
+   
+   为什么 pointer-events: none？
+   噪点层不应拦截任何用户交互，仅视觉叠加。 */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-noise);  /* 1 — 在内容之下 */
+  pointer-events: none;
+  opacity: var(--noise-opacity);
+  mix-blend-mode: overlay;
+  backdrop-filter: blur(0.6px);
+  -webkit-backdrop-filter: blur(0.6px);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;  /* 点图案尺寸，平衡细腻度和性能 */
+}
+
+/* ─── Layer 4: 鼠标光斑跟随 ───
+   仅桌面端生效。鼠标位置 600px 半径的微光晕，
+   中心 rgba(255,255,255,0.025)，边缘 transparent 70%。
+   
+   为什么通过 CSS 变量 --mx/--my 驱动？
+   1. JS 通过 requestAnimationFrame 实时更新 CSS 变量
+   2. CSS 直接响应变量变化，无需每帧重建 DOM/style
+   3. 浏览器 GPU 加速径向渐变渲染，60fps 无压力
+   
+   为什么移动端关闭（--mx/--my = -9999px）？
+   移动端无鼠标，光斑会永远停留在触摸结束位置，
+   这反而会破坏氛围而非增强。完全关闭是正确选择。 */
+.bg-glow {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-glow);  /* 2 — 在噪点之上，内容之下 */
+  pointer-events: none;
+  background: radial-gradient(
+    var(--glow-radius) var(--glow-radius) at var(--mx) var(--my),
+    /* 600px 半径的椭圆形光斑，中心在鼠标位置 */
+    var(--glow-center) 0%,        /* 中心：微亮 rgba(255,255,255,0.025) */
+    transparent var(--glow-edge)  /* 70% 位置完全透明，自然衰减 */
+  );
+  /* 默认 --mx/--my 为 -9999px（移动端），光斑完全不可见
+     JS 激活后才会在鼠标位置出现 */
+  will-change: background;
+}
+
+/* ─── Layer 5: 毛玻璃质感层 ───
+   参考 KIM20260427 设计风格：
+   - 强度 backdrop-filter: blur(8px) saturate(1.3)
+   - 顶部穹顶区域加 rgba 微光渐变（模拟光源折射）
+   - 底部暗区保留穿透感（半透明但不遮挡）
+   - mix-blend-mode: screen 让光区提亮、暗区保留深色
+   - 边缘添加 1px rgba 高光（模拟玻璃边缘折射线） */
+.bg-frost {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  backdrop-filter: blur(8px) saturate(1.3) brightness(1.02);
+  -webkit-backdrop-filter: blur(8px) saturate(1.3) brightness(1.02);
+  background:
+    /* 顶部光源折射带 — 从顶部散发柔和暖白光 */
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.02) 15%,
+      transparent 40%
+    ),
+    /* 穹顶径向微光 — 与 Layer 2 穹顶呼应但更柔和 */
+    radial-gradient(
+      ellipse 100% 50% at 50% 0%,
+      rgba(200, 200, 220, 0.04) 0%,
+      transparent 60%
+    ),
+    /* 全局极薄白色底 — 给毛玻璃一层"底漆" */
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.015) 0%,
+      rgba(0, 0, 0, 0) 100%
+    );
+  mix-blend-mode: screen;
+  will-change: backdrop-filter;
+}
+
+/* ─── 毛玻璃边缘折射线 ───
+   在视口四边添加极细 rgba 高光，
+   模拟真实玻璃边缘的光线折射效果 */
+.bg-frost::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  /* 顶部边更亮（光源方向） */
+  border-top-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.02);
+  border-right-color: rgba(255, 255, 255, 0.02);
+  border-bottom-color: rgba(255, 255, 255, 0.01);
+}
+
+/* ─── 毛玻璃表面微光斑 ───
+   模拟真实玻璃上的光斑反射（像从窗外看出去的毛玻璃窗） */
+.bg-frost::after {
+  content: '';
+  position: absolute;
+  top: 5%;
+  left: 35%;
+  width: 30%;
+  height: 25%;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 100% 80% at 50% 50%,
+    rgba(255, 255, 255, 0.02) 0%,
+    transparent 70%
+  );
+  filter: blur(40px);
+  mix-blend-mode: screen;
+}
+
+/* ─── 移动端 Layer 4 + 5 关闭 ───
+   CSS 变量已在 tokens.css 中通过媒体查询设为 -9999px
+   这里额外确保 .bg-glow 在移动端完全不影响渲染性能 */
+@media (max-width: 767px) {
+  .bg-glow {
+    background: none;
+  }
+  .bg-frost {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: none;
+  }
+}
+
+/* ─── prefers-reduced-motion ───
+   减弱动效偏好下，关闭光斑跟随
+   因为光斑是持续跟随鼠标的"运动效果" */
+@media (prefers-reduced-motion: reduce) {
+  .bg-glow {
+    background: none;
+  }
+}
+
+/* ─── 调试模式：四层可视化 ───
+   在 body 上添加 class="debug-bg" 可逐层查看各层效果
+   开发调试专用，正式发布时移除 */
+body.debug-bg--layer1 {
+  /* 仅显示 Layer 1 基础色 */
+  background-color: var(--bg-base);
+}
+body.debug-bg--layer1::before,
+body.debug-bg--layer1::after,
+body.debug-bg--layer1 .bg-glow {
+  display: none;
+}
+
+body.debug-bg--layer2 {
+  /* 仅显示 Layer 1 + Layer 2 */
+  background-color: var(--bg-base);
+}
+body.debug-bg--layer2::after,
+body.debug-bg--layer2 .bg-glow {
+  display: none;
+}
+
+body.debug-bg--layer3 {
+  /* 仅显示 Layer 1 + Layer 2 + Layer 3（不含光斑）*/
+  background-color: var(--bg-base);
+}
+body.debug-bg--layer3 .bg-glow {
+  display: none;
+}
+
+/* 默认 body.debug-bg--all = 全部四层叠加（即正常状态）*/

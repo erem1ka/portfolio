@@ -1,0 +1,218 @@
+/* ═══════════════════════════════════════════
+   motif.css — 圆点母题样式与状态过渡
+   
+   整个网站围绕一个 4-16px 的强调色圆点展开，
+   它在不同场景扮演不同角色，构成贯穿始终的视觉语言。
+   
+   圆点的 7 种形态（状态机驱动形态切换）：
+   1. Loading — 4px 脉冲圆点
+   2. 鼠标光标 — 16px 实心圆点（mix-blend-mode: difference）
+   3. Hover 作品 — 64px 圆 + "PLAY" 文字
+   4. 作品编号 — ● 01、● 02 形式
+   5. 章节分隔 — 圆点拉伸为横线
+   6. 滚动进度 — 1px 竖线 + 顶端圆点游标
+   7. Footer 终点 — 圆点缩回 4px 然后消失
+   
+   所有形态之间通过 morph 动画切换：
+   - 缩放/拉伸：transform: scale + scaleY
+   - 形变：通过 border-radius 过渡
+   - 切换时长：300-500ms, cubic-bezier(0.77, 0, 0.175, 1)
+   ═══════════════════════════════════════════ */
+
+/* ─── 圆点母题基础 ───
+   所有圆点形态的公共基础样式 */
+.motif-dot {
+  border-radius: 50%;
+  background: var(--accent);  /* #FF3B5C — 强调色 */
+  position: relative;
+  /* 所有形态切换通过 CSS 类名 + transition 完成 */
+  transition: 
+    width var(--duration-morph) var(--ease-morph),
+    height var(--duration-morph) var(--ease-morph),
+    border-radius var(--duration-morph) var(--ease-morph),
+    transform var(--duration-morph) var(--ease-morph),
+    opacity var(--duration-normal) var(--ease-out);
+  will-change: width, height, border-radius, transform, opacity;
+}
+
+/* ─── 形态 1：Loading 脉冲圆点 ───
+   屏幕中心 4×4px，强调色圆点脉冲呼吸 */
+.motif-dot--loading {
+  width: var(--dot-loading);   /* 4px */
+  height: var(--dot-loading);  /* 4px */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: var(--z-overlay);  /* Loading 阶段最高层 */
+  animation: motif-pulse 1200ms ease-in-out infinite;
+  /* 呼吸动画：放大→缩小，模拟"心跳" */
+}
+
+@keyframes motif-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0.7;
+  }
+}
+
+/* ─── 形态 2：鼠标光标 ───
+   16px 实心圆点，mix-blend-mode: difference
+   暗背景反白，亮内容反暗 — 确保光标始终可见
+   
+   为什么用 mix-blend-mode: difference？
+   1. 不需要根据背景亮度手动切换光标颜色
+   2. 在任何背景色（暗/亮/渐变）上自动产生反色
+   3. difference 模式产生"反向互补色"，视觉效果独特 */
+.motif-dot--cursor {
+  width: var(--dot-cursor);   /* 16px */
+  height: var(--dot-cursor);  /* 16px */
+  position: fixed;
+  z-index: var(--z-cursor);  /* 9999 — 最高层级 */
+  mix-blend-mode: difference;
+  pointer-events: none;
+  /* 不设 transition，JS lerp 控制位置跟随
+     但形态切换有 transition（morph 到其他形状）*/
+}
+
+/* ─── 光标拖尾 — 描边圆环 ───
+   后方 32px 描边圆环，延迟 0.3s 跟随
+   鼠标快速移动时两者拉开形成"光带" */
+.motif-dot--cursor-ring {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--accent);
+  background: transparent;
+  position: fixed;
+  z-index: var(--z-cursor);
+  mix-blend-mode: difference;
+  pointer-events: none;
+  border-radius: 50%;
+  transition: 
+    width var(--duration-morph) var(--ease-morph),
+    height var(--duration-morph) var(--ease-morph),
+    border-width var(--duration-morph) var(--ease-morph);
+}
+
+/* ─── 形态 3：Hover 作品 ───
+   变形为 64px 圆 + 内嵌 "PLAY" 文字 */
+.motif-dot--hover-play {
+  width: var(--dot-hover);    /* 64px */
+  height: var(--dot-hover);   /* 64px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-family: 'Inter', 'PingFang SC', sans-serif;
+  font-weight: var(--fw-bold);
+  color: white;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  /* 当光标进入作品区域时，由 JS 将光标切换为此形态 */
+}
+
+/* ─── Hover 按钮 ───
+   80px 圆 + 内嵌 "CLICK" 文字 */
+.motif-dot--hover-click {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-family: 'Inter', 'PingFang SC', sans-serif;
+  font-weight: var(--fw-bold);
+  color: white;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ─── Hover 链接 ───
+   水平箭头 → */
+.motif-dot--hover-link {
+  width: 32px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  transform: scaleX(1);
+}
+
+/* ─── Hover 文字段落 ───
+   竖线 |（编辑器光标感） */
+.motif-dot--hover-text {
+  width: 2px;
+  height: 32px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+
+/* ─── 形态 5：章节分隔 ───
+   圆点拉伸为一条 1px 横线
+   从屏幕中心向两侧延展 */
+.motif-dot--divider {
+  width: 100vw;
+  height: 1px;
+  border-radius: 0;
+  /* 从圆点 morph 到横线：
+     width: 4px → 100vw
+     height: 4px → 1px
+     border-radius: 50% → 0
+     所有变化通过 transition 自然过渡 */
+}
+
+/* ─── 形态 7：Footer 终点 ───
+   圆点缩回 4×4px 然后消失，形成首尾呼应 */
+.motif-dot--end {
+  width: var(--dot-loading);   /* 4px — 回到起点大小 */
+  height: var(--dot-loading);  /* 4px */
+  opacity: 0;  /* 消失 — 淡出动画由 JS 控制 */
+  animation: motif-fade-out 1000ms var(--ease-out) forwards;
+}
+
+@keyframes motif-fade-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 0.5;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
+/* ─── 形态切换过渡 ───
+   状态机通过添加/移除 CSS 类名驱动形态切换
+   所有形态共享 .motif-dot 基础 + 形态特定类名
+   transition 在 .motif-dot 上统一定义 */
+
+/* ─── prefers-reduced-motion ───
+   简化所有动画，保留形态切换但去掉运动效果 */
+@media (prefers-reduced-motion: reduce) {
+  .motif-dot {
+    transition-duration: 0ms;
+  }
+  .motif-dot--loading {
+    animation: none;
+  }
+  .motif-dot--end {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* ─── 移动端 ───
+   自定义光标关闭，使用原生光标 */
+@media (max-width: 767px) {
+  .motif-dot--cursor,
+  .motif-dot--cursor-ring {
+    display: none;  /* 移动端完全隐藏自定义光标 */
+  }
+}

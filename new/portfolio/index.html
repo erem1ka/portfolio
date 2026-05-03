@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="作品集 — 动效设计师 | AE × AIGC × PS">
+  <meta name="theme-color" content="#0B0B0F">
+  <title>作品集 — 动效设计师</title>
+
+  <!-- ─── 字体预加载 ───
+       font-display: swap 防止 FOIT（Flash of Invisible Text）
+       Inter: 英文正文与标题
+       JetBrains Mono: 数字、代码、章节指示器 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+  <!-- ─── CSS 系统 ───
+       按依赖顺序加载：tokens → reset → typography → background → layout → motif -->
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/modern-normalize@2/modern-normalize.min.css">
+  <link rel="stylesheet" href="css/typography.css">
+  <link rel="stylesheet" href="css/background.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/motif.css">
+  <link rel="stylesheet" href="css/gallery.css">
+  <link rel="stylesheet" href="css/modal.css">
+  <link rel="stylesheet" href="css/editor.css">
+
+  <!-- ─── GSAP + ScrollTrigger + Lenis ───
+       所有依赖通过 CDN 加载，无需本地文件
+       GSAP: 动画引擎，ScrollTrigger: 滚动触发器
+       Lenis: 平滑滚动 -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+
+  <!-- ─── 样式补丁 ───
+       确保四层背景系统之上的全局基础样式正确 -->
+  <style>
+    /* 所有内容需在背景层之上 */
+    .main-content {
+      position: relative;
+      z-index: 10;
+    }
+    /* 原生光标隐藏（由 motif.js 控制，移动端保留原生光标） */
+    @media (min-width: 768px) {
+      * { cursor: none !important; }
+    }
+    /* 修复 modern-normalize 可能的冲突 */
+    body {
+      line-height: 1;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    /* 确保锚点可点击 */
+    a { pointer-events: auto; }
+  </style>
+</head>
+
+<body>
+  <!-- ═══════════════════════════════════════════
+    四层背景质感系统（在 body 之上的 DOM 元素）
+    ═══════════════════════════════════════════
+    
+    Layer 1: body background-color — 已在 background.css 设置
+    Layer 2: body::before — 穹顶径向渐变 — 已在 background.css 设置
+    Layer 3: body::after — SVG 噪点纹理 — 已在 background.css 设置
+    Layer 4: .bg-glow — 鼠标光斑跟随（CSS 变量驱动） — 需 DOM 元素 -->
+  
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="bg-frost" aria-hidden="true"></div>
+
+  <!-- ═══════════════════════════════════════════
+    圆点母题 — 自定义光标系统
+    ═══════════════════════════════════════════
+    
+    形态 2：16px 实心圆 + 32px 描边圆环
+    两者通过 lerp 延迟跟随鼠标，形成"光带"
+    由 motif.js 驱动位置和形态切换 -->
+  <div class="motif-dot motif-dot--cursor" aria-hidden="true"></div>
+  <div class="motif-dot--cursor-ring" aria-hidden="true"></div>
+
+  <!-- ═══════════════════════════════════════════
+    极简浮动导航
+    ═══════════════════════════════════════════ -->
+  <nav class="floating-nav" role="navigation" aria-label="Main navigation">
+    <!-- 左上角：姓名标识 + 菜单图标 ⋯ -->
+    <div class="floating-nav__left">
+      <a href="#ch-0" class="nav-identity floating-nav__identity font-cn">你的名字</a>
+      <div class="floating-nav__menu-btn" role="button" aria-label="Open navigation menu" tabindex="0">
+        <span class="floating-nav__menu-dot"></span>
+        <span class="floating-nav__menu-dot"></span>
+        <span class="floating-nav__menu-dot"></span>
+      </div>
+    </div>
+
+    <!-- 右上角：章节指示器 -->
+    <div class="floating-nav__right">
+      <div class="chapter-indicator">
+        <span class="chapter-indicator__number">00</span>
+        <span> · </span>
+        <span class="chapter-indicator__name font-cn">序幕</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════
+    全屏覆盖式导航
+    ═══════════════════════════════════════════
+    Hover 菜单图标 → 全屏展开
+    背景模糊 backdrop-filter: blur(20px) + 大字菜单 -->
+  <div class="nav-overlay" aria-label="Navigation overlay" role="dialog">
+    <div class="nav-overlay__backdrop"></div>
+    <div class="nav-overlay__content">
+      <a href="#ch-0" class="nav-overlay__item font-cn">CH 00 · 序幕</a>
+      <a href="#ch-1" class="nav-overlay__item font-cn">CH 01 · 最强作品</a>
+      <a href="#ch-2" class="nav-overlay__item font-cn">CH 02 · 作品画廊</a>
+      <a href="#ch-3" class="nav-overlay__item font-cn">CH 03 · 作品幕后</a>
+      <a href="#ch-4" class="nav-overlay__item font-cn">CH 04 · 作品档案</a>
+      <a href="#ch-5" class="nav-overlay__item font-cn">CH 05 · 关于我</a>
+      <a href="#ch-6" class="nav-overlay__item font-cn">CH 06 · 终章</a>
+    </div>
+    <div class="nav-overlay__close" role="button" aria-label="Close navigation" tabindex="0">✕</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+    滚动进度条
+    ═══════════════════════════════════════════
+    左侧 1px 竖线 + 顶端圆点游标
+    圆点母题形态 6 -->
+  <div class="scroll-progress" aria-hidden="true">
+    <div class="scroll-progress__fill"></div>
+    <div class="scroll-progress__dot"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+    主内容区域
+    ═══════════════════════════════════════════
+    7 个章节骨架占位，后续批次逐步填充 -->
+  <main class="main-content">
+
+    <!-- ─── CH 0 - PRELUDE（Loading 序列）───
+         loader.js 动态创建 Loading 遮罩层
+         此 section 默认隐藏，Loading 完成后直接进入 CH 1 -->
+    <section id="ch-0" class="chapter chapter--full" data-chapter="0" style="display: none;">
+    </section>
+
+    <!-- ─── CH 1 - THE OPENING（最强作品全屏沉浸）───
+         选择最强 1 个作品，全屏沉浸式自动播放
+         视频铺满 100vw × 100vh, autoplay muted loop
+         左下角标题（stagger 上浮）+ 右下角滚动提示 -->
+    <section id="ch-1" class="chapter chapter--full" data-chapter="1">
+      <!-- 全屏背景视频/图片（占位） -->
+      <div class="ch1__video" style="
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+        opacity: 0;
+      ">
+        <img src="https://picsum.photos/seed/featured-work/1920/1080"
+             alt="最强作品 — 春节开场动效"
+             style="width: 100%; height: 100%; object-fit: cover;"
+             loading="eager">
+        <!-- 实际项目替换为：<video autoplay muted loop playsinline>
+          <source src="/assets/videos/work-001.mp4" type="video/mp4">
+          <source src="/assets/videos/work-001.webm" type="video/webm">
+        </video> -->
+      </div>
+
+      <!-- 左下角：作品标题 + 简介 -->
+      <div style="
+        position: absolute;
+        bottom: 8%;
+        left: 5%;
+        z-index: 11;
+      ">
+        <!-- 标题字符拆分，用于 stagger 上浮动画 -->
+        <h1 class="h-hero font-cn" style="color: var(--text-primary);">
+          <span class="ch1__title-char">春</span><span class="ch1__title-char">节</span><span class="ch1__title-char">开</span><span class="ch1__title-char">场</span><span class="ch1__title-char">动</span><span class="ch1__title-char">效</span>
+        </h1>
+        <p class="ch1__subtitle h-body font-cn" style="color: var(--text-secondary);">
+          AE × AIGC × PS — 为抖音春节活动打造的开场视觉体验
+        </p>
+      </div>
+
+      <!-- 右下角：往下滚动提示 → + 圆点母题装饰 -->
+      <div class="ch1__scroll-hint" style="
+        position: absolute;
+        bottom: 8%;
+        right: 5%;
+        z-index: 11;
+        opacity: 0;
+      ">
+        <div class="h-caption font-cn" style="color: var(--text-muted);">
+          <span style="display: inline-flex; align-items: center; gap: 8px;">
+            ↓ 继续浏览
+            <span style="width: 6px; height: 6px; border-radius: 50%; background: var(--accent);"></span>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── 章节分隔线 ───
+         圆点母题形态 5：圆点拉伸为横线 -->
+    <div class="chapter-divider">
+      <div class="chapter-divider__dot"></div>
+    </div>
+
+    <!-- ─── CH 2 - THE GALLERY（横向滚动画廊）───
+         gallery.js 渲染卡片 + ScrollTrigger pin + scrub
+         velocity.js 叠加速度感应倾斜效果 -->
+    <section id="ch-2" class="chapter chapter--gallery" data-chapter="2">
+      <!-- gallery.js 动态填充：.gallery__header + .gallery__track-wrapper + .gallery__progress -->
+    </section>
+
+    <div class="chapter-divider">
+      <div class="chapter-divider__dot"></div>
+    </div>
+
+    <!-- ─── CH 3 - BEHIND THE FRAME（幕后细节）───
+         后续批次：modal.js + 4 节点 Behind The Frame -->
+    <section id="ch-3" class="chapter" data-chapter="3">
+      <div style="text-align: center; padding: 8rem 2rem;">
+        <h2 class="h-h2 font-cn" style="color: var(--text-primary); opacity: 0.15;">
+          作品幕后
+        </h2>
+        <p class="h-caption font-cn" style="color: var(--text-muted); opacity: 0.5;">
+          CH 03 · 弹窗 +幕后流程 — 第四批交付
+        </p>
+      </div>
+    </section>
+
+    <div class="chapter-divider">
+      <div class="chapter-divider__dot"></div>
+    </div>
+
+    <!-- ─── CH 4 - THE ARCHIVE（瀑布流 + 工具关联图）───
+         后续批次：archive.js + 瀑布流 + 工具云矩阵 -->
+    <section id="ch-4" class="chapter" data-chapter="4">
+      <div style="text-align: center; padding: 8rem 2rem;">
+        <h2 class="h-h2 font-cn" style="color: var(--text-primary); opacity: 0.15;">
+          作品档案
+        </h2>
+        <p class="h-caption font-cn" style="color: var(--text-muted); opacity: 0.5;">
+          CH 04 · 瀑布流 + 工具云矩阵 — 第五批交付
+        </p>
+        <!-- 数字证明占位 -->
+        <div class="h-micro font-cn" style="color: var(--text-muted); margin-top: 2rem;">
+          47 个作品 · 6 种工具 · 3 年经验
+        </div>
+      </div>
+    </section>
+
+    <div class="chapter-divider">
+      <div class="chapter-divider__dot"></div>
+    </div>
+
+    <!-- ─── CH 5 - THE PERSON（极简 About）───
+         后续批次：极简自我介绍 + 圆形照片 -->
+    <section id="ch-5" class="chapter" data-chapter="5">
+      <div style="text-align: center; padding: 8rem 2rem;">
+        <h2 class="h-h2 font-cn" style="color: var(--text-primary); opacity: 0.15;">
+          关于我
+        </h2>
+        <p class="h-caption font-cn" style="color: var(--text-muted); opacity: 0.5;">
+          CH 05 · 极简自我介绍 — 第五批交付
+        </p>
+      </div>
+    </section>
+
+    <div class="chapter-divider">
+      <div class="chapter-divider__dot"></div>
+    </div>
+
+    <!-- ─── CH 6 - THE END（收尾 + 圆点闭环）───
+         后续批次：邮箱 + 圆点母题闭环消失 -->
+    <section id="ch-6" class="chapter" data-chapter="6">
+      <div style="text-align: center; padding: 8rem 2rem;">
+        <h2 class="h-h2 font-cn" style="color: var(--text-primary); opacity: 0.15;">
+          终章
+        </h2>
+        <p class="h-caption font-cn" style="color: var(--text-muted); opacity: 0.5;">
+          CH 06 · 收尾 + 圆点闭环 — 第五批交付
+        </p>
+        <!-- 圆点母题形态 7 占位 -->
+        <div class="motif-dot" style="margin: 2rem auto; opacity: 0.3;" aria-hidden="true"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════
+    JS 系统加载
+    ═══════════════════════════════════════════
+    motif.js 先加载（定义状态机类）
+    app.js 后加载（初始化并使用状态机实例） -->
+  <script src="js/motif.js"></script>
+  <script src="js/transitions.js"></script>
+  <script src="js/loader.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/gallery.js"></script>
+  <script src="js/velocity.js"></script>
+  <script src="js/modal.js"></script>
+  <script src="js/easterEgg.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- ─── 调试辅助 ───
+       在控制台可使用以下命令逐层查看背景：
+       document.body.className = 'debug-bg--layer1'  // 仅 Layer 1
+       document.body.className = 'debug-bg--layer2'  // Layer 1+2
+       document.body.className = 'debug-bg--layer3'  // Layer 1+2+3
+       document.body.className = ''                   // 全部四层 -->
+</body>
+</html>

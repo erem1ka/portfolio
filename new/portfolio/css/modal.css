@@ -1,0 +1,657 @@
+/* ═══════════════════════════════════════════
+   modal.css — 作品 Modal + Behind The Frame 样式
+
+   布局：
+   #work-modal                ← 全屏 fixed 层（z-index: overlay）
+   ├── .modal__backdrop       ← 模糊背景遮罩
+   └── .modal__panel          ← 主面板（左图 + 右信息，两列布局）
+       ├── .modal__close      ← 右上角关闭按钮
+       ├── .modal__media-col  ← 左列：媒体预览
+       └── .modal__info-col   ← 右列：信息 + BTF
+           ├── .modal__meta / .modal__title / .modal__tags / ...
+           ├── .modal__btf-toggle  ← 展开 BTF 的入口按钮
+           └── .modal__btf         ← Behind The Frame 区域
+               ├── .btf__timeline  ← 4节点横向时间线
+               ├── .btf__content   ← 节点内容区
+               └── .btf__nav       ← 上一步/下一步
+   ═══════════════════════════════════════════ */
+
+/* ─── Modal 根层 ─── */
+#work-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.5s var(--ease-out),
+    visibility 0s linear 0.5s;
+}
+
+#work-modal.modal--active {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.5s var(--ease-out),
+    visibility 0s linear 0s;
+}
+
+#work-modal.modal--closing {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.5s var(--ease-out),
+    visibility 0s linear 0.5s;
+}
+
+/* 打开 Modal 时锁住 body 滚动 */
+body.modal-open {
+  overflow: hidden;
+}
+
+/* ─── 背景遮罩 ─── */
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 11, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ─── 主面板 ─── */
+.modal__panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;   /* 左图 : 右信息 = 1:1 */
+  width: min(1200px, 96vw);
+  height: min(88vh, 840px);
+  background: var(--bg-sub);
+  border: 1px solid var(--border);
+  overflow: hidden;
+
+  /* 入场动画 */
+  transform: translateY(32px) scale(0.97);
+  transition: transform 0.5s 0.05s var(--ease-out);
+}
+
+#work-modal.modal--active .modal__panel {
+  transform: translateY(0) scale(1);
+}
+
+/* ─── 关闭按钮 ─── */
+.modal__close {
+  position: absolute;
+  top: var(--space-lg);
+  right: var(--space-lg);
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: none;
+  transition:
+    border-color 0.2s var(--ease-out),
+    background 0.2s var(--ease-out);
+}
+
+.modal__close:hover {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+/* ╳ 图标（纯 CSS） */
+.modal__close-icon {
+  position: relative;
+  display: block;
+  width: 12px;
+  height: 12px;
+}
+
+.modal__close-icon::before,
+.modal__close-icon::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  background: var(--text-secondary);
+  transition: background 0.2s var(--ease-out);
+}
+
+.modal__close-icon::before { transform: translateY(-50%) rotate(45deg); }
+.modal__close-icon::after  { transform: translateY(-50%) rotate(-45deg); }
+
+.modal__close:hover .modal__close-icon::before,
+.modal__close:hover .modal__close-icon::after {
+  background: white;
+}
+
+/* ═══════════════════════════════════════════
+   左列：媒体预览
+   ═══════════════════════════════════════════ */
+.modal__media-col {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-base);
+}
+
+.modal__media-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.modal__media-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 8s linear;
+}
+
+/* 极慢的"呼吸"放大（视差感） */
+#work-modal.modal--active .modal__media-img {
+  transform: scale(1.04);
+}
+
+/* 左侧边渐变遮罩（右侧白向透明，增强层次感） */
+.modal__media-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, transparent 70%, var(--bg-sub) 100%);
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════
+   右列：作品信息
+   ═══════════════════════════════════════════ */
+.modal__info-col {
+  padding: var(--space-2xl);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  /* 自定义滚动条 */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.modal__info-col::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modal__info-col::-webkit-scrollbar-track { background: transparent; }
+.modal__info-col::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* 作品元信息 */
+.modal__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal__num {
+  color: var(--accent);
+  letter-spacing: 0.08em;
+}
+
+.modal__year {
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+/* 标题 */
+.modal__title {
+  color: var(--text-primary);
+  line-height: var(--lh-tight);
+  /* 入场 stagger */
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.5s 0.15s var(--ease-out), transform 0.5s 0.15s var(--ease-out);
+}
+
+#work-modal.modal--active .modal__title {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 工具标签 */
+.modal__tags {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.5s 0.22s var(--ease-out), transform 0.5s 0.22s var(--ease-out);
+}
+
+#work-modal.modal--active .modal__tags {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.modal__tag {
+  font-size: 0.625rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* 分割线 */
+.modal__divider {
+  width: 100%;
+  height: 1px;
+  background: var(--border);
+  margin: var(--space-xs) 0;
+}
+
+/* 简介 */
+.modal__brief {
+  color: var(--text-secondary);
+  line-height: var(--lh-body);
+  font-size: 0.875rem;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.5s 0.28s var(--ease-out), transform 0.5s 0.28s var(--ease-out), display 0s;
+}
+
+#work-modal.modal--active .modal__brief {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── BTF 入口按钮 ─── */
+.modal__btf-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: var(--space-xs) var(--space-md);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  cursor: none;
+  transition:
+    border-color 0.25s var(--ease-out),
+    color 0.25s var(--ease-out);
+  margin-top: auto;   /* 推到信息列底部 */
+  align-self: flex-start;
+}
+
+.modal__btf-toggle:hover,
+.modal__btf-toggle--active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.modal__btf-toggle-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  transition: transform 0.3s var(--ease-out);
+}
+
+.modal__btf-toggle--active .modal__btf-toggle-dot {
+  transform: scale(1.5);
+}
+
+/* ═══════════════════════════════════════════
+   Behind The Frame 区域
+   ═══════════════════════════════════════════ */
+.modal__btf {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.modal__btf[aria-hidden="false"],
+.btf--active {
+  display: flex;
+}
+
+/* ─── 4节点时间线 ─── */
+.btf__timeline {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  position: relative;
+  padding: var(--space-sm) 0;
+}
+
+/* 节点之间的连接线（伪元素） */
+.btf__timeline::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--space-sm) + 5px);   /* 对齐节点圆心 */
+  left: 5px;
+  right: 5px;
+  height: 1px;
+  background: var(--border);
+  z-index: 0;
+}
+
+/* 单个节点 */
+.btf__node {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: none;
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.2s var(--ease-out);
+}
+
+.btf__node:not(.btf__node--active):not(.btf__node--done) {
+  opacity: 0.45;
+}
+
+/* 节点圆点 */
+.btf__node-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--bg-sub);
+  transition:
+    background 0.25s var(--ease-out),
+    border-color 0.25s var(--ease-out),
+    transform 0.25s var(--ease-out);
+}
+
+.btf__node--active .btf__node-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.3);
+}
+
+.btf__node--done .btf__node-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  opacity: 0.5;
+}
+
+/* 节点标签 */
+.btf__node-label {
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.btf__node--active .btf__node-label {
+  color: var(--accent);
+}
+
+/* ─── 内容区 ─── */
+.btf__content {
+  min-height: 160px;
+}
+
+.btf__panel {
+  animation: btf-panel-in 0.35s var(--ease-out) both;
+}
+
+@keyframes btf-panel-in {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Brief 面板 */
+.btf-brief__label {
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-sm);
+  opacity: 0.8;
+}
+
+.btf-brief__text {
+  color: var(--text-secondary);
+  line-height: var(--lh-body);
+  font-size: 0.875rem;
+}
+
+/* Tools 面板 */
+.btf-tools {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-sm);
+}
+
+.btf-tool {
+  border: 1px solid var(--border);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: 2px;
+  transition: border-color 0.2s var(--ease-out);
+}
+
+.btf-tool:hover {
+  border-color: var(--accent);
+}
+
+.btf-tool__name {
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.btf-tool__role {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+/* Craft 面板 */
+.btf-craft {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.btf-craft__img {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: 2px;
+  display: block;
+}
+
+.btf-craft__caption {
+  color: var(--text-muted);
+  margin-top: var(--space-xs);
+  font-size: 0.75rem;
+}
+
+/* Learning 面板 */
+.btf-learning__label {
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-sm);
+  opacity: 0.8;
+}
+
+.btf-learning__text {
+  color: var(--text-secondary);
+  line-height: var(--lh-body);
+  font-size: 0.875rem;
+}
+
+/* ─── 节点导航（上一步/下一步） ─── */
+.btf__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+}
+
+.btf__prev,
+.btf__next {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  cursor: none;
+  transition: color 0.2s var(--ease-out);
+}
+
+.btf__prev:hover:not(:disabled),
+.btf__next:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.btf__prev:disabled,
+.btf__next:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.btf__nav-indicator {
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+/* ═══════════════════════════════════════════
+   移动端：单列布局
+   ═══════════════════════════════════════════ */
+@media (max-width: 767px) {
+  .modal__panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: 40vh 1fr;
+    width: 100vw;
+    height: 100dvh;
+    border: none;
+  }
+
+  .modal__info-col {
+    padding: var(--space-lg);
+  }
+
+  .modal__btf-toggle {
+    margin-top: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   CH3 入口引导页（幕后章节）
+   ═══════════════════════════════════════════ */
+.ch3__inner {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 10vh var(--space-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.ch3__chapter-tag {
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  opacity: 0.8;
+}
+
+.ch3__title {
+  color: var(--text-primary);
+  line-height: var(--lh-tight);
+}
+
+.ch3__desc {
+  color: var(--text-secondary);
+  line-height: var(--lh-body);
+  font-size: 0.9rem;
+}
+
+/* 四节点预览行 */
+.ch3__nodes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+  position: relative;
+  padding-top: var(--space-md);
+}
+
+/* 连接线 */
+.ch3__nodes::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 5px;
+  right: 5px;
+  height: 1px;
+  background: var(--border);
+}
+
+.ch3__node {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: var(--space-sm);
+}
+
+.ch3__node-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  background: var(--bg-sub);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.ch3__node-name {
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  font-size: 0.65rem;
+}
+
+.ch3__node-desc {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 767px) {
+  .ch3__nodes {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ch3__inner {
+    padding: 6vh var(--space-lg);
+  }
+}
+
+/* ─── prefers-reduced-motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .modal__panel,
+  .modal__title,
+  .modal__tags,
+  .modal__brief,
+  .modal__media-img,
+  .btf__panel,
+  .btf__node-dot {
+    transition: none;
+    animation: none;
+  }
+}

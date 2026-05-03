@@ -1,0 +1,426 @@
+/* ═══════════════════════════════════════════
+   gallery.css — CH2 横向滚动画廊样式
+
+   布局结构：
+   .chapter--gallery          ← ScrollTrigger 的 pin trigger
+   ├── .gallery__header       ← 章节标题（pin 时固定左上角）
+   ├── .gallery__track-wrapper ← overflow: hidden 容器
+   │   └── .gallery__track   ← 横向轨道（gallery.js 动态设 width）
+   │       └── .gallery-card × N ← 作品卡片
+   └── .gallery__progress    ← 右下角进度指示器
+   ═══════════════════════════════════════════ */
+
+/* ─── 章节容器 ─── */
+.chapter--gallery {
+  position: relative;
+  width: 100%;
+  height: 100vh;       /* pin 住时保持全屏高度 */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* ─── 章节标题 ─── */
+.gallery__header {
+  position: absolute;
+  top: 10%;
+  left: var(--space-2xl);   /* 与内容区对齐 */
+  z-index: 10;
+  pointer-events: none;
+}
+
+.gallery__chapter-tag {
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  margin-bottom: var(--space-xs);
+  opacity: 0.8;
+}
+
+.gallery__title {
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.gallery__subtitle {
+  color: var(--text-muted);
+}
+
+/* ─── 横向轨道容器 ─── */
+.gallery__track-wrapper {
+  width: 100%;
+  overflow: hidden;
+  padding: 6vh 0;        /* 上下留出视觉呼吸 */
+}
+
+.gallery__track {
+  display: flex;
+  gap: 48px;
+  padding: 0 120px;      /* 首尾留白 = GALLERY_CONFIG.edgePadding */
+  align-items: center;
+  will-change: transform;
+}
+
+/* ═══════════════════════════════════════════
+   画廊卡片
+   ═══════════════════════════════════════════ */
+.gallery-card {
+  flex-shrink: 0;
+  width: 420px;
+  cursor: none;          /* 桌面端使用自定义光标 */
+  
+  /* velocity.js 通过 CSS 变量控制倾斜 */
+  --velocity-tilt: 0deg;
+  transform: perspective(1000px) rotateY(var(--velocity-tilt));
+  transition: transform 0.3s var(--ease-out);
+  
+  /* 入场动画初始状态（gallery.js ScrollTrigger 控制）*/
+  opacity: 0;
+}
+
+/* 媒体区 */
+.gallery-card__media {
+  position: relative;
+  width: 420px;
+  height: 560px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--bg-sub);
+}
+
+.gallery-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.8s var(--ease-out);
+  will-change: transform;
+}
+
+/* Hover：图片轻微放大 */
+.gallery-card:hover .gallery-card__img {
+  transform: scale(1.04);
+}
+
+/* Overlay：hover 时半透明遮罩（配合 PLAY 光标） */
+.gallery-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 11, 15, 0);
+  transition: background 0.4s var(--ease-out);
+  pointer-events: none;
+}
+
+.gallery-card:hover .gallery-card__overlay {
+  background: rgba(11, 11, 15, 0.3);
+}
+
+/* 卡片信息区 */
+.gallery-card__info {
+  padding: var(--space-sm) 0 0;
+}
+
+.gallery-card__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xs);
+}
+
+.gallery-card__num {
+  color: var(--accent);
+  letter-spacing: 0.08em;
+}
+
+.gallery-card__year {
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+}
+
+.gallery-card__title {
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+  line-height: var(--lh-tight);
+  /* h3 尺寸 — 比 h2 小，比 caption 大 */
+  font-size: 1.125rem;
+  font-weight: var(--fw-semibold);
+}
+
+.gallery-card__tags {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.gallery-card__tag {
+  font-size: 0.625rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: border-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
+}
+
+.gallery-card:hover .gallery-card__tag {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════
+   进度指示器（右下角）
+   ═══════════════════════════════════════════ */
+.gallery__progress {
+  position: absolute;
+  bottom: 10%;
+  right: var(--space-2xl);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.gallery__progress-bar {
+  width: 80px;
+  height: 1px;
+  background: var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.gallery__progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.1s linear;
+}
+
+.gallery__progress-label {
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+/* ═══════════════════════════════════════════
+   velocity.js — 速度线
+   ═══════════════════════════════════════════ */
+.velocity-speed-lines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.1s linear;
+}
+
+.velocity-speed-line {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--accent), transparent);
+  opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════════
+   easterEgg.js — 时间胶囊彩蛋
+   ═══════════════════════════════════════════ */
+#easter-egg {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s var(--ease-out);
+}
+
+#easter-egg.egg--active {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+#easter-egg.egg--closing {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 背景遮罩 */
+.egg__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 11, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* 粒子容器 */
+.egg__particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* 单个粒子点 */
+.egg__particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  background: var(--accent);
+  width: var(--size, 4px);
+  height: var(--size, 4px);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+#easter-egg.egg--active .egg__particle {
+  animation: egg-particle-burst 1.2s var(--delay, 0s) var(--ease-out) forwards;
+}
+
+@keyframes egg-particle-burst {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(0);
+  }
+  60% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--angle)) translateX(var(--dist));
+  }
+}
+
+/* 主卡片 */
+.egg__card {
+  position: relative;
+  z-index: 1;
+  width: min(560px, 90vw);
+  background: var(--bg-sub);
+  border: 1px solid var(--border);
+  padding: var(--space-2xl);
+  text-align: center;
+
+  /* 入场动画 */
+  transform: translateY(32px) scale(0.96);
+  transition: transform 0.6s 0.1s var(--ease-out);
+}
+
+#easter-egg.egg--active .egg__card {
+  transform: translateY(0) scale(1);
+}
+
+/* 圆点图标 */
+.egg__dot-icon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin: 0 auto var(--space-lg);
+  animation: motif-pulse 2s ease-in-out infinite;
+}
+
+/* 标签 */
+.egg__label {
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  margin-bottom: var(--space-lg);
+  opacity: 0.8;
+}
+
+/* 寄语内容 */
+.egg__message {
+  color: var(--text-secondary);
+  line-height: var(--lh-body);
+  font-size: 0.9rem;
+  margin-bottom: var(--space-lg);
+  text-align: left;
+}
+
+/* 署名 */
+.egg__author {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin-bottom: var(--space-sm);
+}
+
+/* PS */
+.egg__ps {
+  color: var(--accent);
+  opacity: 0.6;
+  font-size: 0.75rem;
+  margin-bottom: var(--space-xl);
+}
+
+/* 关闭按钮 */
+.egg__close {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: var(--space-xs) var(--space-lg);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  cursor: none;
+  transition: border-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
+}
+
+.egg__close:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════
+   移动端适配
+   ═══════════════════════════════════════════ */
+@media (max-width: 767px) {
+  .gallery__track {
+    padding: 0 24px;
+    gap: 24px;
+  }
+
+  .gallery-card {
+    width: 300px;
+  }
+
+  .gallery-card__media {
+    width: 300px;
+    height: 400px;
+  }
+
+  .gallery__header {
+    left: var(--space-lg);
+    top: 8%;
+  }
+
+  .gallery__progress {
+    right: var(--space-lg);
+  }
+
+  .gallery-card {
+    transform: none;   /* 移动端禁用倾斜效果 */
+  }
+}
+
+/* ─── prefers-reduced-motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .gallery-card,
+  .gallery-card__img,
+  .gallery-card__overlay,
+  .gallery-card__tag {
+    transition: none;
+  }
+
+  .egg__particle {
+    animation: none;
+  }
+
+  .egg__dot-icon {
+    animation: none;
+  }
+}

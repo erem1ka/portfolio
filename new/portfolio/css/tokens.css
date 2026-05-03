@@ -1,0 +1,161 @@
+/* ═══════════════════════════════════════════
+   tokens.css — 设计变量系统
+   整站所有可复用变量集中定义，确保一致性
+   ═══════════════════════════════════════════ */
+
+:root {
+  /* ─── Layer 1: 色温微偏的基础色 ───
+     拒绝 #000000 死黑，用略带冷调的深邃黑
+     叠加后形成"看不见但感觉得到"的质感 */
+  --bg-base: #0B0B0F;   /* 略带冷调的深邃黑，全局基础色 */
+  --bg-sub:  #131318;   /* 卡片、Modal 背景 */
+  --bg-deep: #08080B;   /* 最深处，如页面底部 */
+
+  /* ─── 文字色 ───
+     主文字用暖白 #F5F5F0，避免纯白刺眼
+     次文字 #8A8A85 满足 WCAG AA 对比度 */
+  --text-primary:   #F5F5F0;  /* 暖白，标题/导航 */
+  --text-secondary: #8A8A85;  /* 正文/辅助 */
+  --text-muted:     #555555;  /* 最弱信息 */
+
+  /* ─── 功能色 ─── */
+  --accent: #FF3B5C;    /* 强调色：圆点母题、CTA、Hover、选中态 */
+  --ai-tag: #00D4FF;    /* AIGC 标签、点缀 */
+  --border:  #2A2A2A;   /* hairline 1px 分割线 */
+
+  /* ─── 字号阶梯 ───
+     Hero 120px → H2 64px → H3 32px → 正文 16px → Caption 13px */
+  --fs-hero:    7.5rem;   /* 120px — Hero 主标题 */
+  --fs-hero-md: 6rem;     /* 96px — Hero 中等屏 */
+  --fs-h2:      4rem;     /* 64px — 章节标题 */
+  --fs-h3:      2rem;     /* 32px — 卡片标题 */
+  --fs-body:    1rem;     /* 16px — 正文 */
+  --fs-caption: 0.8125rem; /* 13px — Caption */
+  --fs-micro:   0.6875rem; /* 11px — 章节指示、计数器 */
+  --fs-nav:     0.75rem;   /* 12px — 导航标识 */
+
+  /* ─── 行高 ─── */
+  --lh-hero:  0.95;
+  --lh-h2:    1.0;
+  --lh-h3:    1.1;
+  --lh-body:  1.6;
+  --lh-caption: 1.5;
+
+  /* ─── 字重 ─── */
+  --fw-bold:   700;
+  --fw-semi:   600;
+  --fw-regular: 400;
+
+  /* ─── 间距系统（8px 基数）─── */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 1rem;     /* 16px */
+  --space-4: 1.5rem;   /* 24px */
+  --space-5: 2rem;     /* 32px */
+  --space-6: 3rem;     /* 48px — 卡片间距 */
+  --space-7: 4rem;     /* 64px */
+  --space-8: 6rem;     /* 96px — 章节间距 */
+
+  /* ─── 圆点母题尺寸 ─── */
+  --dot-loading:  4px;   /* Loading 脉冲 */
+  --dot-cursor:   16px;  /* 鼠标光标默认 */
+  --dot-hover:    64px;  /* Hover 作品变形 */
+  --dot-number:   8px;   /* 作品编号 ● */
+  --dot-progress: 6px;   /* 滚动进度游标 */
+
+  /* ─── 缓动曲线 ───
+     全局统一缓动，避免各处使用不同曲线 */
+  --ease-morph:   cubic-bezier(0.77, 0, 0.175, 1);   /* 圆点形态切换 */
+  --ease-out:     cubic-bezier(0.33, 1, 0.68, 1);    /* 通用 ease-out */
+  --ease-in-out:  cubic-bezier(0.65, 0, 0.35, 1);    /* 通用 ease-in-out */
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1); /* 弹性效果 */
+
+  /* ─── 过渡时长 ─── */
+  --duration-fast:    200ms;  /* Hover 微交互 */
+  --duration-normal:  300ms;  /* 标准过渡 */
+  --duration-morph:   500ms;  /* 圆点形态切换 */
+  --duration-reveal:  800ms;  /* 页面载入 reveal */
+  --duration-loading: 1800ms; /* Loading 序列 */
+
+  /* ─── 噪点纹理参数 ─── */
+  --noise-opacity: 0.045;  /* Layer 3 噪点透明度 */
+  --noise-frequency: 0.9;  /* feTurbulence baseFrequency */
+  --noise-octaves: 2;      /* feTurbulence numOctaves */
+
+  /* ─── 鼠标光斑参数 ─── */
+  --glow-radius: 600px;                     /* 光斑半径 */
+  --glow-center: rgba(255, 255, 255, 0.025); /* 光斑中心色 */
+  --glow-edge:   70%;                        /* 边缘透明度截止 */
+
+  /* ─── 鼠标位置（Layer 4 CSS 变量驱动）─── */
+  --mx: -9999px;  /* 默认关闭，移动端保持此值 */
+  --my: -9999px;
+
+  /* ─── 滚动进度 ─── */
+  --scroll-progress: 0;  /* 0→1，JS 实时更新 */
+
+  /* ─── z-index 严格管理 ───
+     四层背景 < 内容 < 浮动导航 < 光标/光斑 */
+  --z-noise:     1;     /* Layer 3 噪点 */
+  --z-glow:      2;     /* Layer 4 光斑 */
+  --z-content:   10;    /* 所有内容 */
+  --z-nav:       100;   /* 浮动导航 */
+  --z-overlay:   500;   /* 全屏导航覆盖 */
+  --z-modal:     800;   /* Modal */
+  --z-cursor:    9999;  /* 自定义光标 */
+
+  /* ─── 卡片规格 ─── */
+  --card-width:  480px;
+  --card-height: 640px;
+  --card-gap:    48px;   /* var(--space-6) */
+
+  /* ─── 响应式断点 ─── */
+  --bp-xl:  1440px;
+  --bp-lg:  1024px;
+  --bp-md:  768px;
+  --bp-sm:  480px;
+
+  /* ─── 速度线参数 ─── */
+  --speed-line-width: 3px;
+  --speed-line-opacity: 0.3;
+  --speed-threshold-normal: 1500;  /* px/s */
+  --speed-threshold-fast: 2500;    /* px/s */
+}
+
+/* ─── 响应式断点覆盖 ───
+   1024-1439px: 字号 ×0.9 */
+@media (max-width: 1439px) and (min-width: 1024px) {
+  :root {
+    --fs-hero: 6.75rem;
+    --fs-hero-md: 5.4rem;
+    --fs-h2: 3.6rem;
+    --fs-h3: 1.8rem;
+  }
+}
+
+/* ─── 移动端 (<768px) ─── */
+@media (max-width: 767px) {
+  :root {
+    --fs-hero: 2rem;     /* ≥32px */
+    --fs-hero-md: 2rem;
+    --fs-h2: 2rem;
+    --fs-h3: 1.25rem;    /* 20px */
+    --fs-body: 0.875rem; /* ≥14px */
+    --card-width: 100vw;
+    --card-height: auto;
+    --mx: -9999px;       /* 关闭 Layer 4 光斑 */
+    --my: -9999px;
+  }
+}
+
+/* ─── prefers-reduced-motion ───
+   所有复杂动效自动降级 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast:    0ms;
+    --duration-normal:  0ms;
+    --duration-morph:   0ms;
+    --duration-reveal:  0ms;
+    --duration-loading: 0ms;
+  }
+}

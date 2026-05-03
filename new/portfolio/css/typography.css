@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════
+   typography.css — 字体系统与字号阶梯
+   字体通过 Google Fonts CDN 加载（见 index.html head）
+   中文 fallback 到系统字体
+   ═══════════════════════════════════════════ */
+
+/* ─── 英文字体 ───
+   Inter: 正文与标题的通用英文字体
+   JetBrains Mono: 数字、代码、章节指示器 */
+.font-en,
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
+}
+
+/* ─── 中文字体 ───
+   HarmonyOS Sans: 华为鸿蒙字体，覆盖中文标题与正文
+   思源黑体 Heavy: Bold fallback
+   PingFang SC: macOS 系统中文 fallback */
+.font-cn {
+  font-family: 'HarmonyOS Sans', 'Noto Sans SC', 'PingFang SC',
+               'Microsoft YaHei', sans-serif;
+}
+
+/* ─── Hero 主标题 ───
+   120px / 96px(中), line-height 0.95, weight 700
+   超大字排版，字间距微负以收紧视觉 */
+.h-hero {
+  font-size: var(--fs-hero);
+  line-height: var(--lh-hero);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.02em;
+}
+
+.h-hero--md {
+  font-size: var(--fs-hero-md);
+}
+
+/* ─── H2 章节标题 ───
+   64px, line-height 1.0, weight 700 */
+.h-h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.01em;
+}
+
+/* ─── H3 卡片标题 ───
+   32px, line-height 1.1, weight 600 */
+.h-h3 {
+  font-size: var(--fs-h3);
+  line-height: var(--lh-h3);
+  font-weight: var(--fw-semi);
+}
+
+/* ─── 正文 ───
+   16px, line-height 1.6, weight 400 */
+.h-body {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  font-weight: var(--fw-regular);
+  color: var(--text-secondary);
+}
+
+/* ─── Caption ───
+   13px, line-height 1.5, uppercase + letter-spacing 4%
+   用于作品编号、年份、标签等辅助信息 */
+.h-caption {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-caption);
+  font-weight: var(--fw-regular);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+/* ─── Micro — 章节指示器、计数器 ───
+   JetBrains Mono 11px，用于右上角章节指示 */
+.h-micro {
+  font-size: var(--fs-micro);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: var(--fw-regular);
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+/* ─── 章节指示器专用 ───
+   右上角 "CH 02 · The Gallery 03/10" */
+.chapter-indicator {
+  font-size: var(--fs-micro);
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.chapter-indicator__number {
+  color: var(--accent);
+}
+
+/* ─── 作品编号圆点 ● 01 ───
+   圆点母题 + JetBrains Mono 数字 */
+.work-number {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-regular);
+  color: var(--text-secondary);
+}
+
+.work-number__dot {
+  width: var(--dot-number);
+  height: var(--dot-number);
+  border-radius: 50%;
+  background: var(--accent);
+  /* 圆点母题形态 4：作品编号 */
+}
+
+/* ─── 工具组合标签 ───
+   "AE × AIGC" 形式，圆点分隔 */
+.tool-tag {
+  font-size: var(--fs-caption);
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.tool-tag__separator {
+  margin: 0 var(--space-1);
+  color: var(--text-muted);
+}
+
+.tool-tag--ai {
+  color: var(--ai-tag);  /* AIGC 标签用 AI 辅色 */
+}
+
+/* ─── 年份 ───
+   JetBrains Mono 13px，次文字色 */
+.work-year {
+  font-size: var(--fs-caption);
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-muted);
+}
+
+/* ─── Navigation 标识 ───
+   左上角 12px 姓名 */
+.nav-identity {
+  font-size: var(--fs-nav);
+  font-weight: var(--fw-regular);
+  color: var(--text-primary);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}

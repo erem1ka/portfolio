@@ -1,0 +1,95 @@
+[
+  {
+    "id": "work-001",
+    "title": "Spring Festival Opening",
+    "titleCN": "春节开场动效",
+    "year": 2024,
+    "tools": ["AE", "AIGC", "PS"],
+    "category": "Motion Effects",
+    "featured": true,
+    "thumbnail": "https://picsum.photos/seed/work-001/480/640",
+    "poster": "https://picsum.photos/seed/work-001-poster/480/640",
+    "video": {
+      "mp4": "https://www.pexels.com/video/3571264/download.mp4",
+      "webm": ""
+    },
+    "behindTheFrame": {
+      "brief": "为抖音春节活动开场动效，要喜庆但不土，融入传统中国元素的同时保持现代感。",
+      "tools": [
+        { "name": "AE", "role": "主合成与关键帧动画" },
+        { "name": "Stable Diffusion", "role": "背景素材生成" },
+        { "name": "PS", "role": "素材后期处理" }
+      ],
+      "craft": [
+        {
+          "screenshot": "https://picsum.photos/seed/work-001-timeline/800/450",
+          "caption": "复杂的图层结构与缓动曲线编辑"
+        }
+      ],
+      "learning": "学到了 AIGC 生成的素材需要大量后期调整才能融入 AE 合成流，下次会更早介入 AI 素材的风格对齐。"
+    }
+  },
+  {
+    "id": "work-002",
+    "title": "Neural Bloom",
+    "titleCN": "神经绽放",
+    "year": 2024,
+    "tools": ["AE", "AIGC", "Cinema 4D"],
+    "category": "AIGC Motion",
+    "featured": true,
+    "thumbnail": "https://picsum.photos/seed/work-002/480/640",
+    "poster": "https://picsum.photos/seed/work-002-poster/480/640",
+    "video": {
+      "mp4": "https://www.pexels.com/video/5765215/download.mp4",
+      "webm": ""
+    },
+    "behindTheFrame": {
+      "brief": "实验性项目，探索 AI 生成素材与 AE 动效的融合方式，创造一种'有机生长'的视觉效果。",
+      "tools": [
+        { "name": "Midjourney", "role": "风格参考与概念生成" },
+        { "name": "AE", "role": "动态合成与粒子系统" },
+        { "name": "Cinema 4D", "role": "3D 基础模型与材质" }
+      ],
+      "craft": [
+        {
+          "screenshot": "https://picsum.photos/seed/work-002-c4d/800/450",
+          "caption": "C4D 中的有机体形态建模"
+        },
+        {
+          "screenshot": "https://picsum.photos/seed/work-002-ae/800/450",
+          "caption": "AE 表达式驱动的粒子扩散"
+        }
+      ],
+      "learning": "如果再做一次，会更注重 3D 到 AE 的管线优化，目前中间环节太多导致迭代速度慢。"
+    }
+  },
+  {
+    "id": "work-003",
+    "title": "Glitch Pulse",
+    "titleCN": "故障脉冲",
+    "year": 2023,
+    "tools": ["AE", "PS"],
+    "category": "Motion Effects",
+    "featured": true,
+    "thumbnail": "https://picsum.photos/seed/work-003/480/640",
+    "poster": "https://picsum.photos/seed/work-003-poster/480/640",
+    "video": {
+      "mp4": "https://www.pexels.com/video/3571264/download.mp4",
+      "webm": ""
+    },
+    "behindTheFrame": {
+      "brief": "品牌视觉标识的故障风格动画，需要在'混乱'中保持品牌辨识度。",
+      "tools": [
+        { "name": "AE", "role": "故障效果合成与时间重映射" },
+        { "name": "PS", "role": "帧级细节手工调整" }
+      ],
+      "craft": [
+        {
+          "screenshot": "https://picsum.photos/seed/work-003-glitch/800/450",
+          "caption": "AE Displacement Map + 时间拉伸组合"
+        }
+      ],
+      "learning": "故障效果最难的不是技术，是节奏。太乱就看不清，太规整就失去质感。下次会用更多音频驱动节奏。"
+    }
+  }
+]

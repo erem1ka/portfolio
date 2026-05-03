@@ -37,7 +37,6 @@ let DATA = {
   practice: [],
   practice2: [],
   mg: [],
-  'aigc-img': [],
   agent: [],
   contact: {
     name: '张峻烨',
@@ -56,7 +55,7 @@ let DATA = {
     aigc: { title:'Seedream 生图 + AE 木偶骨骼动效', desc:'AI 生成原画素材 → 透明抠图 → AE 骨骼点位绑定 → 循环动态打磨 → 抖音特效模板适配，完整「AI 素材生成→后期动态设计」全链路工作流' },
     agent: { title:'AI 智能体创意工作流工具集', desc:'基于 AIGC 开放 API 与智能体调度逻辑，自主搭建网页端设计辅助工具，整合素材生成、Prompt 管理、设计流程自动化能力' }
   },
-  cols: { practice:180, mg:180, 'aigc-img':180, agent:180 }
+  cols: { practice:180, mg:180, agent:180 }
 };
 
 let _publishTimer = null;
@@ -73,7 +72,7 @@ function loadData(){
     if(s){
       const d=JSON.parse(s);
       // 深度替换：用本地缓存完全替换各数组，防止浅合并残留旧数据
-      const SECTIONS = ['practice','practice2','mg','aigc-img','','agent'];
+      const SECTIONS = ['practice','practice2','mg','agent'];
       SECTIONS.forEach(sec=>{ DATA[sec] = d[sec] || []; });
       if(d.contact){
         // 合并时跳过空字符串，避免空值覆盖默认链接（如 douyin）
@@ -89,7 +88,7 @@ function loadData(){
       if(d.cols) {
         DATA.cols = d.cols;
         // Migrate old col-count values (1-8) or old default 100 to new default 180
-        const SECTIONS = ['practice','practice2','mg','aigc-img','','agent'];
+        const SECTIONS = ['practice','practice2','mg','agent'];
         SECTIONS.forEach(sec=>{
           if(DATA.cols[sec] !== undefined && (DATA.cols[sec] <= 8 || DATA.cols[sec] === 100)){
             DATA.cols[sec] = 180;
@@ -100,7 +99,7 @@ function loadData(){
       if(d.toolCards) DATA.toolCards = d.toolCards;
       DATA._version = d._version;
       let cleaned = false;
-      ['practice','mg','aigc-img','','agent'].forEach(sec => {
+      ['practice','mg','agent'].forEach(sec => {
         DATA[sec].forEach(item => {
           if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) { item.media=''; cleaned=true; }
           if(item.cover && (item.cover.startsWith('blob:') || item.cover.startsWith('data:'))) { item.cover=''; cleaned=true; }
@@ -161,7 +160,7 @@ async function publishDataToCloud() {
     
     // 清理 blob/data URL（刷新后无效），直接置空而不是推迟发布
     // 上传进行中的文件：用 fileID 还原云端 URL；无 fileID 则清空，等用户重新上传
-    ['practice','practice2','mg','aigc-img','','agent'].forEach(sec => {
+    ['practice','practice2','mg','agent'].forEach(sec => {
       if(!dataToSave[sec]) return;
       dataToSave[sec].forEach(item => {
         if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) item.media = '';
@@ -218,7 +217,7 @@ async function loadDataFromCloud(forceLoad) {
         // 云端数据更新，用云端的
         // 深度合并：确保所有子对象也被覆盖
         // 清理 blob/data 链接 + 修复旧 URL
-        ['practice','practice2','mg','aigc-img','','agent'].forEach(sec=>{
+        ['practice','practice2','mg','agent'].forEach(sec=>{
           if(!cloudData[sec]) cloudData[sec]=[];
           cloudData[sec].forEach(item=>{
             if(item.media && (item.media.startsWith('blob:') || item.media.startsWith('data:'))) item.media='';
@@ -237,7 +236,7 @@ async function loadDataFromCloud(forceLoad) {
         
         // 深度替换：用云端数据完全替换本地数据，而不是浅合并
         // 确保数组字段被完全替换（不会保留本地旧数组）
-        const SECTIONS = ['practice','practice2','mg','aigc-img','','agent'];
+        const SECTIONS = ['practice','practice2','mg','agent'];
         SECTIONS.forEach(sec=>{
           DATA[sec] = cloudData[sec] || [];
         });
@@ -255,7 +254,7 @@ async function loadDataFromCloud(forceLoad) {
         if(cloudData.tags) DATA.tags = cloudData.tags;
         if(cloudData.cols) {
           DATA.cols = cloudData.cols;
-          const SECTIONS2 = ['practice','practice2','mg','aigc-img','','agent'];
+          const SECTIONS2 = ['practice','practice2','mg','agent'];
           SECTIONS2.forEach(sec=>{
             if(DATA.cols[sec] !== undefined && (DATA.cols[sec] <= 8 || DATA.cols[sec] === 100)) DATA.cols[sec] = 180;
           });
@@ -291,7 +290,7 @@ function toggleTheme(){
 function toggleEdit(){
   // When exiting edit mode, purge empty cards (no media uploaded)
   if(editMode){
-    const sections = ['practice','practice2','mg','aigc-img','','agent'];
+    const sections = ['practice','practice2','mg','agent'];
     let cleaned = false;
     sections.forEach(sec=>{
       const before = (DATA[sec]||[]).length;
@@ -634,7 +633,6 @@ function renderAll(){
   renderGallerySection('practice');
   renderGallerySection('practice2');
   renderSection('mg', 'mg-grid', 'auto');
-  renderSection('aigc-img', 'aigc-img-grid', 'auto');
   renderSection('agent', 'agent-grid', 'auto');
   restoreCols();
   restoreSectionTitles();
@@ -655,8 +653,6 @@ window.addEventListener('resize', ()=>{
 
 function restoreCols(){
   const map = {
-    'practice-cols':'practice','practice2-cols':'practice2', 'mg-cols':'mg', 'aigc-img-cols':'aigc-img',
-    '-cols':'', 'agent-cols':'agent'
   };
   Object.entries(map).forEach(([inputId, key])=>{
     const inp = document.getElementById(inputId);
@@ -930,7 +926,6 @@ function restoreHeroNav(){
     'nav-aigc': 'AIGC',
     'nav-agent': '工具集',
     'nav-contact': '联系',
-    'aigc-img-label': 'AI 生成原画素材',
     'practice-vid-label': '特效 / 转场 / 模板'
   };
   Object.entries(fields).forEach(([id, def])=>{
@@ -962,7 +957,7 @@ async function deleteCard(id){
   // Find the item first to get its fileIDs for cloud storage cleanup
   let sec = '';
   let fileIDs = [];
-  ['practice','practice2','mg','aigc-img','','agent'].forEach(s=>{
+  ['practice','practice2','mg','agent'].forEach(s=>{
     const idx = DATA[s].findIndex(x=>x.id===id);
     if(idx>-1){
       sec = s;
@@ -1060,7 +1055,7 @@ fileInput.addEventListener('change', async ()=>{
 });
 
 function findItem(id){
-  for(const sec of ['practice','practice2','mg','aigc-img','','agent']){
+  for(const sec of ['practice','practice2','mg','agent']){
     const it = DATA[sec].find(x=>x.id===id);
     if(it) return it;
   }
@@ -1068,7 +1063,7 @@ function findItem(id){
 }
 
 function findSection(id){
-  for(const sec of ['practice','practice2','mg','aigc-img','','agent']){
+  for(const sec of ['practice','practice2','mg','agent']){
     if(DATA[sec].find(x=>x.id===id)) return sec;
   }
   return null;
@@ -1346,7 +1341,6 @@ function enableDragSort() {
   const GRIDS = [
     ['practice-grid', 'practice'],
     ['mg-grid', 'mg'],
-    ['aigc-img-grid', 'aigc-img'],
     ['agent-grid', 'agent'],
   ];
   GRIDS.forEach(([gridId, key]) => {
