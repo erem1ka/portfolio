@@ -6,9 +6,7 @@
 
 ## 🚀 在线访问
 
-**GitHub Pages（主站）：** [https://erem1ka.github.io/portfolio/docs/v2/](https://erem1ka.github.io/portfolio/docs/v2/)
-
-**预览页：** [https://erem1ka.github.io/portfolio/docs/v2-preview.html](https://erem1ka.github.io/portfolio/docs/v2-preview.html)
+**GitHub Pages（主站）：** https://erem1ka.github.io/portfolio/v2/
 
 ---
 
