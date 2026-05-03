@@ -662,31 +662,32 @@
     #card-flip-overlay {
       position: fixed; inset: 0; z-index: 400;
       display: flex; align-items: center; justify-content: center;
-      pointer-events: none; perspective: 1200px;
+      pointer-events: none;
     }
     #card-flip-overlay.active { pointer-events: all; }
     #card-flip-backdrop {
       position: absolute; inset: 0;
       background: rgba(26,22,18,0);
-      transition: background .35s ease;
+      transition: background .38s ease;
       cursor: pointer;
     }
     #card-flip-overlay.active #card-flip-backdrop {
-      background: rgba(26,22,18,.82);
+      background: rgba(26,22,18,.84);
     }
     #card-flip-box {
-      position: absolute;
-      transform-style: preserve-3d;
+      position: fixed;
       transform-origin: center center;
+      will-change: transform, opacity;
       transition: none;
+      border-radius: 8px;
+      overflow: hidden;
     }
     #card-flip-box img, #card-flip-box video {
       display: block;
+      width: 100%; height: 100%;
+      object-fit: contain;
       border-radius: 8px;
       box-shadow: 0 32px 80px rgba(0,0,0,.5);
-      max-width: 88vw; max-height: 88vh;
-      object-fit: contain;
-      backface-visibility: hidden;
     }
     .cfb-close {
       position: absolute; top: -36px; right: 0;
@@ -1623,28 +1624,49 @@ document.addEventListener('click', e=>{
   document.querySelectorAll('.vcard').forEach(applyTilt);
 })();
 
-// ── 卡片点击：飞出翻转放大 ──
+// ── 卡片点击：FLIP 放大动画 ──
 (function(){
   const ov = document.createElement('div');
   ov.id = 'card-flip-overlay';
   const bd = document.createElement('div'); bd.id = 'card-flip-backdrop';
   const box = document.createElement('div'); box.id = 'card-flip-box';
   const closeBtn = document.createElement('div');
-  closeBtn.className = 'cfb-close'; closeBtn.textContent = 'ESC  CLOSE'; closeBtn.style.display = 'none';
+  closeBtn.className = 'cfb-close'; closeBtn.textContent = 'ESC  CLOSE'; closeBtn.style.display='none';
   box.appendChild(closeBtn);
   ov.appendChild(bd); ov.appendChild(box);
   document.body.appendChild(ov);
 
+  // 记录动画起始的卡片 rect，关闭时用
+  let _originRect = null;
+
   function closeOverlay(){
     if(!ov.classList.contains('active')) return;
     ov.classList.remove('active');
-    box.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1), opacity .28s';
-    box.style.transform = (box.style.transform||'') + ' scale(0.05)';
-    box.style.opacity = '0';
+    closeBtn.style.display = 'none';
+
+    // 关闭：缩回原卡片位置
+    if(_originRect){
+      const vw = window.innerWidth, vh = window.innerHeight;
+      // 当前 box 在屏幕中央 (tx, ty, nw, nh)
+      const nw = box.offsetWidth, nh = box.offsetHeight;
+      const tx = (vw - nw) / 2, ty = (vh - nh) / 2;
+      const scaleX = _originRect.width / nw;
+      const scaleY = _originRect.height / nh;
+      const dx = _originRect.left + _originRect.width/2 - (tx + nw/2);
+      const dy = _originRect.top  + _originRect.height/2 - (ty + nh/2);
+      box.style.transition = 'transform .28s cubic-bezier(.4,0,1,1), opacity .25s ease';
+      box.style.transform = `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
+      box.style.opacity = '0';
+    } else {
+      box.style.transition = 'transform .28s cubic-bezier(.4,0,1,1), opacity .25s ease';
+      box.style.transform = 'scale(0.06)';
+      box.style.opacity = '0';
+    }
     setTimeout(()=>{
       box.innerHTML=''; box.appendChild(closeBtn);
       box.removeAttribute('style');
-    }, 320);
+      _originRect = null;
+    }, 300);
   }
 
   bd.addEventListener('click', closeOverlay);
@@ -1654,61 +1676,69 @@ document.addEventListener('click', e=>{
   window.openMedia = function openMedia(triggerEl, mediaEl){
     const app = document.getElementById('app');
     if(app.classList.contains('editing')) return;
+
+    // FLIP: 记录起始位置（First）
     const rect = triggerEl.getBoundingClientRect();
+    _originRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+
     // 检查是否是视频卡片
     const cardType = triggerEl.dataset.type || '';
     const isVideoCard = cardType==='mp4' || cardType==='video';
-    // 查找视频数据源
     const videoSrc = isVideoCard ? findVideoSrc(triggerEl) : '';
 
+    // 计算目标尺寸（Last）
     const vw = window.innerWidth, vh = window.innerHeight;
-    const nw = Math.min(vw*.88, Math.max(rect.width*2.8, 480));
-    const nh = Math.min(vh*.86, Math.max(rect.height*2.8, 320));
-    const tx = (vw-nw)/2; const ty = (vh-nh)/2;
+    const nw = Math.min(vw * .88, Math.max(rect.width * 2.8, 480));
+    const nh = Math.min(vh * .86, Math.max(rect.height * 2.8, 320));
+    const tx = (vw - nw) / 2;
+    const ty = (vh - nh) / 2;
 
+    // 准备 box：放到最终位置，内容清空
     box.innerHTML=''; box.appendChild(closeBtn);
+    Object.assign(box.style, {
+      left: tx + 'px', top: ty + 'px',
+      width: nw + 'px', height: nh + 'px',
+      transition: 'none', opacity: '1'
+    });
 
+    // FLIP: Invert — 计算从卡片位置到中央需要的初始 transform
+    const scaleX = rect.width / nw;
+    const scaleY = rect.height / nh;
+    const dx = (rect.left + rect.width/2) - (tx + nw/2);
+    const dy = (rect.top  + rect.height/2) - (ty + nh/2);
+    box.style.transform = `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
+    box.style.opacity = '0';
+
+    // 创建媒体内容
     if(isVideoCard && videoSrc){
-      // 视频卡片：创建 video 元素并播放
       const video = document.createElement('video');
       video.src = videoSrc;
-      video.controls = true;
-      video.playsInline = true;
+      video.controls = true; video.playsInline = true;
       video.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;display:block';
       box.appendChild(video);
-      Object.assign(box.style, {
-        left:rect.left+'px', top:rect.top+'px',
-        width:rect.width+'px', height:rect.height+'px',
-        transform:'rotateY(0deg) scale(1)', opacity:'1', transition:'none'
-      });
-      ov.classList.add('active');
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        box.style.transition = 'left .5s cubic-bezier(.2,.8,.2,1), top .5s cubic-bezier(.2,.8,.2,1), width .5s, height .5s, transform .55s cubic-bezier(.2,.8,.2,1)';
-        box.style.left = tx+'px'; box.style.top = ty+'px';
-        box.style.width = nw+'px'; box.style.height = nh+'px';
-        box.style.transform = 'rotateY(360deg) scale(1)';
-        video.play().catch(()=>{});
-      }));
     } else {
-      // 图片卡片：克隆图片
       const clone = mediaEl.cloneNode(true);
-      clone.removeAttribute('style');
+      clone.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;display:block';
       box.appendChild(clone);
-      Object.assign(box.style, {
-        left:rect.left+'px', top:rect.top+'px',
-        width:rect.width+'px', height:rect.height+'px',
-        transform:'rotateY(0deg) scale(1)', opacity:'1', transition:'none'
-      });
-      ov.classList.add('active');
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        box.style.transition = 'left .5s cubic-bezier(.2,.8,.2,1), top .5s cubic-bezier(.2,.8,.2,1), width .5s, height .5s, transform .55s cubic-bezier(.2,.8,.2,1)';
-        box.style.left = tx+'px'; box.style.top = ty+'px';
-        box.style.width = nw+'px'; box.style.height = nh+'px';
-        box.style.transform = 'rotateY(360deg) scale(1)';
-        clone.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:8px;display:block';
-      }));
     }
-  }
+
+    ov.classList.add('active');
+
+    // FLIP: Play — 下一帧动画到中央（transform: none）
+    requestAnimationFrame(()=>{
+      // 强制浏览器完成一次渲染后再设置动画
+      box.getBoundingClientRect(); // force reflow
+      box.style.transition = 'transform .42s cubic-bezier(.34,1.28,.64,1), opacity .28s ease';
+      box.style.transform = 'translate(0,0) scale(1)';
+      box.style.opacity = '1';
+      if(isVideoCard && videoSrc){
+        const v = box.querySelector('video');
+        if(v) setTimeout(()=>v.play().catch(()=>{}), 200);
+      }
+      // 动画结束后显示关闭按钮
+      setTimeout(()=>{ closeBtn.style.display=''; }, 380);
+    });
+  };
 
   // 从卡片元素或 DATA 中查找视频 URL
   function findVideoSrc(cardEl){
