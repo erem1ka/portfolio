@@ -44,9 +44,9 @@
       --color-sub:  #8b949e;   /* GitHub secondary text */
       --color-dim:  #6e7681;   /* GitHub muted text */
       --color-sep:  rgba(240,246,252,0.10); /* GitHub border */
-      --accent:     #EC9A6E;   /* Warm accent (brand identity) */
-      --accent-dark:#CC7648;   /* Warm dark accent */
-      --accent-light:#F8D0B8;  /* Warm light accent */
+      --accent:     #58a6ff;   /* GitHub link blue */
+      --accent-dark:#1f6feb;   /* GitHub darker blue */
+      --accent-light:#a5d6ff;  /* GitHub light blue */
     }
     body.dark { background: var(--bg-page); color: var(--color-main); }
 
@@ -1381,7 +1381,7 @@ function triggerThemeToggle(e){
     p.style.cssText = `
       position:fixed; z-index:9995; pointer-events:none;
       width:${size}px; height:${size}px; border-radius:50%;
-      background:${isDark ? 'var(--accent)' : 'var(--accent-dark)'};
+      background:${isDark ? 'var(--accent)' : 'var(--accent)'};
       left:${cx}px; top:${cy}px;
       transform:translate(-50%,-50%);
       transition: left .5s cubic-bezier(.2,.8,.2,1),
@@ -1407,7 +1407,7 @@ function triggerThemeToggle(e){
     pointer-events:none;
     width:${maxR}px; height:${maxR}px;
     left:${cx - maxR/2}px; top:${cy - maxR/2}px;
-    background:${isDark ? 'rgba(236,154,110,.15)' : 'rgba(26,22,18,.12)'};
+    background:${isDark ? 'rgba(88,166,255,.15)' : 'rgba(26,22,18,.12)'};
     transform:scale(0); opacity:.7;
   `;
   ripple.classList.remove('rippling');
