@@ -38,12 +38,12 @@
       --sidebar-w:  260px;
     }
     .dark {
-      --bg-page:    #0B0A0E;
-      --bg-card:    #18171C;
-      --color-main: #EFEAE4;
-      --color-sub:  #B2A9A0;
-      --color-dim:  #8A8178;
-      --color-sep:  rgba(255,248,240,0.10);
+      --bg-page:    #0d1117;
+      --bg-card:    #161b22;
+      --color-main: #e6edf3;
+      --color-sub:  #8b949e;
+      --color-dim:  #6e7681;
+      --color-sep:  rgba(240,246,252,0.10);
       --accent:     #EC9A6E;
       --accent-dark:#CC7648;
       --accent-light:#F8D0B8;
@@ -180,7 +180,7 @@
       backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--color-sep);
     }
-    .dark header { background: rgba(11,10,14,.93); }
+    .dark header { background: rgba(13,17,23,.94); }
 
     /* 深色模式：统一背景，消除色块差异 */
     .dark .bg-mod1, .dark .bg-mod2, .dark .bg-mod3, .dark .bg-mod4 { background: var(--bg-page) !important; }
@@ -525,23 +525,23 @@
       border: 1.5px dashed rgba(200,145,122,.4);
       background: rgba(245,240,235,.92);
     }
-    .dark .upload-ov { background: rgba(11,10,14,.93); }
+    .dark .upload-ov { background: rgba(13,17,23,.94); }
     /* 深色模式：卡片用暗影（而非亮色高光）营造深度 */
     .dark .gallery-card:hover, .dark .gallery-card-clone:hover {
       border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(236,154,110,.25), 0 12px 36px rgba(0,0,0,.6);
+      box-shadow: 0 0 0 1px rgba(236,154,110,.3), 0 8px 24px rgba(0,0,0,.5);
     }
     .dark .vcard:hover {
       border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(236,154,110,.2), 0 20px 48px rgba(0,0,0,.65);
+      box-shadow: 0 0 0 1px rgba(236,154,110,.25), 0 12px 36px rgba(0,0,0,.55);
     }
     .dark .play-circle {
       background: rgba(236,154,110,.85);
-      box-shadow: 0 0 24px rgba(236,154,110,.35), 0 4px 12px rgba(0,0,0,.3);
+      box-shadow: 0 0 20px rgba(236,154,110,.3), 0 2px 8px rgba(0,0,0,.3);
     }
     .dark .vcard:hover .play-circle {
       background: rgba(236,154,110,.95);
-      box-shadow: 0 0 32px rgba(236,154,110,.5);
+      box-shadow: 0 0 28px rgba(236,154,110,.45);
     }
     .dark .card-media { background: var(--bg-card); }
     .dark .no-thumb { background: var(--bg-card); }
@@ -610,7 +610,7 @@
     /* ── Image zoom ── */
     #img-zoom-wrap {
       position: fixed; inset: 0; z-index: 200;
-      background: rgba(11,10,14,.92);
+      background: rgba(13,17,23,.92);
       display: none; align-items: center; justify-content: center;
     }
     #img-zoom-wrap.open { display: flex; }
@@ -622,7 +622,7 @@
     /* ── Edit menu ── */
     #editMenu {
       display: none; position: fixed; inset: 0; z-index: 300;
-      background: rgba(11,10,14,.5);
+      background: rgba(13,17,23,.5);
       align-items: center; justify-content: center;
     }
     #editMenu.open { display: flex; }
@@ -672,7 +672,7 @@
     .anim-play-label {
       position: absolute; bottom: 6px; right: 8px;
       font-family: 'Space Mono', monospace; font-size: .48rem;
-      color: rgba(240,235,229,.7); background: rgba(11,10,14,.5);
+      color: rgba(240,235,229,.7); background: rgba(13,17,23,.5);
       padding: 2px 6px; border-radius: 3px; pointer-events: none;
     }
 
@@ -690,12 +690,12 @@
     #card-flip-overlay.active { pointer-events: all; }
     #card-flip-backdrop {
       position: absolute; inset: 0;
-      background: rgba(11,10,14,0);
+      background: rgba(13,17,23,0);
       transition: background .38s ease;
       cursor: pointer;
     }
     #card-flip-overlay.active #card-flip-backdrop {
-      background: rgba(11,10,14,.86);
+      background: rgba(13,17,23,.88);
     }
     /* stage: FLIP 位移+缩放层 */
     #card-flip-stage {
@@ -762,7 +762,7 @@
     /* ── QR zoom ── */
     #qr-zoom-wrap {
       position: fixed; inset: 0; z-index: 250;
-      background: rgba(11,10,14,.85);
+      background: rgba(13,17,23,.85);
       display: none; align-items: center; justify-content: center;
     }
     #qr-zoom-wrap.open { display: flex; }
@@ -1286,7 +1286,7 @@
 <!-- footer 已移除，copyright 在 sidebar -->
 
 <!-- ── Overlays ── -->
-<div id="playerBackdrop" onclick="closeInlinePlayer()" style="display:none;position:fixed;inset:0;z-index:199;background:rgba(11,10,14,.85)"></div>
+<div id="playerBackdrop" onclick="closeInlinePlayer()" style="display:none;position:fixed;inset:0;z-index:199;background:rgba(13,17,23,.88)"></div>
 <div class="inline-player" id="inlinePlayer" style="display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:200;background:var(--bg-card);border-radius:12px 12px 0 0;padding:16px;max-width:700px;width:100%">
   <button class="inline-player-close" onclick="closeInlinePlayer()" style="position:absolute;top:12px;right:16px;font-family:'Space Mono',monospace;font-size:.7rem;color:var(--color-sub);background:none;border:none;cursor:pointer">✕ 关闭</button>
   <video id="inlineVideo" controls playsinline style="width:100%;border-radius:8px"></video>
@@ -1415,7 +1415,7 @@ function triggerThemeToggle(e){
 
   // 3. 整页 clip-path 扩散（切换颜色）
   const spread = document.getElementById('theme-spread');
-  spread.style.background = isDark ? 'var(--bg-page)' : '#0B0A0E';
+  spread.style.background = isDark ? 'var(--bg-page)' : '#0d1117';
   spread.classList.remove('spreading');
   void spread.offsetWidth;
   spread.classList.add('spreading');
