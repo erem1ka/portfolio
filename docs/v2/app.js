@@ -138,6 +138,13 @@ async function publishDataToCloud() {
     return;
   }
   
+  // 安全锁：只有编辑者设备才能推送数据到云端
+  const isEditor = !!localStorage.getItem('portfolio_v2_editor_token');
+  if (!isEditor) {
+    console.log('⛔ 非编辑者设备，跳过云端推送');
+    return;
+  }
+  
   try {
     // Safety check: only push if local version >= cloud version
     const cloudVer = await loadCloudDataVersion();
@@ -1530,11 +1537,16 @@ async function init(){
     
     if (cloudVer > 0 && localVersion > 0) {
       // 两边都有数据 → 比较版本号决定方向
-      if (localVersion > cloudVer) {
-        // 本地更新（刚导入/刚编辑） → 推送本地到云端
+      const isEditor = !!localStorage.getItem('portfolio_v2_editor_token');
+      if (localVersion > cloudVer && isEditor) {
+        // 编辑者设备 + 本地更新 → 推送本地到云端
         console.log('📤 本地数据更新(v' + localVersion + '> v' + cloudVer + ')，推送到云端...');
         await publishDataToCloud();
         renderAll();
+      } else if (localVersion > cloudVer && !isEditor) {
+        // 非编辑者设备 — 本地可能有脏数据，以云端为准
+        console.log('☁ 非编辑者设备，云端为准(v' + cloudVer + ')，重新加载...');
+        await loadDataFromCloud(true);
       } else {
         // 云端更新 → 拉取云端覆盖本地
         console.log('☁ 云端数据更新(v' + cloudVer + ')，正在加载...');
