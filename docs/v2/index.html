@@ -1624,7 +1624,7 @@ document.addEventListener('click', e=>{
   document.querySelectorAll('.vcard').forEach(applyTilt);
 })();
 
-// ── 卡片点击：FLIP 放大动画 ──
+// ── 卡片点击：FLIP 放大动画（画廊卡片附加翻转效果）──
 (function(){
   const ov = document.createElement('div');
   ov.id = 'card-flip-overlay';
@@ -1637,6 +1637,7 @@ document.addEventListener('click', e=>{
   document.body.appendChild(ov);
 
   let _originRect = null;
+  let _isGalleryOpen = false;
 
   function closeOverlay(){
     if(!ov.classList.contains('active')) return;
@@ -1650,8 +1651,10 @@ document.addEventListener('click', e=>{
       const scaleY = _originRect.height / nh;
       const dx = _originRect.left + _originRect.width/2 - (tx + nw/2);
       const dy = _originRect.top  + _originRect.height/2 - (ty + nh/2);
-      box.style.transition = 'transform .28s cubic-bezier(.4,0,1,1), opacity .25s ease';
-      box.style.transform = `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
+      box.style.transition = 'transform .3s cubic-bezier(.4,0,1,1), opacity .25s ease';
+      box.style.transform = _isGalleryOpen
+        ? `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY}) rotateY(-90deg)`
+        : `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
       box.style.opacity = '0';
     } else {
       box.style.transition = 'transform .28s cubic-bezier(.4,0,1,1), opacity .25s ease';
@@ -1662,7 +1665,8 @@ document.addEventListener('click', e=>{
       box.innerHTML=''; box.appendChild(closeBtn);
       box.removeAttribute('style');
       _originRect = null;
-    }, 300);
+      _isGalleryOpen = false;
+    }, 310);
   }
 
   bd.addEventListener('click', closeOverlay);
@@ -1674,6 +1678,8 @@ document.addEventListener('click', e=>{
     if(app.classList.contains('editing')) return;
     const rect = triggerEl.getBoundingClientRect();
     _originRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+    const isGalleryCard = triggerEl.classList.contains('gallery-card') || triggerEl.classList.contains('gallery-card-clone');
+    _isGalleryOpen = isGalleryCard;
     const cardType = triggerEl.dataset.type || '';
     const isVideoCard = cardType==='mp4' || cardType==='video';
     const videoSrc = isVideoCard ? findVideoSrc(triggerEl) : '';
@@ -1686,13 +1692,16 @@ document.addEventListener('click', e=>{
     Object.assign(box.style, {
       left: tx + 'px', top: ty + 'px',
       width: nw + 'px', height: nh + 'px',
-      transition: 'none', opacity: '1'
+      transition: 'none', opacity: '1',
+      perspective: isGalleryCard ? '1200px' : ''
     });
     const scaleX = rect.width / nw;
     const scaleY = rect.height / nh;
     const dx = (rect.left + rect.width/2) - (tx + nw/2);
     const dy = (rect.top  + rect.height/2) - (ty + nh/2);
-    box.style.transform = `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
+    box.style.transform = isGalleryCard
+      ? `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY}) rotateY(-90deg)`
+      : `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
     box.style.opacity = '0';
     if(isVideoCard && videoSrc){
       const video = document.createElement('video');
@@ -1708,14 +1717,19 @@ document.addEventListener('click', e=>{
     ov.classList.add('active');
     requestAnimationFrame(()=>{
       box.getBoundingClientRect();
-      box.style.transition = 'transform .42s cubic-bezier(.34,1.28,.64,1), opacity .28s ease';
-      box.style.transform = 'translate(0,0) scale(1)';
+      if(isGalleryCard){
+        box.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1), opacity .22s ease';
+        box.style.transform = 'translate(0,0) scale(1) rotateY(0deg)';
+      } else {
+        box.style.transition = 'transform .42s cubic-bezier(.34,1.28,.64,1), opacity .28s ease';
+        box.style.transform = 'translate(0,0) scale(1)';
+      }
       box.style.opacity = '1';
       if(isVideoCard && videoSrc){
         const v = box.querySelector('video');
         if(v) setTimeout(()=>v.play().catch(()=>{}), 200);
       }
-      setTimeout(()=>{ closeBtn.style.display=''; }, 380);
+      setTimeout(()=>{ closeBtn.style.display=''; }, 420);
     });
   };
 

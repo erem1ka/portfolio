@@ -1636,8 +1636,9 @@ document.addEventListener('click', e=>{
   ov.appendChild(bd); ov.appendChild(box);
   document.body.appendChild(ov);
 
-  // 记录动画起始的卡片 rect，关闭时用
+  // 记录动画起始的卡片 rect 与类型，关闭时用
   let _originRect = null;
+  let _isGalleryOpen = false;
 
   function closeOverlay(){
     if(!ov.classList.contains('active')) return;
@@ -1647,15 +1648,16 @@ document.addEventListener('click', e=>{
     // 关闭：缩回原卡片位置
     if(_originRect){
       const vw = window.innerWidth, vh = window.innerHeight;
-      // 当前 box 在屏幕中央 (tx, ty, nw, nh)
       const nw = box.offsetWidth, nh = box.offsetHeight;
       const tx = (vw - nw) / 2, ty = (vh - nh) / 2;
       const scaleX = _originRect.width / nw;
       const scaleY = _originRect.height / nh;
       const dx = _originRect.left + _originRect.width/2 - (tx + nw/2);
       const dy = _originRect.top  + _originRect.height/2 - (ty + nh/2);
-      box.style.transition = 'transform .28s cubic-bezier(.4,0,1,1), opacity .25s ease';
-      box.style.transform = `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
+      box.style.transition = 'transform .3s cubic-bezier(.4,0,1,1), opacity .25s ease';
+      box.style.transform = _isGalleryOpen
+        ? `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY}) rotateY(-90deg)`
+        : `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
       box.style.opacity = '0';
     } else {
       box.style.transition = 'transform .28s cubic-bezier(.4,0,1,1), opacity .25s ease';
@@ -1666,7 +1668,8 @@ document.addEventListener('click', e=>{
       box.innerHTML=''; box.appendChild(closeBtn);
       box.removeAttribute('style');
       _originRect = null;
-    }, 300);
+      _isGalleryOpen = false;
+    }, 310);
   }
 
   bd.addEventListener('click', closeOverlay);
@@ -1680,6 +1683,10 @@ document.addEventListener('click', e=>{
     // FLIP: 记录起始位置（First）
     const rect = triggerEl.getBoundingClientRect();
     _originRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+
+    // 判断是否是画廊卡片（使用翻转动画）
+    const isGalleryCard = triggerEl.classList.contains('gallery-card') || triggerEl.classList.contains('gallery-card-clone');
+    _isGalleryOpen = isGalleryCard;
 
     // 检查是否是视频卡片
     const cardType = triggerEl.dataset.type || '';
@@ -1698,15 +1705,21 @@ document.addEventListener('click', e=>{
     Object.assign(box.style, {
       left: tx + 'px', top: ty + 'px',
       width: nw + 'px', height: nh + 'px',
-      transition: 'none', opacity: '1'
+      transition: 'none', opacity: '1',
+      perspective: isGalleryCard ? '1200px' : ''
     });
 
-    // FLIP: Invert — 计算从卡片位置到中央需要的初始 transform
+    // FLIP: Invert — 计算从卡片位置到中央的初始 transform
     const scaleX = rect.width / nw;
     const scaleY = rect.height / nh;
     const dx = (rect.left + rect.width/2) - (tx + nw/2);
     const dy = (rect.top  + rect.height/2) - (ty + nh/2);
-    box.style.transform = `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
+
+    // 画廊卡片：初始带 rotateY(-90deg) 表示翻转起始面
+    // 其他卡片：纯 FLIP
+    box.style.transform = isGalleryCard
+      ? `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY}) rotateY(-90deg)`
+      : `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
     box.style.opacity = '0';
 
     // 创建媒体内容
@@ -1724,20 +1737,25 @@ document.addEventListener('click', e=>{
 
     ov.classList.add('active');
 
-    // FLIP: Play — 下一帧动画到中央（transform: none）
+    // FLIP: Play — 动画到中央
     requestAnimationFrame(()=>{
-      // 强制浏览器完成一次渲染后再设置动画
       box.getBoundingClientRect(); // force reflow
-      box.style.transition = 'transform .42s cubic-bezier(.34,1.28,.64,1), opacity .28s ease';
-      box.style.transform = 'translate(0,0) scale(1)';
+      if(isGalleryCard){
+        // 画廊卡片：先快速位移到中央（同时翻转），弹性曲线
+        box.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1), opacity .22s ease';
+        box.style.transform = 'translate(0,0) scale(1) rotateY(0deg)';
+      } else {
+        box.style.transition = 'transform .42s cubic-bezier(.34,1.28,.64,1), opacity .28s ease';
+        box.style.transform = 'translate(0,0) scale(1)';
+      }
       box.style.opacity = '1';
       if(isVideoCard && videoSrc){
         const v = box.querySelector('video');
         if(v) setTimeout(()=>v.play().catch(()=>{}), 200);
       }
-      // 动画结束后显示关闭按钮
-      setTimeout(()=>{ closeBtn.style.display=''; }, 380);
+      setTimeout(()=>{ closeBtn.style.display=''; }, 420);
     });
+  };
   };
 
   // 从卡片元素或 DATA 中查找视频 URL
