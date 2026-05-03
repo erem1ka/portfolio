@@ -1159,7 +1159,7 @@
         
         <div class="section-title-text">
           <h2 class="section-h2" id="aigc-title" contenteditable="false">AIGC — Generative Workflow</h2>
-          <p class="section-desc" id="aigc-desc" contenteditable="false">Seedream 生图 + AE 木偶骨骼动效 — AI 生成原画素材 → 透明抠图 → AE 骨骼点位绑定 → 循环动态打磨 → 抖音特效模板适配</p>
+          <p class="section-desc" id="aigc-desc" contenteditable="false">AI 生成原画素材 → 透明抠图 → AE 骨骼点位绑定 → 循环动态打磨 → 抖音特效模板适配</p>
         </div>
       </div>
     </div>
@@ -1170,16 +1170,6 @@
     <div class="work-grid" data-row-h="160" id="aigc-img-grid" style="--cols:8"></div>
     <div class="add-card mt-2" id="aigc-img-add" onclick="addWorkCard('aigc-img','auto')">
       <div class="add-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加图片</div>
-    </div>
-    <div style="margin-top:48px">
-      <div class="sub-label">· AE 木偶骨骼绑定动效
-        <span class="cols-ctrl"><input class="cols-input" id="aigc-vid-cols" type="number" min="60" max="300" value="100" onchange="setGridCols('aigc-vid-grid',this.value)"></span>
-      </div>
-      <span id="aigc-vid-label" style="display:none" contenteditable="false"></span>
-      <div class="masonry-grid" data-row-h="160" id="aigc-vid-grid" style="--cols:8"></div>
-      <div class="add-card mt-2" id="aigc-vid-add" onclick="addWorkCard('aigc-vid','auto')">
-        <div class="add-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加动效</div>
-      </div>
     </div>
     <div style="margin-top:48px">
       <div class="sub-label">· Prompt 工程
@@ -1801,7 +1791,7 @@ document.addEventListener('click', e=>{
   function findVideoSrc(cardEl){
     const id = cardEl.dataset.id;
     if(!id) return '';
-    for(const sec of ['practice','practice2','mg','aigc-img','aigc-vid','aigc-prompt','agent']){
+    for(const sec of ['practice','practice2','mg','aigc-img',,'aigc-prompt','agent']){
       const item = (DATA[sec]||[]).find(x=>x.id===id);
       if(item && item.media) return item.media;
     }
