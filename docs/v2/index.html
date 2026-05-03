@@ -1678,8 +1678,9 @@ document.addEventListener('click', e=>{
     if(app.classList.contains('editing')) return;
     const rect = triggerEl.getBoundingClientRect();
     _originRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
-    const isGalleryCard = triggerEl.classList.contains('gallery-card') || triggerEl.classList.contains('gallery-card-clone');
-    _isGalleryOpen = isGalleryCard;
+    // vcard（个人作品区）用翻转动画，画廊卡片用纯 FLIP
+    const isVCard = triggerEl.classList.contains('vcard');
+    _isGalleryOpen = isVCard;
     const cardType = triggerEl.dataset.type || '';
     const isVideoCard = cardType==='mp4' || cardType==='video';
     const videoSrc = isVideoCard ? findVideoSrc(triggerEl) : '';
@@ -1693,13 +1694,13 @@ document.addEventListener('click', e=>{
       left: tx + 'px', top: ty + 'px',
       width: nw + 'px', height: nh + 'px',
       transition: 'none', opacity: '1',
-      perspective: isGalleryCard ? '1200px' : ''
+      perspective: isVCard ? '1200px' : ''
     });
     const scaleX = rect.width / nw;
     const scaleY = rect.height / nh;
     const dx = (rect.left + rect.width/2) - (tx + nw/2);
     const dy = (rect.top  + rect.height/2) - (ty + nh/2);
-    box.style.transform = isGalleryCard
+    box.style.transform = isVCard
       ? `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY}) rotateY(-90deg)`
       : `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
     box.style.opacity = '0';
@@ -1717,7 +1718,7 @@ document.addEventListener('click', e=>{
     ov.classList.add('active');
     requestAnimationFrame(()=>{
       box.getBoundingClientRect();
-      if(isGalleryCard){
+      if(isVCard){
         box.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1), opacity .22s ease';
         box.style.transform = 'translate(0,0) scale(1) rotateY(0deg)';
       } else {

@@ -1684,9 +1684,9 @@ document.addEventListener('click', e=>{
     const rect = triggerEl.getBoundingClientRect();
     _originRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
 
-    // 判断是否是画廊卡片（使用翻转动画）
-    const isGalleryCard = triggerEl.classList.contains('gallery-card') || triggerEl.classList.contains('gallery-card-clone');
-    _isGalleryOpen = isGalleryCard;
+    // vcard（个人作品区）用翻转动画，画廊卡片用纯 FLIP
+    const isVCard = triggerEl.classList.contains('vcard');
+    _isGalleryOpen = isVCard;
 
     // 检查是否是视频卡片
     const cardType = triggerEl.dataset.type || '';
@@ -1706,7 +1706,7 @@ document.addEventListener('click', e=>{
       left: tx + 'px', top: ty + 'px',
       width: nw + 'px', height: nh + 'px',
       transition: 'none', opacity: '1',
-      perspective: isGalleryCard ? '1200px' : ''
+      perspective: isVCard ? '1200px' : ''
     });
 
     // FLIP: Invert — 计算从卡片位置到中央的初始 transform
@@ -1715,9 +1715,9 @@ document.addEventListener('click', e=>{
     const dx = (rect.left + rect.width/2) - (tx + nw/2);
     const dy = (rect.top  + rect.height/2) - (ty + nh/2);
 
-    // 画廊卡片：初始带 rotateY(-90deg) 表示翻转起始面
-    // 其他卡片：纯 FLIP
-    box.style.transform = isGalleryCard
+    // 个人作品区(vcard)：初始带 rotateY(-90deg) 翻转起始面
+    // 画廊卡片：纯 FLIP
+    box.style.transform = isVCard
       ? `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY}) rotateY(-90deg)`
       : `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
     box.style.opacity = '0';
@@ -1740,11 +1740,12 @@ document.addEventListener('click', e=>{
     // FLIP: Play — 动画到中央
     requestAnimationFrame(()=>{
       box.getBoundingClientRect(); // force reflow
-      if(isGalleryCard){
-        // 画廊卡片：先快速位移到中央（同时翻转），弹性曲线
+      if(isVCard){
+        // 个人作品区：FLIP位移 + rotateY 翻转，弹性曲线
         box.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1), opacity .22s ease';
         box.style.transform = 'translate(0,0) scale(1) rotateY(0deg)';
       } else {
+        // 画廊卡片：纯 FLIP 缩放
         box.style.transition = 'transform .42s cubic-bezier(.34,1.28,.64,1), opacity .28s ease';
         box.style.transform = 'translate(0,0) scale(1)';
       }
@@ -1755,7 +1756,6 @@ document.addEventListener('click', e=>{
       }
       setTimeout(()=>{ closeBtn.style.display=''; }, 420);
     });
-  };
   };
 
   // 从卡片元素或 DATA 中查找视频 URL
