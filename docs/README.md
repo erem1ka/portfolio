@@ -1,88 +1,141 @@
-# 作品集网站 — 使用说明
+# Portfolio v2 — 张峻烨作品集
 
-## 文件结构
+> 效果创意设计 × AIGC 全链路创作者
+
+---
+
+## 🚀 在线访问
+
+**GitHub Pages（主站）：** [https://erem1ka.github.io/portfolio/docs/v2/](https://erem1ka.github.io/portfolio/docs/v2/)
+
+**预览页：** [https://erem1ka.github.io/portfolio/docs/v2-preview.html](https://erem1ka.github.io/portfolio/docs/v2-preview.html)
+
+---
+
+## 📁 文件结构
 
 ```
-portfolio/
-├── index.html       # 主页面（单文件即可运行）
-├── assets/
-│   └── resume.pdf   # 把你的简历 PDF 放在这里
-└── README.md
+docs/
+├── v2/
+│   ├── index.html          # 主页面（HTML + 内联 CSS/JS）
+│   ├── app.js              # 数据渲染、编辑模式、云同步、卡片生成
+│   ├── style.css           # 样式表
+│   ├── cloudbase-sdk.min.js # 腾讯云开发 SDK
+│   ├── easterEgg.js        # 彩蛋交互
+│   ├── favicon.svg         # 网站图标
+│   ├── hero-illus.png      # Hero 区插画
+│   └── README.md           # 本说明文档
+├── v2-preview.html         # 预览页（与主版结构一致）
+├── v2-preview-app.js       # 预览页数据逻辑
+├── v1-*                    # v1 版本（独立运行，不受 v2 影响）
+└── README.md               # v1 说明文档
 ```
 
 ---
 
-## 核心机制：GitHub 云端存储
+## 🏗 核心架构
 
-上传的媒体文件会自动推到你的 GitHub 仓库，生成 **永久公开链接**：
+### 主题系统
 
-```
-https://raw.githubusercontent.com/你的用户名/portfolio/main/media/xxx.mp4
-```
+- 双主题：**深色 / 浅色**，一键切换（右上角圆形按钮）
+- 暗色模式配色完全对齐 **GitHub Dark（Primer 风格）**
+- CSS 变量 token 驱动：所有颜色、边框、阴影、overlay 均通过变量统一管理
 
-- 本地文件删了，作品依然在线 ✓
-- 任何人用链接都能访问 ✓
-- 网站部署到 GitHub Pages 后外部完全可访问 ✓
+### 数据同步（CloudBase 腾讯云开发）
 
----
+- **云数据库集合：** `portfolio_v2` → 文档 `main`
+- **本地缓存：** `localStorage` key `portfolio_v2_data`
+- **版本冲突机制：** `_version`（时间戳）做本地与云端对比
+- **编辑者锁：** 只有进入编辑模式的设备持有 `portfolio_v2_editor_token` 才可 push；非编辑设备仅 pull
+- **自动发布：** 修改后 3s debounce 自动推送云端
 
-## 第一步：准备 GitHub 仓库
+### 卡片交互
 
-1. 注册 / 登录 [github.com](https://github.com)
-2. 新建一个 **Public** 仓库，命名为 `portfolio`
-3. 进入 **Settings → Developer settings → Personal access tokens → Tokens (classic)**
-4. 点击 **Generate new token (classic)**，勾选 `repo` 权限，生成后复制
+- **所有卡片** 点击统一走 `openMedia()` → FLIP zoom overlay
+- **个人作品卡片**（practice2 / mg）额外 `rotateY` 翻转
+- 视频在 overlay 内播放
 
----
+### 信息架构
 
-## 第二步：配置网站
+| 模块 | 数据 key | 说明 |
+|------|---------|------|
+| 业务作品 | `practice` / `practice2` | 画廊滚动模式 |
+| 个人作品 | `mg` | Masonry 网格 |
+| AIGC 作品 | `aigc-img` | Work 网格 |
+| 工具开发 | `agent` | Masonry 网格 |
+| 联系方式 | `contact` | 名片 / 简历 / 社交链接 |
 
-1. 打开 `index.html`（双击用浏览器打开）
-2. 点击导航栏左上角的 **GitHub 图标**（或直接找配置按钮）
-3. 填入：GitHub 用户名、仓库名（`portfolio`）、Access Token
-4. 点击「测试连接」确认成功，再点「保存配置」
-
-> Token 只保存在你自己浏览器的 localStorage，不会上传给任何人。
-
----
-
-## 第三步：上传作品（直接在页面操作）
-
-1. 鼠标悬停到任意**「待上传」**卡片
-2. 出现上传区域，点击 → 选择文件
-3. 文件会**先在本地预览**，同时自动上传到 GitHub
-4. 上传完成后自动切换为永久链接 ✓
-
-支持格式：`.mp4` `.webm` `.gif` `.webp` `.jpg` `.png`
+> ⚠️ **各模块标题、描述、卡片内容等文字均为可编辑字段，以用户在网页编辑模式下修改的内容为准，代码中的默认值仅为初始模板。**
 
 ---
 
-## 第四步：修改个人信息
+## ✏️ 编辑模式
 
-打开 `index.html`，搜索以下占位符替换：
+1. 点击页面右下角 **「编辑」** 按钮
+2. 进入后：
+   - 标题、描述直接点击编辑
+   - 悬停卡片出现 **上传媒体 / 删除** 按钮
+   - 底部出现 **添加卡片** 按钮
+   - 行高输入框可调整 Masonry 行高（60–300px）
+   - 可拖拽排序卡片
+3. 首次进入标记当前设备为 **编辑者**（只有编辑者能推送云端）
+4. 退出自动保存
+
+---
+
+## 🎨 作品上传
+
+编辑模式 → 悬停卡片 → **上传媒体**，支持 `.mp4` `.webm` `.gif` `.webp` `.jpg` `.png`
+
+上传流程：文件存入腾讯云存储 → 获得 `fileID` → 生成公开 URL → 图片自动压缩 → MP4 自动提取封面帧
+
+---
+
+## 📱 多设备访问
+
+- **编辑者设备**：修改 → 自动推送云端 → 其他设备可见
+- **非编辑者设备**：访问时自动 pull 云端最新数据
+- 版本冲突始终以云端为权威来源
+
+---
+
+## 🛠 技术栈
+
+| 类别 | 技术 |
+|------|------|
+| 框架 | 纯原生 HTML/CSS/JS |
+| 云服务 | 腾讯云开发 CloudBase |
+| 部署 | GitHub Pages |
+| 字体 | Noto Sans SC / Cormorant Garamond / DM Serif Display / Caveat / Space Mono |
+| 主题 | CSS 变量 token + GitHub Primer 暗色配色 |
+| 动画 | FLIP + CSS transitions + IntersectionObserver |
+
+---
+
+## 🔑 部署前替换
+
+`app.js` 中搜索以下占位符替换：
 
 | 占位符 | 替换为 |
-|---|---|
-| `{{EMAIL}}` | 你的邮箱 |
-| `{{BILIBILI_UID}}` | B 站 UID |
-| `{{DOUYIN_ID}}` | 抖音主页 ID |
-| `{{XIAOHONGSHU_ID}}` | 小红书主页 ID |
-| `{{MAJOR}}` | 你的专业 |
-| `{{INTERNSHIP_COMPANY}}` | 实习公司（如 `快手`）|
+|--------|--------|
+| `{{EMAIL}}` | 邮箱 |
+| `{{QQ}}` | QQ 号 |
+| `{{PHONE}}` | 手机号 |
 
 ---
 
-## 部署到 GitHub Pages（让外部访客能看到）
+## ⚡ 快速部署
 
-1. 把 `index.html` 和 `assets/` 上传到同一个 `portfolio` 仓库的根目录
-2. 仓库 Settings → Pages → Source: `main` 分支 → Save
-3. 等待 2 分钟，访问 `https://你的用户名.github.io/portfolio/`
-4. 把这个链接填入简历和求职邮件
+```bash
+git clone https://github.com/erem1ka/portfolio.git
+cd portfolio
+# 替换占位符后推送
+git push
+# GitHub Pages 自动发布 → https://erem1ka.github.io/portfolio/docs/v2/
+```
 
 ---
 
-## 注意事项
+## 📌 v1 / v2 独立运行
 
-- **GitHub 单文件大小限制：100MB**，如果视频超出，建议用 Handbrake 压缩到 50MB 以内
-- 上传的文件存放在仓库的 `media/` 目录，格式为 `时间戳_原文件名`
-- GitHub 免费账号仓库总容量 1GB，作品集视频完全够用
+v1（`docs/v1-*`）与 v2（`docs/v2/`）完全独立，互不影响。
