@@ -38,15 +38,15 @@
       --sidebar-w:  260px;
     }
     .dark {
-      --bg-page:    #161412;
-      --bg-card:    #1F1C1A;
-      --color-main: #F2EDE8;
-      --color-sub:  #A09590;
-      --color-dim:  #5E5550;
-      --color-sep:  rgba(255,240,230,0.10);
-      --accent:     #D4967E;
-      --accent-dark:#BA7A62;
-      --accent-light:#E8B8A2;
+      --bg-page:    #0B0A0E;
+      --bg-card:    #18171C;
+      --color-main: #EFEAE4;
+      --color-sub:  #B2A9A0;
+      --color-dim:  #8A8178;
+      --color-sep:  rgba(255,248,240,0.10);
+      --accent:     #EC9A6E;
+      --accent-dark:#CC7648;
+      --accent-light:#F8D0B8;
     }
     body.dark { background: var(--bg-page); color: var(--color-main); }
 
@@ -180,7 +180,7 @@
       backdrop-filter: blur(16px);
       border-bottom: 1px solid var(--color-sep);
     }
-    .dark header { background: rgba(26,22,18,.9); }
+    .dark header { background: rgba(11,10,14,.93); }
 
     /* 深色模式：统一背景，消除色块差异 */
     .dark .bg-mod1, .dark .bg-mod2, .dark .bg-mod3, .dark .bg-mod4 { background: var(--bg-page) !important; }
@@ -231,10 +231,10 @@
       object-fit: contain;
       display: block;
     }
-    /* 深色模式：插画降低亮度并略微透明，更好融合背景 */
+    /* 深色模式：插画适度降暗融入背景 */
     .dark .hero-right-img {
-      filter: brightness(0.7) contrast(0.9);
-      opacity: 0.85;
+      filter: brightness(0.82) contrast(0.95);
+      opacity: 1;
     }
     .hero-right-placeholder {
       width: 100%; height: 100%;
@@ -525,7 +525,29 @@
       border: 1.5px dashed rgba(200,145,122,.4);
       background: rgba(245,240,235,.92);
     }
-    .dark .upload-ov { background: rgba(28,24,20,.92); }
+    .dark .upload-ov { background: rgba(11,10,14,.93); }
+    /* 深色模式：卡片用暗影（而非亮色高光）营造深度 */
+    .dark .gallery-card:hover, .dark .gallery-card-clone:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(236,154,110,.25), 0 12px 36px rgba(0,0,0,.6);
+    }
+    .dark .vcard:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(236,154,110,.2), 0 20px 48px rgba(0,0,0,.65);
+    }
+    .dark .play-circle {
+      background: rgba(236,154,110,.85);
+      box-shadow: 0 0 24px rgba(236,154,110,.35), 0 4px 12px rgba(0,0,0,.3);
+    }
+    .dark .vcard:hover .play-circle {
+      background: rgba(236,154,110,.95);
+      box-shadow: 0 0 32px rgba(236,154,110,.5);
+    }
+    .dark .card-media { background: var(--bg-card); }
+    .dark .no-thumb { background: var(--bg-card); }
+    .dark .section-sticker { opacity: .16; }
+    .dark .upload-ov-btn { border-color: var(--accent); }
+    .dark .upload-ov-btn:hover { background: rgba(236,154,110,.12); }
     .gallery-card .upload-ov, .gallery-card-clone .upload-ov { display: none; }
     .editing .gallery-card:hover .upload-ov,
     .editing .gallery-card-clone:hover .upload-ov { display: flex; }
@@ -588,7 +610,7 @@
     /* ── Image zoom ── */
     #img-zoom-wrap {
       position: fixed; inset: 0; z-index: 200;
-      background: rgba(28,24,20,.92);
+      background: rgba(11,10,14,.92);
       display: none; align-items: center; justify-content: center;
     }
     #img-zoom-wrap.open { display: flex; }
@@ -600,7 +622,7 @@
     /* ── Edit menu ── */
     #editMenu {
       display: none; position: fixed; inset: 0; z-index: 300;
-      background: rgba(28,24,20,.5);
+      background: rgba(11,10,14,.5);
       align-items: center; justify-content: center;
     }
     #editMenu.open { display: flex; }
@@ -650,7 +672,7 @@
     .anim-play-label {
       position: absolute; bottom: 6px; right: 8px;
       font-family: 'Space Mono', monospace; font-size: .48rem;
-      color: rgba(240,235,229,.7); background: rgba(28,24,20,.5);
+      color: rgba(240,235,229,.7); background: rgba(11,10,14,.5);
       padding: 2px 6px; border-radius: 3px; pointer-events: none;
     }
 
@@ -668,12 +690,12 @@
     #card-flip-overlay.active { pointer-events: all; }
     #card-flip-backdrop {
       position: absolute; inset: 0;
-      background: rgba(26,22,18,0);
+      background: rgba(11,10,14,0);
       transition: background .38s ease;
       cursor: pointer;
     }
     #card-flip-overlay.active #card-flip-backdrop {
-      background: rgba(26,22,18,.84);
+      background: rgba(11,10,14,.86);
     }
     /* stage: FLIP 位移+缩放层 */
     #card-flip-stage {
@@ -740,7 +762,7 @@
     /* ── QR zoom ── */
     #qr-zoom-wrap {
       position: fixed; inset: 0; z-index: 250;
-      background: rgba(28,24,20,.85);
+      background: rgba(11,10,14,.85);
       display: none; align-items: center; justify-content: center;
     }
     #qr-zoom-wrap.open { display: flex; }
@@ -1085,9 +1107,9 @@
 
     <!-- 装饰贴纸：第二条画廊左侧空白区 -->
     <div class="section-sticker" style="left:0px;top:0;width:80px;height:80px;transform:rotate(-8deg)">
-      <svg viewBox="0 0 100 100" fill="none" stroke="#C8917A" stroke-width="1.5">
+      <svg viewBox="0 0 100 100" fill="none" stroke="var(--accent)" stroke-width="1.5">
         <polygon points="50,10 90,40 80,90 20,90 10,40"/>
-        <text x="50" y="55" text-anchor="middle" font-family="Cormorant Garamond" font-size="14" fill="#C8917A" opacity=".4">AE</text>
+        <text x="50" y="55" text-anchor="middle" font-family="Cormorant Garamond" font-size="14" fill="var(--accent)" opacity=".4">AE</text>
       </svg>
     </div>
     <div class="add-card mt-2" id="practice2-add" onclick="addWorkCard('practice2','auto')">
@@ -1112,15 +1134,15 @@
     <div class="masonry-grid" data-row-h="160" id="mg-grid" style="--cols:8"></div>
     <!-- 装饰贴纸 -->
     <div class="section-sticker" style="right:30px;top:120px;width:100px;height:100px;transform:rotate(18deg)">
-      <svg viewBox="0 0 100 100" fill="none" stroke="#C8917A" stroke-width="1.5">
+      <svg viewBox="0 0 100 100" fill="none" stroke="var(--accent)" stroke-width="1.5">
         <path d="M20 50 Q40 10 60 50 Q80 90 100 50"/><path d="M0 50 Q20 90 40 50 Q60 10 80 50"/>
-        <circle cx="50" cy="50" r="5" fill="#C8917A" opacity=".3"/>
+        <circle cx="50" cy="50" r="5" fill="var(--accent)" opacity=".3"/>
       </svg>
     </div>
     <div class="section-sticker" style="right:40px;bottom:80px;width:70px;height:70px;transform:rotate(-15deg)">
-      <svg viewBox="0 0 100 100" fill="none" stroke="#C8917A" stroke-width="1.5">
+      <svg viewBox="0 0 100 100" fill="none" stroke="var(--accent)" stroke-width="1.5">
         <rect x="20" y="20" width="60" height="60" rx="4"/><rect x="30" y="30" width="40" height="40" rx="2"/>
-        <line x1="45" y1="40" x2="45" y2="60"/><line x1="40" y1="50" x2="55" y2="50"/><circle cx="45" cy="50" r="3" fill="#C8917A" opacity=".3"/>
+        <line x1="45" y1="40" x2="45" y2="60"/><line x1="40" y1="50" x2="55" y2="50"/><circle cx="45" cy="50" r="3" fill="var(--accent)" opacity=".3"/>
       </svg>
     </div>
     <div class="add-card mt-2" id="mg-add" onclick="addWorkCard('mg','auto')">
@@ -1167,14 +1189,14 @@
       <div class="masonry-grid" data-row-h="160" id="aigc-prompt-grid" style="--cols:8"></div>
     <!-- 装饰贴纸 -->
     <div class="section-sticker" style="right:20px;top:100px;width:90px;height:90px;transform:rotate(8deg)">
-      <svg viewBox="0 0 100 100" fill="none" stroke="#C8917A" stroke-width="1.5">
+      <svg viewBox="0 0 100 100" fill="none" stroke="var(--accent)" stroke-width="1.5">
         <path d="M50 20 L65 40 L90 40 L70 60 L78 85 L50 70 L22 85 L30 60 L10 40 L35 40Z"/>
       </svg>
     </div>
     <div class="section-sticker" style="right:30px;top:300px;width:80px;height:80px;transform:rotate(-20deg)">
-      <svg viewBox="0 0 100 100" fill="none" stroke="#C8917A" stroke-width="1.5">
+      <svg viewBox="0 0 100 100" fill="none" stroke="var(--accent)" stroke-width="1.5">
         <circle cx="50" cy="50" r="40"/><path d="M50 10 L50 90" stroke-dasharray="3 8"/><path d="M10 50 L90 50" stroke-dasharray="3 8"/>
-        <text x="50" y="55" text-anchor="middle" font-family="Cormorant Garamond" font-size="12" fill="#C8917A" opacity=".4">AI</text>
+        <text x="50" y="55" text-anchor="middle" font-family="Cormorant Garamond" font-size="12" fill="var(--accent)" opacity=".4">AI</text>
       </svg>
     </div>
       <div class="add-card mt-2" id="aigc-prompt-add" onclick="addWorkCard('aigc-prompt','prompt')">
@@ -1200,15 +1222,15 @@
     <div class="masonry-grid" data-row-h="160" id="agent-grid" style="--cols:8"></div>
     <!-- 装饰贴纸 -->
     <div class="section-sticker" style="right:20px;top:80px;width:100px;height:100px;transform:rotate(-6deg)">
-      <svg viewBox="0 0 100 100" fill="none" stroke="#C8917A" stroke-width="1.5">
-        <path d="M30 50 L50 30 L70 50 L50 70Z"/><circle cx="50" cy="50" r="8" fill="#C8917A" opacity=".3"/>
+      <svg viewBox="0 0 100 100" fill="none" stroke="var(--accent)" stroke-width="1.5">
+        <path d="M30 50 L50 30 L70 50 L50 70Z"/><circle cx="50" cy="50" r="8" fill="var(--accent)" opacity=".3"/>
         <line x1="50" y1="30" x2="50" y2="10"/><line x1="70" y1="50" x2="90" y2="50"/><line x1="50" y1="70" x2="50" y2="90"/><line x1="30" y1="50" x2="10" y2="50"/>
       </svg>
     </div>
     <div class="section-sticker" style="right:40px;bottom:80px;width:80px;height:80px;transform:rotate(25deg)">
-      <svg viewBox="0 0 100 100" fill="none" stroke="#C8917A" stroke-width="1.5">
+      <svg viewBox="0 0 100 100" fill="none" stroke="var(--accent)" stroke-width="1.5">
         <path d="M20 80 L30 20 L50 50 L70 20 L80 80"/>
-        <text x="50" y="90" text-anchor="middle" font-family="Space Mono" font-size="10" fill="#C8917A" opacity=".3">&lt;/&gt;</text>
+        <text x="50" y="90" text-anchor="middle" font-family="Space Mono" font-size="10" fill="var(--accent)" opacity=".3">&lt;/&gt;</text>
       </svg>
     </div>
     <div class="add-card mt-2" id="agent-add" onclick="addWorkCard('agent','auto')">
@@ -1264,7 +1286,7 @@
 <!-- footer 已移除，copyright 在 sidebar -->
 
 <!-- ── Overlays ── -->
-<div id="playerBackdrop" onclick="closeInlinePlayer()" style="display:none;position:fixed;inset:0;z-index:199;background:rgba(28,24,20,.85)"></div>
+<div id="playerBackdrop" onclick="closeInlinePlayer()" style="display:none;position:fixed;inset:0;z-index:199;background:rgba(11,10,14,.85)"></div>
 <div class="inline-player" id="inlinePlayer" style="display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:200;background:var(--bg-card);border-radius:12px 12px 0 0;padding:16px;max-width:700px;width:100%">
   <button class="inline-player-close" onclick="closeInlinePlayer()" style="position:absolute;top:12px;right:16px;font-family:'Space Mono',monospace;font-size:.7rem;color:var(--color-sub);background:none;border:none;cursor:pointer">✕ 关闭</button>
   <video id="inlineVideo" controls playsinline style="width:100%;border-radius:8px"></video>
@@ -1357,7 +1379,7 @@ function triggerThemeToggle(e){
     p.style.cssText = `
       position:fixed; z-index:9995; pointer-events:none;
       width:${size}px; height:${size}px; border-radius:50%;
-      background:${isDark ? '#C8917A' : '#A8745C'};
+      background:${isDark ? 'var(--accent)' : 'var(--accent-dark)'};
       left:${cx}px; top:${cy}px;
       transform:translate(-50%,-50%);
       transition: left .5s cubic-bezier(.2,.8,.2,1),
@@ -1383,7 +1405,7 @@ function triggerThemeToggle(e){
     pointer-events:none;
     width:${maxR}px; height:${maxR}px;
     left:${cx - maxR/2}px; top:${cy - maxR/2}px;
-    background:${isDark ? 'rgba(200,145,122,.15)' : 'rgba(26,22,18,.12)'};
+    background:${isDark ? 'rgba(236,154,110,.15)' : 'rgba(26,22,18,.12)'};
     transform:scale(0); opacity:.7;
   `;
   ripple.classList.remove('rippling');
@@ -1393,7 +1415,7 @@ function triggerThemeToggle(e){
 
   // 3. 整页 clip-path 扩散（切换颜色）
   const spread = document.getElementById('theme-spread');
-  spread.style.background = isDark ? '#F5F0EB' : '#1A1612';
+  spread.style.background = isDark ? 'var(--bg-page)' : '#0B0A0E';
   spread.classList.remove('spreading');
   void spread.offsetWidth;
   spread.classList.add('spreading');
