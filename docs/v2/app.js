@@ -1521,19 +1521,31 @@ async function init(){
   
   // 先从本地加载数据
   loadData();
-  const hasLocalData = !!(DATA._version && DATA._version > 0);
+  const localVersion = DATA._version || 0;
+  const hasLocalData = localVersion > 0;
   
-  // 优先尝试从云端拉取（无论本地是否有数据，云端数据始终为准）
+  // 优先尝试从云端同步
   if (cloudReady) {
     const cloudVer = await loadCloudDataVersion();
     
-    if (cloudVer > 0) {
-      // 云端有数据 → 拉取覆盖本地
+    if (cloudVer > 0 && localVersion > 0) {
+      // 两边都有数据 → 比较版本号决定方向
+      if (localVersion > cloudVer) {
+        // 本地更新（刚导入/刚编辑） → 推送本地到云端
+        console.log('📤 本地数据更新(v' + localVersion + '> v' + cloudVer + ')，推送到云端...');
+        await publishDataToCloud();
+        renderAll();
+      } else {
+        // 云端更新 → 拉取云端覆盖本地
+        console.log('☁ 云端数据更新(v' + cloudVer + ')，正在加载...');
+        await loadDataFromCloud(true);
+      }
+    } else if (cloudVer > 0 && !hasLocalData) {
+      // 云端有数据，本地没有 → 拉取云端
       console.log('☁ 检测到云端数据(v' + cloudVer + ')，正在加载...');
       await loadDataFromCloud(true);
-      // loadDataFromCloud 内部已调用 renderAll()
-    } else if (hasLocalData) {
-      // 云端无数据但本地有 → 编辑者设备首次推送
+    } else if (hasLocalData && cloudVer <= 0) {
+      // 本地有数据，云端没有 → 推送
       const isEditor = !!localStorage.getItem('portfolio_v2_editor_token');
       if (isEditor) {
         console.log('📤 云端无数据，推送本地数据...');
@@ -1541,20 +1553,13 @@ async function init(){
       }
       renderAll();
     } else {
-      // 云端无数据且本地无数据 → 真正的首次访问
+      // 双方都没有数据 → 默认模板
       console.log('🆕 首次访问，显示默认模板');
       renderAll();
     }
   } else {
-    // 云开发不可用，仅本地模式
     console.warn('⚠ 云开发未连接，仅使用本地数据');
-    if (hasLocalData) {
-      renderAll();
-    } else {
-      // 新设备，本地也无数据，但云也不可用 — 显示默认并提示
-      console.log('🆕 离线首次访问，显示默认模板');
-      renderAll();
-    }
+    renderAll();
   }
 }
 
