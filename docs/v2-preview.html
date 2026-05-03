@@ -663,6 +663,7 @@
       position: fixed; inset: 0; z-index: 400;
       display: flex; align-items: center; justify-content: center;
       pointer-events: none;
+      perspective: 1400px;
     }
     #card-flip-overlay.active { pointer-events: all; }
     #card-flip-backdrop {
@@ -674,13 +675,24 @@
     #card-flip-overlay.active #card-flip-backdrop {
       background: rgba(26,22,18,.84);
     }
-    #card-flip-box {
+    /* stage: FLIP 位移+缩放层 */
+    #card-flip-stage {
       position: fixed;
       transform-origin: center center;
       will-change: transform, opacity;
       transition: none;
+      pointer-events: none;
+    }
+    /* box: rotateY 翻转层，perspective 从 ov 继承 */
+    #card-flip-box {
+      width: 100%; height: 100%;
+      transform-origin: center center;
+      transform-style: preserve-3d;
+      will-change: transform;
+      transition: none;
       border-radius: 8px;
       overflow: hidden;
+      pointer-events: all;
     }
     #card-flip-box img, #card-flip-box video {
       display: block;
@@ -1624,51 +1636,57 @@ document.addEventListener('click', e=>{
   document.querySelectorAll('.vcard').forEach(applyTilt);
 })();
 
-// ── 卡片点击：FLIP 放大动画 ──
+// ── 卡片点击：FLIP 放大动画（vcard区翻转，画廊区纯缩放）──
 (function(){
   const ov = document.createElement('div');
   ov.id = 'card-flip-overlay';
   const bd = document.createElement('div'); bd.id = 'card-flip-backdrop';
+
+  // stage: 负责 FLIP 位移+缩放，perspective 在 ov 的 CSS 上生效（ov 设 perspective:1400px）
+  const stage = document.createElement('div'); stage.id = 'card-flip-stage';
+  // box: 负责 rotateY 翻转
   const box = document.createElement('div'); box.id = 'card-flip-box';
   const closeBtn = document.createElement('div');
   closeBtn.className = 'cfb-close'; closeBtn.textContent = 'ESC  CLOSE'; closeBtn.style.display='none';
   box.appendChild(closeBtn);
-  ov.appendChild(bd); ov.appendChild(box);
+  stage.appendChild(box);
+  ov.appendChild(bd); ov.appendChild(stage);
   document.body.appendChild(ov);
 
-  // 记录动画起始的卡片 rect 与类型，关闭时用
   let _originRect = null;
-  let _isGalleryOpen = false;
+  let _isVCard = false;
 
   function closeOverlay(){
     if(!ov.classList.contains('active')) return;
     ov.classList.remove('active');
     closeBtn.style.display = 'none';
 
-    // 关闭：缩回原卡片位置
     if(_originRect){
       const vw = window.innerWidth, vh = window.innerHeight;
-      const nw = box.offsetWidth, nh = box.offsetHeight;
+      const nw = stage.offsetWidth, nh = stage.offsetHeight;
       const tx = (vw - nw) / 2, ty = (vh - nh) / 2;
       const scaleX = _originRect.width / nw;
       const scaleY = _originRect.height / nh;
       const dx = _originRect.left + _originRect.width/2 - (tx + nw/2);
       const dy = _originRect.top  + _originRect.height/2 - (ty + nh/2);
-      box.style.transition = 'transform .3s cubic-bezier(.4,0,1,1), opacity .25s ease';
-      box.style.transform = _isGalleryOpen
-        ? `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY}) rotateY(-90deg)`
-        : `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
-      box.style.opacity = '0';
+      stage.style.transition = 'transform .3s cubic-bezier(.4,0,1,1), opacity .25s ease';
+      stage.style.transform = `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
+      stage.style.opacity = '0';
+      if(_isVCard){
+        box.style.transition = 'transform .3s cubic-bezier(.4,0,1,1)';
+        box.style.transform = 'rotateY(-180deg)';
+      }
     } else {
-      box.style.transition = 'transform .28s cubic-bezier(.4,0,1,1), opacity .25s ease';
-      box.style.transform = 'scale(0.06)';
-      box.style.opacity = '0';
+      stage.style.transition = 'transform .28s cubic-bezier(.4,0,1,1), opacity .25s ease';
+      stage.style.transform = 'scale(0.06)';
+      stage.style.opacity = '0';
     }
     setTimeout(()=>{
       box.innerHTML=''; box.appendChild(closeBtn);
       box.removeAttribute('style');
+      stage.removeAttribute('style');
       _originRect = null;
-      _isGalleryOpen = false;
+      _isVCard = false;
     }, 310);
   }
 
@@ -1680,49 +1698,43 @@ document.addEventListener('click', e=>{
     const app = document.getElementById('app');
     if(app.classList.contains('editing')) return;
 
-    // FLIP: 记录起始位置（First）
     const rect = triggerEl.getBoundingClientRect();
     _originRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+    _isVCard = triggerEl.classList.contains('vcard');
 
-    // vcard（个人作品区）用翻转动画，画廊卡片用纯 FLIP
-    const isVCard = triggerEl.classList.contains('vcard');
-    _isGalleryOpen = isVCard;
-
-    // 检查是否是视频卡片
     const cardType = triggerEl.dataset.type || '';
     const isVideoCard = cardType==='mp4' || cardType==='video';
     const videoSrc = isVideoCard ? findVideoSrc(triggerEl) : '';
 
-    // 计算目标尺寸（Last）
     const vw = window.innerWidth, vh = window.innerHeight;
     const nw = Math.min(vw * .88, Math.max(rect.width * 2.8, 480));
     const nh = Math.min(vh * .86, Math.max(rect.height * 2.8, 320));
     const tx = (vw - nw) / 2;
     const ty = (vh - nh) / 2;
 
-    // 准备 box：放到最终位置，内容清空
+    // 清空 box 内容
     box.innerHTML=''; box.appendChild(closeBtn);
-    Object.assign(box.style, {
+    box.removeAttribute('style');
+
+    // stage 定位到目标位置，初始 transform = 从卡片出发的 FLIP invert
+    Object.assign(stage.style, {
       left: tx + 'px', top: ty + 'px',
       width: nw + 'px', height: nh + 'px',
-      transition: 'none', opacity: '1',
-      perspective: isVCard ? '1200px' : ''
+      transition: 'none', opacity: '0'
     });
-
-    // FLIP: Invert — 计算从卡片位置到中央的初始 transform
     const scaleX = rect.width / nw;
     const scaleY = rect.height / nh;
     const dx = (rect.left + rect.width/2) - (tx + nw/2);
     const dy = (rect.top  + rect.height/2) - (ty + nh/2);
+    stage.style.transform = `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
 
-    // 个人作品区(vcard)：初始带 rotateY(-90deg) 翻转起始面
-    // 画廊卡片：纯 FLIP
-    box.style.transform = isVCard
-      ? `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY}) rotateY(-90deg)`
-      : `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
-    box.style.opacity = '0';
+    // vcard: box 初始旋转 -180deg（背面），画廊: box 不旋转
+    if(_isVCard){
+      box.style.transition = 'none';
+      box.style.transform = 'rotateY(-180deg)';
+    }
 
-    // 创建媒体内容
+    // 填充内容
     if(isVideoCard && videoSrc){
       const video = document.createElement('video');
       video.src = videoSrc;
@@ -1737,28 +1749,28 @@ document.addEventListener('click', e=>{
 
     ov.classList.add('active');
 
-    // FLIP: Play — 动画到中央
     requestAnimationFrame(()=>{
-      box.getBoundingClientRect(); // force reflow
-      if(isVCard){
-        // 个人作品区：FLIP位移 + rotateY 翻转，弹性曲线
-        box.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1), opacity .22s ease';
-        box.style.transform = 'translate(0,0) scale(1) rotateY(0deg)';
-      } else {
-        // 画廊卡片：纯 FLIP 缩放
-        box.style.transition = 'transform .42s cubic-bezier(.34,1.28,.64,1), opacity .28s ease';
-        box.style.transform = 'translate(0,0) scale(1)';
+      stage.getBoundingClientRect(); // force reflow
+
+      // stage: FLIP 飞到中央
+      stage.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1), opacity .2s ease';
+      stage.style.transform = 'translate(0,0) scale(1)';
+      stage.style.opacity = '1';
+
+      if(_isVCard){
+        // box: 同步翻转 -180deg → 0deg，时长与 stage 相同
+        box.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1)';
+        box.style.transform = 'rotateY(0deg)';
       }
-      box.style.opacity = '1';
+
       if(isVideoCard && videoSrc){
         const v = box.querySelector('video');
-        if(v) setTimeout(()=>v.play().catch(()=>{}), 200);
+        if(v) setTimeout(()=>v.play().catch(()=>{}), 300);
       }
-      setTimeout(()=>{ closeBtn.style.display=''; }, 420);
+      setTimeout(()=>{ closeBtn.style.display=''; }, 440);
     });
   };
 
-  // 从卡片元素或 DATA 中查找视频 URL
   function findVideoSrc(cardEl){
     const id = cardEl.dataset.id;
     if(!id) return '';

@@ -663,6 +663,7 @@
       position: fixed; inset: 0; z-index: 400;
       display: flex; align-items: center; justify-content: center;
       pointer-events: none;
+      perspective: 1400px;
     }
     #card-flip-overlay.active { pointer-events: all; }
     #card-flip-backdrop {
@@ -674,13 +675,23 @@
     #card-flip-overlay.active #card-flip-backdrop {
       background: rgba(26,22,18,.84);
     }
-    #card-flip-box {
+    /* stage: FLIP 位移+缩放层 */
+    #card-flip-stage {
       position: fixed;
       transform-origin: center center;
       will-change: transform, opacity;
       transition: none;
+      pointer-events: none;
+    }
+    /* box: rotateY 翻转层，perspective 从 ov 继承 */
+    #card-flip-box {
+      width: 100%; height: 100%;
+      transform-origin: center center;
+      will-change: transform;
+      transition: none;
       border-radius: 8px;
       overflow: hidden;
+      pointer-events: all;
     }
     #card-flip-box img, #card-flip-box video {
       display: block;
@@ -1624,20 +1635,22 @@ document.addEventListener('click', e=>{
   document.querySelectorAll('.vcard').forEach(applyTilt);
 })();
 
-// ── 卡片点击：FLIP 放大动画（画廊卡片附加翻转效果）──
+// ── 卡片点击：FLIP 放大动画（vcard区翻转，画廊区纯缩放）──
 (function(){
   const ov = document.createElement('div');
   ov.id = 'card-flip-overlay';
   const bd = document.createElement('div'); bd.id = 'card-flip-backdrop';
+  const stage = document.createElement('div'); stage.id = 'card-flip-stage';
   const box = document.createElement('div'); box.id = 'card-flip-box';
   const closeBtn = document.createElement('div');
   closeBtn.className = 'cfb-close'; closeBtn.textContent = 'ESC  CLOSE'; closeBtn.style.display='none';
   box.appendChild(closeBtn);
-  ov.appendChild(bd); ov.appendChild(box);
+  stage.appendChild(box);
+  ov.appendChild(bd); ov.appendChild(stage);
   document.body.appendChild(ov);
 
   let _originRect = null;
-  let _isGalleryOpen = false;
+  let _isVCard = false;
 
   function closeOverlay(){
     if(!ov.classList.contains('active')) return;
@@ -1645,27 +1658,30 @@ document.addEventListener('click', e=>{
     closeBtn.style.display = 'none';
     if(_originRect){
       const vw = window.innerWidth, vh = window.innerHeight;
-      const nw = box.offsetWidth, nh = box.offsetHeight;
+      const nw = stage.offsetWidth, nh = stage.offsetHeight;
       const tx = (vw - nw) / 2, ty = (vh - nh) / 2;
       const scaleX = _originRect.width / nw;
       const scaleY = _originRect.height / nh;
       const dx = _originRect.left + _originRect.width/2 - (tx + nw/2);
       const dy = _originRect.top  + _originRect.height/2 - (ty + nh/2);
-      box.style.transition = 'transform .3s cubic-bezier(.4,0,1,1), opacity .25s ease';
-      box.style.transform = _isGalleryOpen
-        ? `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY}) rotateY(-90deg)`
-        : `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
-      box.style.opacity = '0';
+      stage.style.transition = 'transform .3s cubic-bezier(.4,0,1,1), opacity .25s ease';
+      stage.style.transform = `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
+      stage.style.opacity = '0';
+      if(_isVCard){
+        box.style.transition = 'transform .3s cubic-bezier(.4,0,1,1)';
+        box.style.transform = 'rotateY(-180deg)';
+      }
     } else {
-      box.style.transition = 'transform .28s cubic-bezier(.4,0,1,1), opacity .25s ease';
-      box.style.transform = 'scale(0.06)';
-      box.style.opacity = '0';
+      stage.style.transition = 'transform .28s cubic-bezier(.4,0,1,1), opacity .25s ease';
+      stage.style.transform = 'scale(0.06)';
+      stage.style.opacity = '0';
     }
     setTimeout(()=>{
       box.innerHTML=''; box.appendChild(closeBtn);
       box.removeAttribute('style');
+      stage.removeAttribute('style');
       _originRect = null;
-      _isGalleryOpen = false;
+      _isVCard = false;
     }, 310);
   }
 
@@ -1678,9 +1694,7 @@ document.addEventListener('click', e=>{
     if(app.classList.contains('editing')) return;
     const rect = triggerEl.getBoundingClientRect();
     _originRect = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
-    // vcard（个人作品区）用翻转动画，画廊卡片用纯 FLIP
-    const isVCard = triggerEl.classList.contains('vcard');
-    _isGalleryOpen = isVCard;
+    _isVCard = triggerEl.classList.contains('vcard');
     const cardType = triggerEl.dataset.type || '';
     const isVideoCard = cardType==='mp4' || cardType==='video';
     const videoSrc = isVideoCard ? findVideoSrc(triggerEl) : '';
@@ -1690,20 +1704,21 @@ document.addEventListener('click', e=>{
     const tx = (vw - nw) / 2;
     const ty = (vh - nh) / 2;
     box.innerHTML=''; box.appendChild(closeBtn);
-    Object.assign(box.style, {
+    box.removeAttribute('style');
+    Object.assign(stage.style, {
       left: tx + 'px', top: ty + 'px',
       width: nw + 'px', height: nh + 'px',
-      transition: 'none', opacity: '1',
-      perspective: isVCard ? '1200px' : ''
+      transition: 'none', opacity: '0'
     });
     const scaleX = rect.width / nw;
     const scaleY = rect.height / nh;
     const dx = (rect.left + rect.width/2) - (tx + nw/2);
     const dy = (rect.top  + rect.height/2) - (ty + nh/2);
-    box.style.transform = isVCard
-      ? `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY}) rotateY(-90deg)`
-      : `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
-    box.style.opacity = '0';
+    stage.style.transform = `translate(${dx}px,${dy}px) scale(${scaleX},${scaleY})`;
+    if(_isVCard){
+      box.style.transition = 'none';
+      box.style.transform = 'rotateY(-180deg)';
+    }
     if(isVideoCard && videoSrc){
       const video = document.createElement('video');
       video.src = videoSrc;
@@ -1717,20 +1732,19 @@ document.addEventListener('click', e=>{
     }
     ov.classList.add('active');
     requestAnimationFrame(()=>{
-      box.getBoundingClientRect();
-      if(isVCard){
-        box.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1), opacity .22s ease';
-        box.style.transform = 'translate(0,0) scale(1) rotateY(0deg)';
-      } else {
-        box.style.transition = 'transform .42s cubic-bezier(.34,1.28,.64,1), opacity .28s ease';
-        box.style.transform = 'translate(0,0) scale(1)';
+      stage.getBoundingClientRect();
+      stage.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1), opacity .2s ease';
+      stage.style.transform = 'translate(0,0) scale(1)';
+      stage.style.opacity = '1';
+      if(_isVCard){
+        box.style.transition = 'transform .46s cubic-bezier(.34,1.18,.64,1)';
+        box.style.transform = 'rotateY(0deg)';
       }
-      box.style.opacity = '1';
       if(isVideoCard && videoSrc){
         const v = box.querySelector('video');
-        if(v) setTimeout(()=>v.play().catch(()=>{}), 200);
+        if(v) setTimeout(()=>v.play().catch(()=>{}), 300);
       }
-      setTimeout(()=>{ closeBtn.style.display=''; }, 420);
+      setTimeout(()=>{ closeBtn.style.display=''; }, 440);
     });
   };
 
