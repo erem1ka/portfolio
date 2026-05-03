@@ -373,9 +373,21 @@ function importData(file){
   reader.onload = ()=>{
     try{
       const data = JSON.parse(reader.result);
-      if(data.portfolio){
-        localStorage.setItem('portfolio_v2_data', JSON.stringify(data.portfolio));
+      const raw = data.portfolio || data;
+      // v1→v2 清理：移除 bilibili，跳过空字符串覆盖默认值
+      if(raw.contact){
+        delete raw.contact.bilibili;
+        // 空字符串不覆盖默认值（如 douyin）
+        Object.keys(raw.contact).forEach(k=>{
+          if(raw.contact[k] === '' || raw.contact[k] === null) delete raw.contact[k];
+        });
       }
+      // 删除 v1 专有的 gh_config（如果有）
+      delete data.gh_config;
+      // 确保有 _version，以便推送到云端
+      raw._version = Date.now();
+      localStorage.setItem('portfolio_v2_data', JSON.stringify(raw));
+      localStorage.setItem('portfolio_v2_editor_token', 'true');
       alert('导入成功！页面将刷新。');
       location.reload();
     }catch(e){
