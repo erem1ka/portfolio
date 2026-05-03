@@ -291,6 +291,21 @@ function toggleTheme(){
 function toggleEdit(){
   // When exiting edit mode, purge empty cards (no media uploaded)
   if(editMode){
+    // 先把画廊卡片当前 DOM 里的 title/desc 刷回 DATA，防止 blur 未触发导致丢失
+    ['practice','practice2'].forEach(key=>{
+      const track=document.getElementById(key+'-gallery-track');
+      if(!track) return;
+      track.querySelectorAll('.gallery-card').forEach(card=>{
+        const id=card.dataset.id;
+        if(!id) return;
+        const item=findItem(id);
+        if(!item) return;
+        const titleEl=card.querySelector('.gc-title');
+        const descEl=card.querySelector('.gc-sub');
+        if(titleEl) item.title=titleEl.textContent.trim();
+        if(descEl) item.desc=descEl.textContent.trim();
+      });
+    });
     const sections = ['practice','practice2','mg','aigc-img','agent'];
     let cleaned = false;
     sections.forEach(sec=>{
@@ -298,7 +313,8 @@ function toggleEdit(){
       DATA[sec] = (DATA[sec]||[]).filter(item=>item.media);
       if(DATA[sec].length !== before) cleaned = true;
     });
-    if(cleaned){ saveData(); renderAll(); }
+    saveData();
+    if(cleaned){ renderAll(); }
   }
   editMode = !editMode;
   // 进入编辑模式时标记为编辑者设备（只有编辑者才能推送数据到云端）
