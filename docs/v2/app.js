@@ -237,7 +237,14 @@ async function loadDataFromCloud(forceLoad) {
           DATA[sec] = cloudData[sec] || [];
         });
         // 替换 contact、sectionTitles、heroNav、tags、cols 等对象
-        if(cloudData.contact) DATA.contact = Object.assign(DATA.contact, cloudData.contact);
+        if(cloudData.contact){
+          // 合并时跳过空字符串，避免空值覆盖默认链接（如 douyin）
+          Object.keys(cloudData.contact).forEach(k=>{
+            if(cloudData.contact[k] !== '' && cloudData.contact[k] !== null && cloudData.contact[k] !== undefined){
+              DATA.contact[k] = cloudData.contact[k];
+            }
+          });
+        }
         if(cloudData.sectionTitles) DATA.sectionTitles = cloudData.sectionTitles;
         if(cloudData.heroNav) DATA.heroNav = cloudData.heroNav;
         if(cloudData.tags) DATA.tags = cloudData.tags;
@@ -1502,23 +1509,39 @@ async function init(){
   
   // 先从本地加载数据
   loadData();
-  renderAll();
+  const hasLocalData = !!(DATA._version && DATA._version > 0);
   
+  // 优先尝试从云端拉取（无论本地是否有数据，云端数据始终为准）
   if (cloudReady) {
-    // 优先从云端拉取最新数据，防止新设备的空数据覆盖云端
-    const cloudResult = await loadCloudDataVersion();
-    const cloudVersion = cloudResult || 0;
+    const cloudVer = await loadCloudDataVersion();
     
-    if (cloudVersion > 0) {
-      // 云端有数据 → 拉取云端覆盖本地（无论本地是否有数据）
+    if (cloudVer > 0) {
+      // 云端有数据 → 拉取覆盖本地
+      console.log('☁ 检测到云端数据(v' + cloudVer + ')，正在加载...');
       await loadDataFromCloud(true);
-    } else {
-      // 云端没有数据（首次部署），只有编辑者设备才推送
+      // loadDataFromCloud 内部已调用 renderAll()
+    } else if (hasLocalData) {
+      // 云端无数据但本地有 → 编辑者设备首次推送
       const isEditor = !!localStorage.getItem('portfolio_v2_editor_token');
-      const localVersion = DATA._version || 0;
-      if (localVersion > 0 && isEditor) {
-        publishDataToCloud();
+      if (isEditor) {
+        console.log('📤 云端无数据，推送本地数据...');
+        await publishDataToCloud();
       }
+      renderAll();
+    } else {
+      // 云端无数据且本地无数据 → 真正的首次访问
+      console.log('🆕 首次访问，显示默认模板');
+      renderAll();
+    }
+  } else {
+    // 云开发不可用，仅本地模式
+    console.warn('⚠ 云开发未连接，仅使用本地数据');
+    if (hasLocalData) {
+      renderAll();
+    } else {
+      // 新设备，本地也无数据，但云也不可用 — 显示默认并提示
+      console.log('🆕 离线首次访问，显示默认模板');
+      renderAll();
     }
   }
 }
