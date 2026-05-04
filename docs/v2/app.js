@@ -935,7 +935,6 @@ function rerenderAllTags(){
 function restoreHeroNav(){
   if(!DATA.heroNav) DATA.heroNav = {};
   const fields = {
-    'hero-sub': '效果创意设计 · 短视频特效素材 · AIGC 全链路工作流 · AI 智能体工具基建',
     'hero-tagline-text': '动态内容设计 · 短视频特效素材 · AIGC 全链路创作 · AI 智能体工具基建',
     'header-name': '张峻烨',
     'header-role': '效果创意设计 · AIGC',
