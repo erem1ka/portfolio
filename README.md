@@ -1,4 +1,4 @@
-# Portfolio v2 — 张峻烨作品集
+# Portfolio — 张峻烨作品集
 
 > 效果创意设计 × AIGC 全链路创作者
 
@@ -6,9 +6,11 @@
 
 ## 🚀 在线访问
 
-**GitHub Pages（主站）：** [https://erem1ka.github.io/portfolio/v2/](https://erem1ka.github.io/portfolio/v2/)
-
-**预览页：** [https://erem1ka.github.io/portfolio/v2-preview.html](https://erem1ka.github.io/portfolio/v2-preview.html)
+| 版本 | 地址 | 说明 |
+|------|------|------|
+| **v2 主站** | [erem1ka.github.io/portfolio/v2/](https://erem1ka.github.io/portfolio/v2/) | 当前迭代版本 |
+| v2 预览页 | [erem1ka.github.io/portfolio/v2-preview.html](https://erem1ka.github.io/portfolio/v2-preview.html) | 结构一致的预览镜像 |
+| v1 归档 | [erem1ka.github.io/portfolio/](https://erem1ka.github.io/portfolio/) | 暗色电影感初版，tag `v1-stable` |
 
 ---
 
@@ -21,14 +23,16 @@ docs/
 │   ├── app.js                  # 数据渲染、编辑模式、云同步、卡片生成
 │   ├── style.css               # 样式表
 │   ├── cloudbase-sdk.min.js     # 腾讯云开发 SDK
-│   ├── easterEgg.js            # 彩蛋交互
+│   ├── easterEgg.js             # 彩蛋交互
 │   ├── favicon.svg             # 网站图标
-│   ├── hero-illus.png          # Hero 区插画
-│   └── README.md               # 本说明文档
-├── v2-preview.html              # 预览页（与主版结构一致）
+│   ├── hero-illus.png           # Hero 区插画
+│   └── README.md                # v2 详细说明
+├── v2-preview.html              # 预览页
 ├── v2-preview-app.js            # 预览页数据逻辑
-├── v1-*                         # v1 版本（独立运行，不受 v2 影响）
-└── README.md                    # 仓库总说明文档
+├── index.html                   # v1 主页
+├── v1-app.js                   # v1 逻辑
+├── v1-style.css                 # v1 样式
+└── README.md                    # 本说明文档
 ```
 
 ---
@@ -39,7 +43,7 @@ docs/
 
 - 双主题：**深色 / 浅色**，编辑模式下可切换（右上角圆形按钮，暂默认隐藏，优化后再开放）
 - 暗色模式配色对齐 **GitHub Dark（Primer 风格）**，所有文字对比度达到 WCAG AA/AAA
-- CSS 变量 token 驱动：所有颜色、边框、阴影、overlay 均通过变量统一管理
+- CSS 变量 token 驱动：颜色、边框、阴影、overlay 均通过变量统一管理
 
 ### 响应式布局
 
@@ -151,6 +155,6 @@ git push
 
 ---
 
-## 📌 v1 / v2 独立运行
+## 📌 版本独立
 
 v1（`docs/v1-*`）与 v2（`docs/v2/`）完全独立，互不影响。
