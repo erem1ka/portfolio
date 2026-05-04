@@ -454,6 +454,13 @@
     .vcard:hover .card-media img,
     .vcard:hover .card-media video { transform: scale(1.04); }
     .card-media.empty-card { cursor: default; }
+    /* Hide card text area when both title & desc are empty */
+    .card-no-text { display: none; }
+    .editing .card-no-text { display: block; }
+    .gallery-card.card-no-text .gc-title,
+    .gallery-card.card-no-text .gc-sub { display: none; }
+    .editing .gallery-card.card-no-text .gc-title,
+    .editing .gallery-card.card-no-text .gc-sub { display: block; }
     .no-thumb {
       width: 100%; height: 100%;
       display: flex; align-items: center; justify-content: center;

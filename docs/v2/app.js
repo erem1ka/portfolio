@@ -320,6 +320,21 @@ function toggleEdit(){
   editMode = !editMode;
   // 进入编辑模式时标记为编辑者设备（只有编辑者才能推送数据到云端）
   if(editMode) localStorage.setItem('portfolio_v2_editor_token', '1');
+  // 退出编辑模式时：如果用户在编辑中添加了标题/描述，移除 card-no-text 让文字区显示
+  if(!editMode){
+    document.querySelectorAll('.card-no-text').forEach(el=>{
+      const titleP = el.querySelector('[data-field="title"]');
+      const descP = el.querySelector('[data-field="desc"]');
+      if((titleP && titleP.textContent.trim()) || (descP && descP.textContent.trim()))
+        el.classList.remove('card-no-text');
+    });
+    document.querySelectorAll('.gallery-card.card-no-text').forEach(card=>{
+      const gcTitle = card.querySelector('.gc-title');
+      const gcSub = card.querySelector('.gc-sub');
+      if((gcTitle && gcTitle.textContent.trim()) || (gcSub && gcSub.textContent.trim()))
+        card.classList.remove('card-no-text');
+    });
+  }
   const app = document.getElementById('app');
   app.classList.toggle('editing', editMode);
   const btn = document.getElementById('editMenuBtn');
@@ -506,7 +521,7 @@ function makeMp4Card(item, section){
         <button class="del-ov-btn" onclick="event.stopPropagation();deleteCard('${item.id}')">&#x2715; 删除</button>
       </div>
     </div>
-    <div class="p-2.5 pb-2">
+    <div class="p-2.5 pb-2${!(item.title||item.desc)?' card-no-text':''}">
       <p class="font-sans font-medium text-main text-[.82rem] leading-snug mb-0.5" data-field="title">${escHtml(item.title||'作品标题')}</p>
       <p class="text-sub font-light text-[.72rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
@@ -1462,7 +1477,7 @@ function makeGalleryCard(item, rowH, galKey){
   const ar = item.ar || (9/16);
   const cardW = Math.round(rowH * ar);
   const card=document.createElement('div');
-  card.className='gallery-card'+(editMode?' card-hover':'');
+  card.className='gallery-card'+(editMode?' card-hover':'')+(item.title||item.desc?'':' card-no-text');
   card.dataset.id=item.id||'';
   card.dataset.section=galKey;
   card.dataset.type=item.type||'auto';
