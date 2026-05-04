@@ -737,6 +737,18 @@
     #qr-zoom-wrap img { max-width: 320px; border-radius: 8px; }
 
     /* ── Mobile nav ── */
+    #mobileNavBtn {
+      display: none; position: fixed; top: 12px; left: 16px; z-index: 56;
+      width: 40px; height: 40px; border: 1px solid var(--color-sep); border-radius: 6px;
+      background: var(--bg-card); cursor: pointer;
+      align-items: center; justify-content: center;
+      transition: border-color .2s;
+    }
+    #mobileNavBtn:hover { border-color: var(--accent); }
+    #mobileNavBtn svg { width: 18px; height: 18px; stroke: var(--color-sub); }
+    @media(max-width:900px) {
+      #mobileNavBtn { display: flex; }
+    }
     #mobileNavPanel {
       display: none; position: fixed;
       top: 52px; left: 0; right: 0; z-index: 55;
@@ -1091,6 +1103,15 @@
   </div>
 </header>
 
+<!-- 移动端汉堡菜单按钮 -->
+<button id="mobileNavBtn" onclick="toggleMobileNav()" aria-label="菜单">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <line x1="4" y1="7" x2="20" y2="7"/>
+    <line x1="4" y1="12" x2="20" y2="12"/>
+    <line x1="4" y1="17" x2="20" y2="17"/>
+  </svg>
+</button>
+
 <!-- ── Hero ── -->
 <section class="hero-section content-offset" id="hero-section">
   <div class="hero-left">
@@ -1329,6 +1350,19 @@
 <script src="./v2-preview-app.js"></script>
 
 <script>
+// Mobile nav toggle
+function toggleMobileNav(){
+  const panel = document.getElementById('mobileNavPanel');
+  if(panel) panel.classList.toggle('open');
+}
+document.addEventListener('click', function(e){
+  const panel = document.getElementById('mobileNavPanel');
+  const btn = document.getElementById('mobileNavBtn');
+  if(panel && panel.classList.contains('open') && !panel.contains(e.target) && !btn.contains(e.target)){
+    panel.classList.remove('open');
+  }
+});
+
 // v2 theme init & toggleTheme override
 (function(){
   const app = document.getElementById('app');
