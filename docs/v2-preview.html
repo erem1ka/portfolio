@@ -52,7 +52,7 @@
 
     /* ── Reset / Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; overflow-x: hidden; }
+    html { scroll-behavior: smooth; overflow-x: clip; }
     body {
       background: var(--bg-page);
       color: var(--color-main);
@@ -965,9 +965,14 @@
       .section-sticker { display: none; }
     }
 
+    @media (max-width: 600px) {
+      #contact-grid { gap: 48px; }
+    }
     @media (max-width: 375px) {
       .hero-name { font-size: clamp(2.4rem, 10vw, 3.2rem); }
       .section-inner { padding: 40px 16px 40px; }
+      #contact-grid { gap: 32px; flex-direction: column; align-items: center; }
+    }
     }
 
   </style>
@@ -1255,7 +1260,7 @@
         <p class="section-desc">联系我</p>
       </div>
     </div>
-    <div style="display:flex;justify-content:center;gap:120px" id="contact-grid">
+    <div style="display:flex;justify-content:center;gap:120px;flex-wrap:wrap" id="contact-grid">
       <div id="contact-left-col">
         <p style="font-family:'Noto Sans SC',sans-serif;font-size:.68rem;font-weight:200;letter-spacing:.2em;text-transform:uppercase;color:var(--color-dim);margin-bottom:16px">微信</p>
         <div id="wechat-qr-wrap" style="position:relative;display:inline-block;cursor:pointer;transition:transform .22s,box-shadow .22s" onmouseenter="this.style.transform='scale(1.04) translateY(-3px)';this.style.boxShadow='0 16px 40px rgba(200,145,122,.22),0 4px 12px rgba(0,0,0,.08)';this.style.borderColor='var(--accent-light)'"
