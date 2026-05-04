@@ -1085,20 +1085,34 @@ function extractFirstFrame(file){
   return new Promise(resolve=>{
     const url = URL.createObjectURL(file);
     const video = document.createElement('video');
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = 'metadata';
-    video.src = url;
-    video.addEventListener('loadeddata',()=>{ video.currentTime = 0.01; });
+    video.muted = true; video.playsInline = true;
+    video.preload = 'metadata'; video.src = url;
+    // Smart seek: try middle first, then 1/4, 3/4, 0.5s — skip black frames
+    let seekPos = [];
+    let idx = 0;
+    video.addEventListener('loadedmetadata',()=>{
+      const d = video.duration;
+      seekPos = (d && d !== Infinity && d > 0) ? [d/2, d*0.25, d*0.75, 0.5] : [1, 0.5];
+      video.currentTime = seekPos[idx];
+    });
     video.addEventListener('seeked',()=>{
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video,0,0);
-      resolve(canvas.toDataURL('image/jpeg',.82));
+      const c = document.createElement('canvas');
+      c.width = video.videoWidth; c.height = video.videoHeight;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      // Detect black frame: sample every 4th pixel
+      const px = ctx.getImageData(0, 0, c.width, c.height).data;
+      let dark = 0;
+      for(let i=0; i<px.length; i+=16){
+        if(px[i]<30 && px[i+1]<30 && px[i+2]<30) dark++;
+      }
+      if(dark / (px.length/16) > 0.85 && ++idx < seekPos.length){
+        video.currentTime = seekPos[idx]; return; // try next position
+      }
+      resolve(c.toDataURL('image/jpeg', .82));
       URL.revokeObjectURL(url);
     });
-    video.addEventListener('error',()=>resolve(''));
+    video.addEventListener('error', ()=>resolve(''));
   });
 }
 
