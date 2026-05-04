@@ -294,13 +294,13 @@
     .gallery-outer-left {
       overflow: visible;
       clip-path: inset(0);
-      padding-right: 60px;
+      padding-right: 96px;
     }
     .gallery-outer-left .gallery-track { justify-content: flex-start; }
     .gallery-outer-right {
       overflow: visible;
       clip-path: inset(0);
-      padding-right: 60px;
+      padding-right: 96px;
     }
     .gallery-outer-right .gallery-track { justify-content: flex-start; }
 
@@ -360,7 +360,7 @@
     }
     .gallery-outer::before, .gallery-outer::after {
       content: ''; position: absolute; top: 0; bottom: 0;
-      width: 2%; z-index: 3; pointer-events: none;
+      width: 60px; z-index: 3; pointer-events: none;
     }
     .gallery-outer::before { left: 0; background: linear-gradient(to right, var(--bg-page), transparent); }
     .gallery-outer::after  { right: 0; background: linear-gradient(to left,  var(--bg-page), transparent); }
@@ -962,7 +962,7 @@
       .section-title-wrap { margin-bottom: 36px; }
       #theme-toggle-btn { width: 40px; height: 40px; top: 10px; right: 10px; }
       #theme-toggle-btn svg { width: 18px; height: 18px; }
-      .gallery-outer-left, .gallery-outer-right { padding-right: 16px; }
+      .gallery-outer-left, .gallery-outer-right { padding-right: 20px; }
       .work-grid[style*="--cols"], .masonry-grid[style*="--cols"] { --cols: 2 !important; }
       #editMenu .menu-inner { min-width: calc(100vw - 48px); }
       #mobileNavPanel a { font-size: .68rem; }
@@ -972,7 +972,7 @@
     @media (max-width: 375px) {
       .hero-name { font-size: clamp(2.4rem, 10vw, 3.2rem); }
       .section-inner { padding: 40px 16px 40px; }
-      .gallery-outer-left, .gallery-outer-right { padding-right: 8px; }
+      .gallery-outer-left, .gallery-outer-right { padding-right: 16px; }
     }
 
   </style>
