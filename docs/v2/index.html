@@ -907,7 +907,7 @@
     /* ── 桌面大屏 ≥ 1440px ── */
     @media (min-width: 1440px) {
       :root { --sidebar-w: 280px; }
-      .section-inner { padding: 96px 0 96px clamp(96px, 7vw, 160px); }
+      .section-inner { padding: 96px clamp(96px, 7vw, 160px) 96px clamp(96px, 7vw, 160px); }
       .hero-section { padding: 96px clamp(72px, 6vw, 140px); }
     }
 
@@ -916,7 +916,7 @@
       :root { --sidebar-w: 300px; }
       /* 内容区增加最大宽度，避免超宽屏行太长 */
       .content-offset { max-width: 1800px; }
-      .section-inner { padding: 112px 80px 112px clamp(120px, 8vw, 200px); }
+      .section-inner { padding: 112px clamp(120px, 8vw, 200px) 112px clamp(120px, 8vw, 200px); }
       .hero-section { padding: 112px clamp(80px, 7vw, 160px); }
     }
 
@@ -924,13 +924,13 @@
     @media (min-width: 2560px) {
       :root { --sidebar-w: 320px; }
       .content-offset { max-width: 2200px; }
-      .section-inner { padding: 128px 100px 128px clamp(140px, 8vw, 240px); }
+      .section-inner { padding: 128px clamp(140px, 8vw, 240px) 128px clamp(140px, 8vw, 240px); }
     }
 
     /* ── 中等桌面 901–1280px（紧凑布局） ── */
     @media (min-width: 901px) and (max-width: 1280px) {
       :root { --sidebar-w: 220px; }
-      .section-inner { padding: 72px 0 72px 64px; }
+      .section-inner { padding: 72px 64px 72px 64px; }
       .hero-section { padding: 64px 48px; }
       .hero-name { font-size: clamp(3.2rem, 5vw, 5.5rem); }
       .section-title-wrap { margin-bottom: 44px; }
