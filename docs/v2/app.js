@@ -522,7 +522,7 @@ function makeMp4Card(item, section){
       </div>
     </div>
     <div class="p-2.5 pb-2${!(item.title||item.desc)?' card-no-text':''}">
-      <p class="font-sans font-medium text-main text-[.82rem] leading-snug mb-0.5" data-field="title">${escHtml(item.title||'作品标题')}</p>
+      <p class="font-sans font-medium text-main text-[.82rem] leading-snug mb-0.5" data-field="title">${escHtml((item.title||item.desc) ? (item.title||'作品标题') : '')}</p>
       <p class="text-sub font-light text-[.72rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
   if(mediaSrc){
@@ -552,8 +552,8 @@ function makeImgCard(item, section){
         <button class="del-ov-btn" onclick="event.stopPropagation();deleteCard('${item.id}')">&#x2715; 删除</button>
       </div>
     </div>
-    <div class="p-2.5 pb-2">
-      <p class="font-sans font-medium text-main text-[.82rem] leading-snug mb-0.5" data-field="title">${escHtml(item.title||'作品标题')}</p>
+    <div class="p-2.5 pb-2${!(item.title||item.desc)?' card-no-text':''}">
+      <p class="font-sans font-medium text-main text-[.82rem] leading-snug mb-0.5" data-field="title">${escHtml((item.title||item.desc) ? (item.title||'作品标题') : '')}</p>
       <p class="text-sub font-light text-[.72rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
   if(item.media){
@@ -1533,14 +1533,14 @@ function makeGalleryCard(item, rowH, galKey){
   const titleDiv=document.createElement('div');
   titleDiv.className='gc-title';
   titleDiv.style.backfaceVisibility='hidden'; // force GPU layer to prevent text repaint flicker
-  titleDiv.textContent=item.title||'作品标题';
+  titleDiv.textContent=(item.title||item.desc) ? (item.title||'作品标题') : '';
   if(editMode){ titleDiv.contentEditable='true'; titleDiv.onblur=()=>{item.title=titleDiv.textContent.trim();saveData();}; }
   card.appendChild(titleDiv);
   const descDiv=document.createElement('div');
   descDiv.className='gc-sub';
   descDiv.textContent=item.desc||'';
   if(editMode){ descDiv.contentEditable='true'; descDiv.onblur=()=>{item.desc=descDiv.textContent.trim();saveData();}; }
-  if(item.desc||editMode) card.appendChild(descDiv);
+  if(item.desc||editMode||!(item.title||item.desc)) card.appendChild(descDiv);
   return card;
 }
 
