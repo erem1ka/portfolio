@@ -1800,8 +1800,10 @@ document.addEventListener('click', e=>{
   function findVideoSrc(cardEl){
     const id = cardEl.dataset.id;
     if(!id) return '';
-    for(const sec of ['practice','practice2','mg','agent']){
-      const item = (DATA[sec]||[]).find(x=>x.id===id);
+    for(const sec of Object.keys(DATA)){
+      const arr = DATA[sec];
+      if(!Array.isArray(arr)) continue;
+      const item = arr.find(x=>x.id===id);
       if(item && item.media) return item.media;
     }
     return '';
