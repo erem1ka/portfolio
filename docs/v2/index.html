@@ -293,14 +293,10 @@
     }
     .gallery-outer-left {
       overflow: visible;
-      clip-path: inset(0);
-      margin-right: -96px;
     }
     .gallery-outer-left .gallery-track { justify-content: flex-start; }
     .gallery-outer-right {
       overflow: visible;
-      clip-path: inset(0);
-      margin-right: -96px;
     }
     .gallery-outer-right .gallery-track { justify-content: flex-start; }
 
@@ -974,10 +970,7 @@
       }
 
       /* 画廊穿透到屏幕右边缘 */
-      .gallery-outer-left,
-      .gallery-outer-right {
-        margin-right: -28px;
-      }
+
 
       /* 隐藏自定义光标 */
       #cursor-ball, #cursor-ring { display: none !important; }
@@ -999,12 +992,6 @@
       /* Section 内边距 */
       .section-inner { padding: 48px 20px 48px; }
 
-      /* 画廊穿透 */
-      .gallery-outer-left,
-      .gallery-outer-right {
-        margin-right: -20px;
-      }
-
       /* Section 标题 */
       h2.section-h2 { font-size: clamp(1.4rem, 5.5vw, 2rem); }
       .section-title-wrap { margin-bottom: 36px; }
@@ -1015,12 +1002,6 @@
         top: 10px; right: 10px;
       }
       #theme-toggle-btn svg { width: 18px; height: 18px; }
-
-      /* 画廊 padding */
-      .gallery-outer-left,
-      .gallery-outer-right {
-        padding-right: 20px;
-      }
 
       /* 卡片 work-grid 在手机端固定 2 列 */
       .work-grid[style*="--cols"],
@@ -1042,8 +1023,7 @@
     @media (max-width: 375px) {
       .hero-name { font-size: clamp(2.4rem, 10vw, 3.2rem); }
       .section-inner { padding: 40px 16px 40px; }
-      .gallery-outer-left,
-      .gallery-outer-right { margin-right: -16px; }
+
     }
 
   </style>
