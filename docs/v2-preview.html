@@ -355,10 +355,11 @@
     }
     .gallery-outer::before, .gallery-outer::after {
       content: ''; position: absolute; top: 0; bottom: 0;
-      width: 36px; z-index: 3; pointer-events: none; opacity: .55;
+      width: 48px; z-index: 3; pointer-events: none;
+      backdrop-filter: blur(1.5px); -webkit-backdrop-filter: blur(1.5px);
     }
-    .gallery-outer::before { left: 0; background: linear-gradient(to right, var(--bg-page), transparent); }
-    .gallery-outer::after  { right: 0; background: linear-gradient(to left,  var(--bg-page), transparent); }
+    .gallery-outer::before { left: 0; background: linear-gradient(to right, rgba(245,240,235,.45), rgba(200,145,122,.05) 40%, transparent); }
+    .gallery-outer::after  { right: 0; background: linear-gradient(to left,  rgba(245,240,235,.45), rgba(200,145,122,.05) 40%, transparent); }
     .gallery-track { display: flex; gap: 12px; padding: 0 2px; will-change: transform; transform: translate3d(0,0,0); transform-style: preserve-3d; }
     .gallery-card, .gallery-card-clone {
       flex-shrink: 0; border-radius: 4px; border: 1px solid var(--color-sep);
@@ -511,6 +512,9 @@
       background: rgba(245,240,235,.92);
     }
     .dark .upload-ov { background: rgba(13,17,23,.94); }
+    /* 深色模式：画廊渐变用暗色玻璃底 + 微暖光 */
+    .dark .gallery-outer::before { background: linear-gradient(to right, rgba(13,17,23,.45), rgba(200,145,122,.05) 40%, transparent); }
+    .dark .gallery-outer::after  { background: linear-gradient(to left,  rgba(13,17,23,.45), rgba(200,145,122,.05) 40%, transparent); }
     /* 深色模式：卡片用暗影（而非亮色高光）营造深度 */
     .dark .gallery-card:hover, .dark .gallery-card-clone:hover {
       border-color: var(--accent);
