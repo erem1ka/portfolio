@@ -43,12 +43,15 @@ let DATA = {
     name: '张峻烨',
     bio: '效果创意设计 × AIGC 全链路创作者。实习期间参与短视频平台全链路特效素材设计，熟练掌握 AE 动态设计、Seedream 生图、骨骼木偶动画。持续探索 AI 工具与视觉创作的融合边界，自主搭建创意工作流工具集，具备 AI Agent 应用思维与全链路创意基建能力。',
     tags: ['After Effects','Seedream','MG 图形动效','骨骼木偶动画','AIGC 工作流','Agent 基建','剪映'],
-    email: '{{EMAIL}}',
-    qq: '{{QQ}}',
-    phone: '{{PHONE}}',
+    email: '',
+    qq: '',
+    phone: '',
 
     douyin: 'https://www.douyin.com/user/MS4wLjABAAAA3JxwUq5D1epmpu-ZVxnAm6JzOTQzohLG4oUqFH09aiZPN8xeokgwXIA3A2H5wZFg',
-    wechatQr: ''
+    wechatQr: '',
+    email: '',
+    qq: '',
+    phone: ''
   },
   sectionTitles: {
     practice: { title:'短视频平台 · 业务作品', desc:'参与短视频平台全链路特效素材设计，独立完成动态特效、画面转场、轻量化动画素材的 AE 全流程制作与方案输出' },
@@ -96,8 +99,7 @@ function loadData(){
           }
         });
       }
-      if(d.skills) DATA.skills = d.skills;
-      if(d.toolCards) DATA.toolCards = d.toolCards;
+
       DATA._version = d._version;
       let cleaned = false;
       ['practice','mg','aigc-img','agent'].forEach(sec => {
@@ -260,8 +262,7 @@ async function loadDataFromCloud(forceLoad) {
             if(DATA.cols[sec] !== undefined && (DATA.cols[sec] <= 8 || DATA.cols[sec] === 100)) DATA.cols[sec] = 180;
           });
         }
-        if(cloudData.skills) DATA.skills = cloudData.skills;
-        if(cloudData.toolCards) DATA.toolCards = cloudData.toolCards;
+
         DATA._version = cloudData._version;
         try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); }catch(e){}
         renderAll();
@@ -363,17 +364,7 @@ function toggleEdit(){
 function openEditMenu(){ document.getElementById('editMenu').classList.add('open'); }
 function closeEditMenu(){ document.getElementById('editMenu').classList.remove('open'); }
 
-function toggleMobileNav(){
-  const nav = document.getElementById('navLinks');
-  nav.classList.toggle('mobile-open');
-}
-// Close mobile nav when clicking a link
-document.addEventListener('click', e=>{
-  if(e.target.closest('#navLinks a') || e.target.closest('#themeBtn')){
-    const nav = document.getElementById('navLinks');
-    if(nav) nav.classList.remove('mobile-open');
-  }
-});
+
 
 function exportData(){
   const data = {
@@ -770,15 +761,7 @@ function restoreContact(){
   };
 
 
-  // ── Tool card fields ──
-  const TOOL_FIELDS = ['tool1-title','tool1-desc','tool2-title','tool2-desc','tool3-title','tool3-desc'];
-  if(!DATA.toolCards) DATA.toolCards = {};
-  TOOL_FIELDS.forEach(id=>{
-    const el = document.getElementById(id);
-    if(!el) return;
-    if(DATA.toolCards[id]) el.textContent = DATA.toolCards[id];
-    el.onblur=()=>{ DATA.toolCards[id]=el.textContent.trim(); saveData(); };
-  });
+
   // restore resume
   if(!DATA.contact.resumeName) DATA.contact.resumeName='';
   if(!DATA.contact.resumeUrl) DATA.contact.resumeUrl='';
@@ -1096,27 +1079,7 @@ function rerenderItemSection(id){
   else renderSection(sec, sec+'-grid');
 }
 
-// Extract first frame of animated webp/gif from a URL via canvas
-function extractAnimFirstFrame(src){
-  return new Promise(resolve=>{
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = ()=>{
-      try{
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        canvas.getContext('2d').drawImage(img, 0, 0);
-        resolve(canvas.toDataURL('image/jpeg', 0.88));
-      } catch(e){
-        // CORS or other error: fall back to using src directly
-        resolve(null);
-      }
-    };
-    img.onerror = ()=>resolve(null);
-    img.src = src;
-  });
-}
+
 
 function extractFirstFrame(file){
   return new Promise(resolve=>{
@@ -1158,41 +1121,6 @@ function getImageAR(url){
     img.src=url;
   });
 }
-
-function openInlinePlayer(src, cardEl){
-  const player=document.getElementById('inlinePlayer');
-  const video=document.getElementById('inlineVideo');
-  video.src=src;
-  const vw=window.innerWidth;
-  const vh=window.innerHeight;
-  const w=Math.min(Math.round(vw*.82),1200);
-  const loadHandler=()=>{
-    const ar=video.videoWidth/video.videoHeight;
-    let h=Math.round(w/ar);
-    if(h>vh*.82) h=Math.round(vh*.82);
-    player.style.width=w+'px';
-    player.style.height=h+'px';
-    player.style.left='50%';
-    player.style.top='50%';
-    player.style.transform=`translate(-50%,-50%)`;
-    video.removeEventListener('loadedmetadata',loadHandler);
-  };
-  video.addEventListener('loadedmetadata',loadHandler);
-  player.classList.add('open');
-  document.getElementById('playerBackdrop').classList.add('open');
-  video.play().catch(()=>{});
-}
-
-function closeInlinePlayer(){
-  const player=document.getElementById('inlinePlayer');
-  const video=document.getElementById('inlineVideo');
-  video.pause();
-  video.src='';
-  player.classList.remove('open');
-  document.getElementById('playerBackdrop').classList.remove('open');
-}
-
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeInlinePlayer(); } });
 
 function triggerQRUpload(){
   const inp=document.createElement('input');
@@ -1359,7 +1287,6 @@ function _clearDragIndicators(container) {
 
 function enableDragSort() {
   const GRIDS = [
-    ['practice-grid', 'practice'],
     ['mg-grid', 'mg'],
     ['aigc-img-grid', 'aigc-img'],
     ['agent-grid', 'agent'],
@@ -1424,23 +1351,19 @@ function applyLayoutByScreen() {
   const isMobile = window.innerWidth <= 900;
   const sidebar = document.getElementById('sidebar');
   const navLinks = document.getElementById('navLinks');
-  const hamburger = document.getElementById('hamburgerBtn');
-  const mobileThemeBtn = document.getElementById('themeBtnMobile');
+  // 读取 CSS 变量，与响应式断点保持一致
+  const sidebarW = isMobile ? '0px' : (getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w').trim() || '260px');
 
   if (isMobile) {
     if(sidebar) sidebar.style.display = 'none';
-    if(navLinks) navLinks.style.display = 'none'; // hidden by default, toggled by hamburger
-    if(hamburger) hamburger.style.display = 'flex';
-    // Remove content-offset on mobile
+    if(navLinks) navLinks.style.display = 'none';
     document.querySelectorAll('.content-offset').forEach(el => el.style.marginLeft = '0');
-    document.querySelector('header') && (document.querySelector('header').style.marginLeft = '0');
+    const h = document.querySelector('header'); if(h) h.style.marginLeft = '0';
   } else {
     if(sidebar) sidebar.style.display = 'flex';
-    if(navLinks) navLinks.style.display = 'none'; // desktop: navLinks hidden, sidebar handles navigation
-    if(hamburger) hamburger.style.display = 'none';
-    // Apply content-offset on desktop
-    document.querySelectorAll('.content-offset').forEach(el => el.style.marginLeft = '240px');
-    document.querySelector('header') && (document.querySelector('header').style.marginLeft = '240px');
+    if(navLinks) navLinks.style.display = 'none';
+    document.querySelectorAll('.content-offset').forEach(el => el.style.marginLeft = sidebarW);
+    const h = document.querySelector('header'); if(h) h.style.marginLeft = sidebarW;
   }
 }
 
@@ -1510,24 +1433,14 @@ const GALLERY_ROW_H = 280;
 const GALLERY_ROW_H_MAP = { 'practice2': 200 }; // per-key overrides
 
 function renderGallerySection(key){
-  const rowH = GALLERY_ROW_H_MAP[key] || GALLERY_ROW_H;
   const track=document.getElementById(key+'-gallery-track');
   if(!track) return;
   track.innerHTML='';
   const items=(DATA[key]||[]).filter(i=>i.media);
-  items.forEach(item=>{
-    const card=makeGalleryCard(item, rowH, key);
-    track.appendChild(card);
-  });
-  if(editMode){
-    const empty=makeGalleryCard({media:'',title:'',desc:'',type:'auto'}, rowH, key);
-    track.appendChild(empty);
-  }
   initGalleryLoop(key, track, items);
 }
 
-// backwards compat alias
-function renderPracticeGallery(items){ renderGallerySection('practice'); }
+
 
 function makeGalleryCard(item, rowH, galKey){
   rowH = rowH || GALLERY_ROW_H;

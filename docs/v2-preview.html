@@ -189,17 +189,6 @@
     .dark .section-inner { background: var(--bg-page); }
     .dark .section-sticky-header { background: var(--bg-page); }
     .dark .hero-section { background: var(--bg-page); }
-    .header-link-item {
-      display: flex; flex-direction: column;
-      align-items: center; gap: 4px;
-      cursor: pointer; text-decoration: none;
-    }
-    .header-link-text {
-      font-family: 'Noto Sans SC', sans-serif;
-      font-size: .48rem; font-weight: 200; letter-spacing: .12em;
-      text-transform: uppercase; color: var(--color-sub);
-    }
-
     /* ── Hero Section ── 文字偏左，插画偏右，铺满内容区 */
     .hero-section {
       position: relative;
@@ -607,10 +596,6 @@
       font-size: .5rem; color: var(--color-dim);
     }
 
-    /* ── Inline video player ── */
-    #playerBackdrop.open { display: block !important; }
-    .inline-player.open { display: block !important; }
-
     /* ── Image zoom ── */
     #img-zoom-wrap {
       position: fixed; inset: 0; z-index: 200;
@@ -736,25 +721,6 @@
       transition: color .2s;
     }
     .cfb-close:hover { color: #fff; }
-
-    /* ── Prompt card ── */
-    .prompt-card {
-      background: var(--bg-card); border: 1px solid var(--color-sep);
-      border-radius: 6px; padding: 20px 22px;
-      font-family: 'Space Mono', monospace; font-size: .7rem;
-      line-height: 1.9; color: var(--color-sub);
-      width: 100%; position: relative;
-    }
-    .prompt-card .prompt-tag {
-      font-family: 'Noto Sans SC', sans-serif;
-      font-size: .5rem; font-weight: 200;
-      letter-spacing: .16em; text-transform: uppercase;
-      color: var(--accent); margin-bottom: 10px;
-    }
-    .prompt-card .prompt-text {
-      white-space: pre-wrap; word-break: break-all;
-      color: var(--color-main);
-    }
 
     /* ── Bilibili / Douyin contact links ── */
     #contact-douyin {
@@ -1102,12 +1068,6 @@
     </div>
   </div>
 
-  <!-- sidebar-bottom: copyright -->
-  <div class="sidebar-bottom" style="display:none">
-    <button id="themeBtnSidebar" onclick="toggleTheme()"></button>
-    <svg id="themeIconSidebar" viewBox="0 0 24 24"></svg>
-    <button id="editBtnSidebar" onclick="openEditMenu()"></button>
-  </div>
   <!-- copyright 固定在 sidebar 左下角 -->
   <p style="font-family:'Noto Sans SC',sans-serif;font-size:.7rem;font-weight:200;letter-spacing:.1em;color:var(--color-dim);text-align:center;width:var(--sidebar-w);position:fixed;left:0;bottom:16px;padding:0 24px;z-index:61">© 2027 Zhang Junye</p>
 </aside>
@@ -1129,10 +1089,6 @@
     <a id="nav-practice"></a><a id="nav-mg"></a><a id="nav-aigc"></a>
     <a id="nav-agent"></a><a id="nav-contact"></a>
   </div>
-  <!-- 移动端主题切换备用 -->
-  <button id="themeBtnMobile" onclick="toggleTheme()" style="display:none" aria-label="切换主题">
-    <svg id="themeIconMobile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
-  </button>
 </header>
 
 <!-- ── Hero ── -->
@@ -1323,15 +1279,15 @@
       <div style="display:flex;flex-direction:column;gap:24px" id="contact-right-col">
         <div>
           <p style="font-family:'Noto Sans SC',sans-serif;font-size:.68rem;font-weight:200;letter-spacing:.2em;text-transform:uppercase;color:var(--color-dim);margin-bottom:6px">电话</p>
-          <span style="font-family:'Noto Sans SC',sans-serif;font-size:1rem;font-weight:400;color:var(--color-main)" id="contact-phone" contenteditable="false">{{PHONE}}</span>
+          <span style="font-family:'Noto Sans SC',sans-serif;font-size:1rem;font-weight:400;color:var(--color-main)" id="contact-phone" contenteditable="false"></span>
         </div>
         <div>
           <p style="font-family:'Noto Sans SC',sans-serif;font-size:.68rem;font-weight:200;letter-spacing:.2em;text-transform:uppercase;color:var(--color-dim);margin-bottom:6px">邮箱</p>
-          <span style="font-family:'Noto Sans SC',sans-serif;font-size:1rem;font-weight:400;color:var(--color-main)" id="contact-email" contenteditable="false">{{EMAIL}}</span>
+          <span style="font-family:'Noto Sans SC',sans-serif;font-size:1rem;font-weight:400;color:var(--color-main)" id="contact-email" contenteditable="false"></span>
         </div>
         <div>
           <p style="font-family:'Noto Sans SC',sans-serif;font-size:.68rem;font-weight:200;letter-spacing:.2em;text-transform:uppercase;color:var(--color-dim);margin-bottom:6px">QQ</p>
-          <span style="font-family:'Noto Sans SC',sans-serif;font-size:1rem;font-weight:400;color:var(--color-main)" id="contact-qq" contenteditable="false">{{QQ}}</span>
+          <span style="font-family:'Noto Sans SC',sans-serif;font-size:1rem;font-weight:400;color:var(--color-main)" id="contact-qq" contenteditable="false"></span>
         </div>
       </div>
     </div>
@@ -1341,11 +1297,7 @@
 <!-- footer 已移除，copyright 在 sidebar -->
 
 <!-- ── Overlays ── -->
-<div id="playerBackdrop" onclick="closeInlinePlayer()" style="display:none;position:fixed;inset:0;z-index:199;background:rgba(13,17,23,.88)"></div>
-<div class="inline-player" id="inlinePlayer" style="display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:200;background:var(--bg-card);border-radius:12px 12px 0 0;padding:16px;max-width:700px;width:100%">
-  <button class="inline-player-close" onclick="closeInlinePlayer()" style="position:absolute;top:12px;right:16px;font-family:'Space Mono',monospace;font-size:.7rem;color:var(--color-sub);background:none;border:none;cursor:pointer">✕ 关闭</button>
-  <video id="inlineVideo" controls playsinline style="width:100%;border-radius:8px"></video>
-</div>
+
 
 
 <div id="editMenu" onclick="if(event.target===this)closeEditMenu()">
@@ -1393,10 +1345,8 @@
   function syncThemeIcon(isDark){
     const sunPath = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
     const moonPath = '<path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/>';
-    ['themeIconSidebar','themeIconMobile','themeIconMain'].forEach(id=>{
-      const el = document.getElementById(id);
-      if(el) el.innerHTML = isDark ? sunPath : moonPath;
-    });
+    const el = document.getElementById('themeIconMain');
+    if(el) el.innerHTML = isDark ? sunPath : moonPath;
   }
   // 初始化图标
   syncThemeIcon(saved === 'dark');
