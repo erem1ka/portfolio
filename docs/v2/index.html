@@ -937,6 +937,110 @@
       100% { transform: translate(-50%,-50%) scale(1); opacity: 0; }
     }
 
+    /* ══════════════════════════════════════════
+       响应式断点
+       ≤ 900px  平板横屏 / 大屏手机（竖屏）
+       ≤ 600px  手机
+       ══════════════════════════════════════════ */
+
+    /* ── 平板 / 大屏手机 ≤ 900px ── */
+    @media (max-width: 900px) {
+      /* 主题切换按钮缩小 */
+      #theme-toggle-btn {
+        width: 48px; height: 48px;
+        top: 12px; right: 12px;
+      }
+
+      /* Hero 改为垂直堆叠 */
+      .hero-section {
+        flex-direction: column;
+        align-items: flex-start;
+        min-height: auto;
+        padding: 56px 28px 40px;
+        gap: 28px;
+      }
+      .hero-left {
+        max-width: 100%;
+        padding-right: 0;
+      }
+      .hero-right {
+        width: 100%;
+        max-height: 300px;
+        justify-content: center;
+      }
+      .hero-right-img { max-height: 280px; }
+
+      /* Section 内边距收窄 */
+      .section-inner {
+        padding: 64px 28px 64px;
+      }
+
+      /* 画廊行高缩小 */
+      .gallery-outer-left,
+      .gallery-outer-right {
+        padding-right: 28px;
+      }
+
+      /* 隐藏自定义光标 */
+      #cursor-ball, #cursor-ring { display: none !important; }
+    }
+
+    /* ── 手机 ≤ 600px ── */
+    @media (max-width: 600px) {
+      /* Hero 字体 */
+      .hero-name { font-size: clamp(2.8rem, 11vw, 4rem); }
+      .hero-tagline { font-size: 1rem; }
+      .hero-greeting { font-size: .6rem; }
+      .hero-sub { font-size: .65rem; }
+      .hero-section { padding: 40px 20px 32px; }
+
+      /* 右侧插画在手机上进一步缩小 */
+      .hero-right { max-height: 220px; }
+      .hero-right-img { max-height: 200px; }
+
+      /* Section 内边距 */
+      .section-inner { padding: 48px 20px 48px; }
+
+      /* Section 标题 */
+      h2.section-h2 { font-size: clamp(1.4rem, 5.5vw, 2rem); }
+      .section-title-wrap { margin-bottom: 36px; }
+
+      /* 主题切换按钮 */
+      #theme-toggle-btn {
+        width: 40px; height: 40px;
+        top: 10px; right: 10px;
+      }
+      #theme-toggle-btn svg { width: 18px; height: 18px; }
+
+      /* 画廊 padding */
+      .gallery-outer-left,
+      .gallery-outer-right {
+        padding-right: 16px;
+      }
+
+      /* 卡片 work-grid 在手机端固定 2 列 */
+      .work-grid[style*="--cols"],
+      .masonry-grid[style*="--cols"] {
+        --cols: 2 !important;
+      }
+
+      /* 编辑菜单内容区宽度 */
+      #editMenu .menu-inner { min-width: calc(100vw - 48px); }
+
+      /* mobile nav panel 字体 */
+      #mobileNavPanel a { font-size: .68rem; }
+
+      /* 隐藏装饰贴纸（手机屏幕太小会遮挡内容） */
+      .section-sticker { display: none; }
+    }
+
+    /* ── 超小屏 ≤ 375px ── */
+    @media (max-width: 375px) {
+      .hero-name { font-size: clamp(2.4rem, 10vw, 3.2rem); }
+      .section-inner { padding: 40px 16px 40px; }
+      .gallery-outer-left,
+      .gallery-outer-right { padding-right: 8px; }
+    }
 
   </style>
 </head>
