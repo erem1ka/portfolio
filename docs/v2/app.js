@@ -132,7 +132,7 @@ async function loadCloudDataVersion() {
   return 0;
 }
 
-async function publishDataToCloud() {
+async function publishDataToCloud(force) {
   if (!db) {
     console.warn('云数据库未初始化，跳过同步');
     return;
@@ -146,13 +146,15 @@ async function publishDataToCloud() {
   }
   
   try {
-    // Safety check: only push if local version >= cloud version
-    const cloudVer = await loadCloudDataVersion();
-    const localVer = DATA._version || 0;
-    if (cloudVer > localVer) {
-      console.log('云端数据更新(local=' + localVer + ' cloud=' + cloudVer + ')，跳过推送，先拉取');
-      await loadDataFromCloud(true);
-      return;
+    // Safety check: only push if local version >= cloud version（force=true 时跳过，如删除卡片）
+    if (!force) {
+      const cloudVer = await loadCloudDataVersion();
+      const localVer = DATA._version || 0;
+      if (cloudVer > localVer) {
+        console.log('云端数据更新(local=' + localVer + ' cloud=' + cloudVer + ')，跳过推送，先拉取');
+        await loadDataFromCloud(true);
+        return;
+      }
     }
     
     const collection = db.collection('portfolio_v2');
@@ -1026,7 +1028,12 @@ async function deleteCard(id){
   if(sec){
     const idx = DATA[sec].findIndex(x=>x.id===id);
     DATA[sec].splice(idx,1);
-    saveData();
+    // 更新本地版本号并写 localStorage，但不触发防抖推送
+    DATA._version = Date.now();
+    try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); } catch(e){}
+    // 立刻强制推云端，跳过版本比较（删除是明确操作，必须同步）
+    clearTimeout(_publishTimer);
+    if(db) publishDataToCloud(true);
     if(sec==='practice'||sec==='practice2') renderGallerySection(sec);
     else renderSection(sec, sec+'-grid');
     // Delete files from cloud storage using fileID
@@ -1082,7 +1089,9 @@ fileInput.addEventListener('change', async ()=>{
   } else if(isWebpGif || isImg){
     item.ar = await getImageAR(blobUrl);
   }
-  saveData();
+  // blob 阶段只写 localStorage，不触发云端推送（blob URL 无效，推了也会被清空）
+  DATA._version = Date.now();
+  try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); } catch(e){}
   rerenderItemSection(_uploadTarget);
   
   // 上传媒体文件到云存储
@@ -1103,11 +1112,12 @@ fileInput.addEventListener('change', async ()=>{
         }
       }catch(e){ console.warn('封面上传失败:', e); }
     }
-    saveData();
+    // 上传完成后立刻强制推云端（真实 CDN URL，跳过版本比较确保同步）
+    DATA._version = Date.now();
+    try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); } catch(e){}
     rerenderItemSection(_uploadTarget);
-    // 上传完成后立刻发布到云端（取消防抖，确保云端拿到真实URL而不是blob）
     clearTimeout(_publishTimer);
-    if(db) publishDataToCloud();
+    if(db) publishDataToCloud(true);
   }
 });
 
