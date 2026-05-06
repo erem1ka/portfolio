@@ -527,6 +527,13 @@ function makeMp4Card(item, section){
     </div>`;
   if(mediaSrc){
     const mediaEl = card.querySelector('.card-media');
+    // 封面/动图加载失败时用 fileID 刷新
+    const coverImg = card.querySelector('.card-media img');
+    if(coverImg && item.coverFileID){
+      coverImg.addEventListener('error', ()=>{ refreshCoverUrl(item, coverImg); }, {once:true});
+    } else if(coverImg && item.fileID && isAnim){
+      coverImg.addEventListener('error', ()=>{ refreshItemUrl(item, coverImg); }, {once:true});
+    }
     card.querySelector('.card-media').addEventListener('click', e=>{
       if(e.target.closest('.upload-ov') || editMode) return;
       // 所有卡片统一使用 openMedia（zoom overlay），video 在 overlay 内播放
@@ -546,7 +553,7 @@ function makeImgCard(item, section){
   card.dataset.section = section || '';
   card.innerHTML = `
     <div class="card-media${!item.media?' empty-card':''}">
-      ${item.media ? `<img src="${item.media}" alt="" style="pointer-events:none">` : `<div class="no-thumb">待上传</div>`}
+      ${item.media ? `<img src="${item.media}" alt="" style="pointer-events:none" data-fileid="${item.fileID||''}">` : `<div class="no-thumb">待上传</div>`}
       <div class="upload-ov">
         <button class="upload-ov-btn" onclick="event.stopPropagation();triggerMediaUpload('${item.id}','img')">上传图片</button>
         <button class="del-ov-btn" onclick="event.stopPropagation();deleteCard('${item.id}')">&#x2715; 删除</button>
@@ -557,6 +564,10 @@ function makeImgCard(item, section){
       <p class="text-sub font-light text-[.72rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
   if(item.media){
+    const imgEl = card.querySelector('.card-media img');
+    if(imgEl){
+      imgEl.addEventListener('error', ()=>{ refreshItemUrl(item, imgEl); }, {once:true});
+    }
     const useFlip = section==='practice2' || section==='mg';
     card.querySelector('.card-media').addEventListener('click', e=>{
       if(e.target.closest('.upload-ov') || editMode) return;
@@ -566,6 +577,34 @@ function makeImgCard(item, section){
   }
   setupEditableFields(card, item);
   return card;
+}
+
+// 图片加载失败时，用 fileID 重新换取有效 URL
+async function refreshItemUrl(item, imgEl){
+  if(!item.fileID || !tcbApp) return;
+  try{
+    const res = await tcbApp.getTempFileURL({ fileList:[item.fileID] });
+    const newUrl = res?.fileList?.[0]?.tempFileURL;
+    if(newUrl && !newUrl.startsWith('blob:') && !newUrl.startsWith('data:')){
+      item.media = newUrl;
+      if(imgEl) imgEl.src = newUrl;
+      saveData();
+    }
+  }catch(e){ console.warn('refreshItemUrl 失败:', e); }
+}
+
+// 视频封面加载失败时，用 coverFileID 换取有效 URL
+async function refreshCoverUrl(item, imgEl){
+  if(!item.coverFileID || !tcbApp) return;
+  try{
+    const res = await tcbApp.getTempFileURL({ fileList:[item.coverFileID] });
+    const newUrl = res?.fileList?.[0]?.tempFileURL;
+    if(newUrl && !newUrl.startsWith('blob:') && !newUrl.startsWith('data:')){
+      item.cover = newUrl;
+      if(imgEl) imgEl.src = newUrl;
+      saveData();
+    }
+  }catch(e){ console.warn('refreshCoverUrl 失败:', e); }
 }
 
 function escHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
