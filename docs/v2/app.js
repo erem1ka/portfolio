@@ -177,8 +177,8 @@ async function publishDataToCloud(force) {
       if(dataToSave.contact.resumeUrl && (dataToSave.contact.resumeUrl.startsWith('blob:') || dataToSave.contact.resumeUrl.startsWith('data:'))) dataToSave.contact.resumeUrl = '';
     }
     
-    // 用 set() 全量覆盖写入 doc('main')，CloudBase set() 是替换而非合并
-    // 不用 remove+add，因为 add() 不支持指定 _id，会产生随机 ID 文档
+    // 用 update() 更新已有文档，或 add() 创建新文档
+    // CloudBase 的 set() 对已存在文档也会报 E11000，add() 不支持指定 _id
     let exists = false;
     try {
       const existing = await collection.doc('main').get();
@@ -186,7 +186,7 @@ async function publishDataToCloud(force) {
     } catch(e) { exists = false; }
 
     if (exists) {
-      await collection.doc('main').set({ data: dataToSave, updatedAt: new Date() });
+      await collection.doc('main').update({ data: dataToSave, updatedAt: new Date() });
     } else {
       await collection.add({ data: dataToSave, updatedAt: new Date() });
     }
