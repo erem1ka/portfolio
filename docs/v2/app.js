@@ -124,7 +124,7 @@ async function loadCloudDataVersion() {
   if (!db) return 0;
   try {
     const collection = db.collection('portfolio_v2');
-    const result = await collection.doc('main').get();
+    const result = await collection.limit(1).get();
     if (result.data && result.data.length > 0) {
       return result.data[0].data._version || 0;
     }
@@ -177,19 +177,21 @@ async function publishDataToCloud(force) {
       if(dataToSave.contact.resumeUrl && (dataToSave.contact.resumeUrl.startsWith('blob:') || dataToSave.contact.resumeUrl.startsWith('data:'))) dataToSave.contact.resumeUrl = '';
     }
     
-    // 用 update() 更新已有文档，或 add() 创建新文档
-    // CloudBase 的 set() 对已存在文档也会报 E11000，add() 不支持指定 _id
-    let exists = false;
+    // 全量覆盖：先删除所有旧文档（包括之前 bug 产生的随机 ID 文档），再写入新文档
+    // CloudBase 的 set()/update() 都不能全量替换，只能 remove+add
+    // add() 不支持指定 _id，读取改用 collection.limit(1).get()
     try {
-      const existing = await collection.doc('main').get();
-      if (existing.data && existing.data.length > 0) exists = true;
-    } catch(e) { exists = false; }
-
-    if (exists) {
-      await collection.doc('main').update({ data: dataToSave, updatedAt: new Date() });
-    } else {
-      await collection.add({ data: dataToSave, updatedAt: new Date() });
+      // 删除 _id='main' 的旧文档
+      await collection.doc('main').remove();
+    } catch(e) {}
+    // 删除之前 add() bug 产生的随机 ID 文档
+    const oldDocs = await collection.limit(100).get();
+    if(oldDocs.data && oldDocs.data.length > 0){
+      for(const doc of oldDocs.data){
+        try { await collection.doc(doc._id).remove(); } catch(e) {}
+      }
     }
+    await collection.add({ data: dataToSave, updatedAt: new Date() });
     
     DATA._version = newVersion;
     console.log('✓ 数据已同步到云端');
@@ -205,7 +207,7 @@ async function loadDataFromCloud(forceLoad) {
   
   try {
     const collection = db.collection('portfolio_v2');
-    const result = await collection.doc('main').get();
+    const result = await collection.limit(1).get();
     
     if (result.data && result.data.length > 0) {
       const cloudData = result.data[0].data;
