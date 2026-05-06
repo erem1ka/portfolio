@@ -1463,22 +1463,10 @@ async function init(){
     const cloudVer = await loadCloudDataVersion();
     
     if (cloudVer > 0 && localVersion > 0) {
-      // 两边都有数据 → 比较版本号决定方向
-      const isEditor = !!localStorage.getItem('portfolio_v2_editor_token');
-      if (localVersion > cloudVer && isEditor) {
-        // 编辑者设备 + 本地更新 → 推送本地到云端
-        console.log('📤 本地数据更新(v' + localVersion + '> v' + cloudVer + ')，推送到云端...');
-        await publishDataToCloud();
-        renderAll();
-      } else if (localVersion > cloudVer && !isEditor) {
-        // 非编辑者设备 — 本地可能有脏数据，以云端为准
-        console.log('☁ 非编辑者设备，云端为准(v' + cloudVer + ')，重新加载...');
-        await loadDataFromCloud(true);
-      } else {
-        // 云端更新 → 拉取云端覆盖本地
-        console.log('☁ 云端数据更新(v' + cloudVer + ')，正在加载...');
-        await loadDataFromCloud(true);
-      }
+      // 两边都有数据 → 启动时永远以云端为准，防止旧设备覆盖新数据
+      // （操作中的推送由 deleteCard/upload 的 force 参数保证实时性）
+      console.log('☁ 启动拉取云端数据(cloud=v' + cloudVer + ', local=v' + localVersion + ')...');
+      await loadDataFromCloud(true);
     } else if (cloudVer > 0 && !hasLocalData) {
       // 云端有数据，本地没有 → 拉取云端
       console.log('☁ 检测到云端数据(v' + cloudVer + ')，正在加载...');
