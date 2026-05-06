@@ -523,7 +523,7 @@ function makeMp4Card(item, section){
     </div>
     <div class="p-2.5 pb-2${!(item.title||item.desc)?' card-no-text':''}">
       <p class="font-sans font-medium text-main text-[.82rem] leading-snug mb-0.5" data-field="title">${escHtml((item.title||item.desc) ? (item.title||'作品标题') : '')}</p>
-      <p class="text-sub font-light text-[.72rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
+      <p class="text-sub font-normal text-[.78rem] leading-relaxed whitespace-pre-wrap" data-field="desc">${escHtml(item.desc||'')}</p>
     </div>`;
   if(mediaSrc){
     const mediaEl = card.querySelector('.card-media');
