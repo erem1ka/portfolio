@@ -1603,7 +1603,7 @@ function initGalleryLoop(key, track, realItems){
     if(editMode) return; // 编辑模式：不拦截滚轮，让页面正常滚动
     inst.wheeling=true;
     const delta=e.deltaY!==0?e.deltaY:e.deltaX;
-    inst.boost=Math.max(-22,Math.min(22,inst.boost+delta*0.07));
+    inst.boost=Math.max(-22,Math.min(22,inst.boost+delta*0.2));
     e.preventDefault();
   };
   galleryOuter?.addEventListener('wheel',onWheel,{passive:false});
