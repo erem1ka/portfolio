@@ -177,19 +177,18 @@ async function publishDataToCloud(force) {
       if(dataToSave.contact.resumeUrl && (dataToSave.contact.resumeUrl.startsWith('blob:') || dataToSave.contact.resumeUrl.startsWith('data:'))) dataToSave.contact.resumeUrl = '';
     }
     
+    // 用 set() 全量覆盖写入 doc('main')，CloudBase set() 是替换而非合并
+    // 不用 remove+add，因为 add() 不支持指定 _id，会产生随机 ID 文档
     let exists = false;
     try {
       const existing = await collection.doc('main').get();
       if (existing.data && existing.data.length > 0) exists = true;
     } catch(e) { exists = false; }
-    
+
     if (exists) {
-      // 全量覆盖：先删除旧文档再写入新文档，确保云端数据完全替换
-      // set() 可能是合并而非替换，remove+add 确保万无一失
-      try { await collection.doc('main').remove(); } catch(e) {}
-      await collection.add({ _id: 'main', data: dataToSave, updatedAt: new Date() });
+      await collection.doc('main').set({ data: dataToSave, updatedAt: new Date() });
     } else {
-      await collection.add({ _id: 'main', data: dataToSave, updatedAt: new Date() });
+      await collection.add({ data: dataToSave, updatedAt: new Date() });
     }
     
     DATA._version = newVersion;
