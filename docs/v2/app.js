@@ -154,6 +154,13 @@ async function publishDataToCloud() {
       await loadDataFromCloud(true);
       return;
     }
+
+    // Safety check: 本地数据为空时绝不覆盖云端
+    const totalItems = ['practice','practice2','mg','aigc-img','agent'].reduce((n,s)=>n+(DATA[s]?.length||0),0);
+    if (totalItems === 0 && cloudVer > 0) {
+      console.warn('⛔ 本地数据为空但云端有数据，跳过推送防止覆盖');
+      return;
+    }
     
     const collection = db.collection('portfolio_v2');
     const dataToSave = JSON.parse(JSON.stringify(DATA));
@@ -182,10 +189,14 @@ async function publishDataToCloud() {
     } catch(e) { exists = false; }
     
     if (exists) {
-      // 全量覆盖：先删除旧文档再写入新文档，确保云端数据完全替换
-      // set() 可能是合并而非替换，remove+add 确保万无一失
-      try { await collection.doc('main').remove(); } catch(e) {}
-      await collection.add({ _id: 'main', data: dataToSave, updatedAt: new Date() });
+      // 使用 set() 覆盖写入，避免 remove+add 之间网络失败导致数据丢失
+      try {
+        await collection.doc('main').set({ data: dataToSave, updatedAt: new Date() });
+      } catch(e) {
+        // set() 失败则 fallback: remove + add
+        try { await collection.doc('main').remove(); } catch(e2) {}
+        await collection.add({ _id: 'main', data: dataToSave, updatedAt: new Date() });
+      }
     } else {
       await collection.add({ _id: 'main', data: dataToSave, updatedAt: new Date() });
     }
