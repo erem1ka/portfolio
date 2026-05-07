@@ -124,7 +124,7 @@ async function loadCloudDataVersion() {
   if (!db) return 0;
   try {
     const collection = db.collection('portfolio_v2');
-    const result = await collection.doc('main').get();
+    const result = await collection.orderBy('updatedAt','desc').limit(1).get();
     if (result.data && result.data.length > 0) {
       return result.data[0].data._version || 0;
     }
@@ -159,7 +159,8 @@ async function publishDataToCloud(force) {
 
     // Safety check: 本地数据为空时绝不覆盖云端
     const totalItems = ['practice','practice2','mg','aigc-img','agent'].reduce((n,s)=>n+(DATA[s]?.length||0),0);
-    if (totalItems === 0 && cloudVer > 0) {
+    const _cloudVerForGuard = force ? 0 : await loadCloudDataVersion();
+    if (totalItems === 0 && _cloudVerForGuard > 0) {
       console.warn('⛔ 本地数据为空但云端有数据，跳过推送防止覆盖');
       return;
     }
@@ -184,20 +185,21 @@ async function publishDataToCloud(force) {
       if(dataToSave.contact.resumeUrl && (dataToSave.contact.resumeUrl.startsWith('blob:') || dataToSave.contact.resumeUrl.startsWith('data:'))) dataToSave.contact.resumeUrl = '';
     }
     
-    // 全量覆盖 doc('main')：用 db.command.set() 强制替换 data 字段（非合并）
-    // 匿名用户需要在 CloudBase 控制台开放 portfolio_v2 集合的写权限
-    let exists = false;
+    // 查询最新文档（按 updatedAt 降序）
+    let docId = null;
     try {
-      const existing = await collection.doc('main').get();
-      if (existing.data && existing.data.length > 0) exists = true;
-    } catch(e) { exists = false; }
+      const existing = await collection.orderBy('updatedAt','desc').limit(1).get();
+      if (existing.data && existing.data.length > 0) docId = existing.data[0]._id;
+    } catch(e) {}
 
-    if (exists) {
-      await collection.doc('main').update({
+    if (docId) {
+      // 已有文档：用 db.command.set() 强制全量替换 data 字段
+      await collection.doc(docId).update({
         data: db.command.set(dataToSave),
         updatedAt: new Date()
       });
     } else {
+      // 没有文档：新建一条
       await collection.add({ data: dataToSave, updatedAt: new Date() });
     }
     
