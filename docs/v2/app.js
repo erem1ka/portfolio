@@ -132,7 +132,7 @@ async function loadCloudDataVersion() {
   return 0;
 }
 
-async function publishDataToCloud() {
+async function publishDataToCloud(force) {
   if (!db) {
     console.warn('云数据库未初始化，跳过同步');
     return;
@@ -146,13 +146,15 @@ async function publishDataToCloud() {
   }
   
   try {
-    // Safety check: only push if local version >= cloud version
-    const cloudVer = await loadCloudDataVersion();
-    const localVer = DATA._version || 0;
-    if (cloudVer > localVer) {
-      console.log('云端数据更新(local=' + localVer + ' cloud=' + cloudVer + ')，跳过推送，先拉取');
-      await loadDataFromCloud(true);
-      return;
+    // Safety check: only push if local version >= cloud version（force=true 时跳过，如删除卡片）
+    if (!force) {
+      const cloudVer = await loadCloudDataVersion();
+      const localVer = DATA._version || 0;
+      if (cloudVer > localVer) {
+        console.log('云端数据更新(local=' + localVer + ' cloud=' + cloudVer + ')，跳过推送，先拉取');
+        await loadDataFromCloud(true);
+        return;
+      }
     }
 
     // Safety check: 本地数据为空时绝不覆盖云端
@@ -182,23 +184,21 @@ async function publishDataToCloud() {
       if(dataToSave.contact.resumeUrl && (dataToSave.contact.resumeUrl.startsWith('blob:') || dataToSave.contact.resumeUrl.startsWith('data:'))) dataToSave.contact.resumeUrl = '';
     }
     
+    // 全量覆盖 doc('main')：用 db.command.set() 强制替换 data 字段（非合并）
+    // 匿名用户需要在 CloudBase 控制台开放 portfolio_v2 集合的写权限
     let exists = false;
     try {
       const existing = await collection.doc('main').get();
       if (existing.data && existing.data.length > 0) exists = true;
     } catch(e) { exists = false; }
-    
+
     if (exists) {
-      // 使用 set() 覆盖写入，避免 remove+add 之间网络失败导致数据丢失
-      try {
-        await collection.doc('main').set({ data: dataToSave, updatedAt: new Date() });
-      } catch(e) {
-        // set() 失败则 fallback: remove + add
-        try { await collection.doc('main').remove(); } catch(e2) {}
-        await collection.add({ _id: 'main', data: dataToSave, updatedAt: new Date() });
-      }
+      await collection.doc('main').update({
+        data: db.command.set(dataToSave),
+        updatedAt: new Date()
+      });
     } else {
-      await collection.add({ _id: 'main', data: dataToSave, updatedAt: new Date() });
+      await collection.add({ data: dataToSave, updatedAt: new Date() });
     }
     
     DATA._version = newVersion;
@@ -1037,7 +1037,12 @@ async function deleteCard(id){
   if(sec){
     const idx = DATA[sec].findIndex(x=>x.id===id);
     DATA[sec].splice(idx,1);
-    saveData();
+    // 更新本地版本号并写 localStorage，但不触发防抖推送
+    DATA._version = Date.now();
+    try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); } catch(e){}
+    // 立刻强制推云端，跳过版本比较（删除是明确操作，必须同步）
+    clearTimeout(_publishTimer);
+    if(db) publishDataToCloud(true);
     if(sec==='practice'||sec==='practice2') renderGallerySection(sec);
     else renderSection(sec, sec+'-grid');
     // Delete files from cloud storage using fileID
@@ -1093,7 +1098,9 @@ fileInput.addEventListener('change', async ()=>{
   } else if(isWebpGif || isImg){
     item.ar = await getImageAR(blobUrl);
   }
-  saveData();
+  // blob 阶段只写 localStorage，不触发云端推送（blob URL 无效，推了也会被清空）
+  DATA._version = Date.now();
+  try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); } catch(e){}
   rerenderItemSection(_uploadTarget);
   
   // 上传媒体文件到云存储
@@ -1114,11 +1121,12 @@ fileInput.addEventListener('change', async ()=>{
         }
       }catch(e){ console.warn('封面上传失败:', e); }
     }
-    saveData();
+    // 上传完成后立刻强制推云端（真实 CDN URL，跳过版本比较确保同步）
+    DATA._version = Date.now();
+    try{ localStorage.setItem(APP_KEY, JSON.stringify(DATA)); } catch(e){}
     rerenderItemSection(_uploadTarget);
-    // 上传完成后立刻发布到云端（取消防抖，确保云端拿到真实URL而不是blob）
     clearTimeout(_publishTimer);
-    if(db) publishDataToCloud();
+    if(db) publishDataToCloud(true);
   }
 });
 
@@ -1464,22 +1472,10 @@ async function init(){
     const cloudVer = await loadCloudDataVersion();
     
     if (cloudVer > 0 && localVersion > 0) {
-      // 两边都有数据 → 比较版本号决定方向
-      const isEditor = !!localStorage.getItem('portfolio_v2_editor_token');
-      if (localVersion > cloudVer && isEditor) {
-        // 编辑者设备 + 本地更新 → 推送本地到云端
-        console.log('📤 本地数据更新(v' + localVersion + '> v' + cloudVer + ')，推送到云端...');
-        await publishDataToCloud();
-        renderAll();
-      } else if (localVersion > cloudVer && !isEditor) {
-        // 非编辑者设备 — 本地可能有脏数据，以云端为准
-        console.log('☁ 非编辑者设备，云端为准(v' + cloudVer + ')，重新加载...');
-        await loadDataFromCloud(true);
-      } else {
-        // 云端更新 → 拉取云端覆盖本地
-        console.log('☁ 云端数据更新(v' + cloudVer + ')，正在加载...');
-        await loadDataFromCloud(true);
-      }
+      // 两边都有数据 → 启动时永远以云端为准，防止旧设备覆盖新数据
+      // （操作中的推送由 deleteCard/upload 的 force 参数保证实时性）
+      console.log('☁ 启动拉取云端数据(cloud=v' + cloudVer + ', local=v' + localVersion + ')...');
+      await loadDataFromCloud(true);
     } else if (cloudVer > 0 && !hasLocalData) {
       // 云端有数据，本地没有 → 拉取云端
       console.log('☁ 检测到云端数据(v' + cloudVer + ')，正在加载...');
