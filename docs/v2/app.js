@@ -217,7 +217,7 @@ async function loadDataFromCloud(forceLoad) {
   
   try {
     const collection = db.collection('portfolio_v2');
-    const result = await collection.doc('main').get();
+    const result = await collection.orderBy('updatedAt','desc').limit(1).get();
     
     if (result.data && result.data.length > 0) {
       const cloudData = result.data[0].data;
