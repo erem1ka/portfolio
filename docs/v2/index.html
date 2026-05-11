@@ -106,7 +106,7 @@
     .sidebar-item {
       display: block; padding: 0;
       cursor: pointer; text-decoration: none;
-      color: var(--color-dim);
+      color: var(--color-sub);
       font-family: 'Cormorant Garamond', serif;
       font-size: 1.4rem; font-weight: 400; font-style: italic;
       letter-spacing: .03em;
@@ -125,8 +125,8 @@
     }
     .sidebar-item:hover { color: var(--color-main); }
     .sidebar-item:hover::after { width: 60%; }
-    .sidebar-item.active { color: var(--color-main); }
-    .sidebar-item.active::after { width: 60%; background: var(--accent); }
+    .sidebar-item.active { color: var(--color-main); font-weight: 600; }
+    .sidebar-item.active::after { width: 70%; background: var(--accent); }
 
     /* 社交链接区（无分隔线） */
     .sidebar-links {
@@ -142,8 +142,8 @@
     }
     .sidebar-link-label {
       font-family: 'Noto Sans SC', sans-serif;
-      font-size: .62rem; font-weight: 300;
-      letter-spacing: .08em; color: var(--color-dim);
+      font-size: .62rem; font-weight: 400;
+      letter-spacing: .08em; color: var(--color-sub);
       text-align: center;
     }
 
