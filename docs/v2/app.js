@@ -1501,6 +1501,26 @@ async function init(){
   }
 }
 
+// 立即用 localStorage 数据渲染，消除 FOUC（内容闪烁）
+// init() 异步完成后会再次 renderAll() 覆盖为云端最新数据
+(function preRender(){
+  try{
+    const s = localStorage.getItem(APP_KEY);
+    if(s){
+      const d = JSON.parse(s);
+      const SECTIONS = ['practice','practice2','mg','aigc-img','agent'];
+      SECTIONS.forEach(sec=>{ DATA[sec] = d[sec] || []; });
+      if(d.contact) Object.assign(DATA.contact, d.contact);
+      if(d.sectionTitles) DATA.sectionTitles = d.sectionTitles;
+      if(d.heroNav) DATA.heroNav = d.heroNav;
+      if(d.tags) DATA.tags = d.tags;
+      if(d.cols) DATA.cols = d.cols;
+      DATA._version = d._version || 0;
+      renderAll();
+    }
+  }catch(e){}
+})();
+
 init();
 
 
