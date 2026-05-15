@@ -379,31 +379,103 @@
    移动端适配
    ═══════════════════════════════════════════ */
 @media (max-width: 767px) {
-  .gallery__track {
-    padding: 0 24px;
-    gap: 24px;
+  /* ─── 画廊章节：从 pin 全屏 → 正常文档流 ─── */
+  /* 注意：JS 端 setupScrollTrigger 会检测 isMobile 跳过 pin */
+  .chapter--gallery {
+    height: auto;         /* 不再 100vh 固定高度 */
+    min-height: auto;
+    overflow: visible;    /* 允许内容撑开 */
+    display: block;
   }
 
+  /* 标题区：改为正常文档流内 */
+  .gallery__header {
+    position: relative;   /* 取消 absolute，不 pin */
+    top: auto;
+    left: auto;
+    padding: var(--space-6) var(--space-4) var(--space-4);
+    pointer-events: auto;
+  }
+
+  .gallery__chapter-tag {
+    margin-bottom: var(--space-2);
+  }
+
+  .gallery__title {
+    margin-bottom: var(--space-2);
+  }
+
+  /* 轨道容器：改为垂直网格布局 */
+  .gallery__track-wrapper {
+    padding: 0 var(--space-4) var(--space-4);
+    overflow: visible;
+  }
+
+  .gallery__track {
+    /* 重置横向布局 → 纵向单列 */
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    padding: 0;
+    width: 100% !important;   /* 覆盖 JS 设置的固定 px 宽度 */
+    transform: none !important; /* 覆盖 GSAP 的 x 偏移 */
+  }
+
+  /* 卡片：填满容器宽度 */
   .gallery-card {
-    width: 300px;
+    width: 100%;
+    transform: none !important;  /* 关闭 perspectiveTilt 倾斜 */
+    opacity: 1 !important;       /* 覆盖 GSAP 初始 opacity: 0 */
+    cursor: pointer;             /* 移动端用系统光标 */
+  }
+
+  /* 媒体区：16:10 比例，更接近手机视觉习惯 */
+  .gallery-card__media {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;  /* 横宽竖短，充分利用手机宽度 */
+  }
+
+  /* hover overlay 移动端不需要 */
+  .gallery-card:hover .gallery-card__overlay {
+    background: rgba(11, 11, 15, 0);
+  }
+
+  /* 进度指示器：改为文档流内居中展示 */
+  .gallery__progress {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    justify-content: center;
+    padding: var(--space-3) 0 var(--space-4);
+  }
+
+  /* 卡片信息区间距 */
+  .gallery-card__info {
+    padding: var(--space-3) 0 0;
+  }
+
+  .gallery-card__title {
+    font-size: 1rem;
+  }
+
+  .gallery__track {
+    gap: var(--space-5);
+  }
+}
+
+/* ─── 小手机 (<480px) ─── */
+@media (max-width: 479px) {
+  .gallery__header {
+    padding: var(--space-5) var(--space-3) var(--space-3);
+  }
+
+  .gallery__track-wrapper {
+    padding: 0 var(--space-3) var(--space-3);
   }
 
   .gallery-card__media {
-    width: 300px;
-    height: 400px;
-  }
-
-  .gallery__header {
-    left: var(--space-lg);
-    top: 8%;
-  }
-
-  .gallery__progress {
-    right: var(--space-lg);
-  }
-
-  .gallery-card {
-    transform: none;   /* 移动端禁用倾斜效果 */
+    aspect-ratio: 4 / 3;  /* 小屏更方形 */
   }
 }
 

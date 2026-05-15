@@ -1,0 +1,187 @@
+/* ═══════════════════════════════════════════
+   mobile.css — 移动端专属优化
+   
+   只在 768px 以下生效的移动端体验增强：
+   · 触摸目标尺寸（最小 44×44px）
+   · tap 高亮与反馈
+   · 滚动行为优化
+   · 安全区域（iPhone 刘海/Home Bar）适配
+   · 防止误触缩放
+   ═══════════════════════════════════════════ */
+
+/* ─── 全局移动端基础 ─── */
+@media (max-width: 767px) {
+
+  /* 防止双击缩放（保留单指滚动流畅度）*/
+  * {
+    touch-action: pan-y pan-x;
+  }
+
+  /* 按钮和链接：禁止特定元素的双击缩放 */
+  button, a, [role="button"], [tabindex="0"] {
+    touch-action: manipulation;
+  }
+
+  /* ─── 触摸反馈色 ───
+     替代 outline，给用户清晰的点击反馈 */
+  * {
+    -webkit-tap-highlight-color: rgba(255, 59, 92, 0.12);
+  }
+
+  /* ─── 最小触摸目标 44×44px ─── */
+  .floating-nav__menu-btn {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav-overlay__item {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0 var(--space-4);
+  }
+
+  .modal__close {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* ─── 防止 body 滚动条闪烁 ─── */
+  html {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+  }
+
+  body {
+    overflow-x: hidden;
+    /* 顺滑惯性滚动 */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ─── iPhone 安全区域适配 ───
+     底部 Home Bar 不遮挡导航 */
+  .floating-nav {
+    padding-top: max(var(--space-2), env(safe-area-inset-top));
+    padding-left: max(var(--space-3), env(safe-area-inset-left));
+    padding-right: max(var(--space-3), env(safe-area-inset-right));
+  }
+
+  /* Modal sheet 底部安全区域 */
+  #work-modal .modal__info-col {
+    padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
+  }
+
+  /* ─── 全屏覆盖导航安全区域 ─── */
+  .nav-overlay {
+    padding-bottom: max(var(--space-5), env(safe-area-inset-bottom));
+  }
+
+  /* ─── 文字选择优化 ───
+     标题不可选中，减少误操作 */
+  .h-hero,
+  .h-h2,
+  .h-h3,
+  .nav-identity,
+  .chapter-indicator,
+  .gallery__chapter-tag {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* ─── 图片防止长按菜单（gallery 卡片）─── */
+  .gallery-card__img,
+  .modal__media-img {
+    -webkit-user-drag: none;
+    pointer-events: none;
+  }
+
+  /* ─── 让卡片 overlay 在 tap 时显示 ─── */
+  .gallery-card:active .gallery-card__overlay {
+    background: rgba(11, 11, 15, 0.25);
+  }
+
+  /* ─── 全屏导航：点击 item 后收起动画 ─── */
+  .nav-overlay__item:active {
+    color: var(--accent);
+    transform: translateX(var(--space-2));
+  }
+
+  /* ─── 禁止 modal 内部误触关闭的 scroll 穿透 ─── */
+  .modal__info-col {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ─── 章节占位文字优化 ─── */
+  [data-chapter="3"] .h-h2,
+  [data-chapter="4"] .h-h2,
+  [data-chapter="5"] .h-h2,
+  [data-chapter="6"] .h-h2 {
+    font-size: var(--fs-h2);
+    opacity: 0.12;  /* 移动端占位更淡 */
+  }
+
+  /* ─── 卡片 tag：移动端加大点击区域 ─── */
+  .gallery-card__tag {
+    padding: 4px 10px;  /* 从 2px 8px 增大 */
+    font-size: 0.7rem;  /* 略增大，更易读 */
+  }
+}
+
+/* ─── 小手机 (<480px) 专属 ─── */
+@media (max-width: 479px) {
+  /* 更大行高提升可读性 */
+  .h-body {
+    line-height: 1.7;
+  }
+
+  /* gallery 卡片标题允许换行 */
+  .gallery-card__title {
+    font-size: 0.9375rem;
+    line-height: 1.3;
+  }
+
+  /* 章节标题下方副标题收小 */
+  .gallery__subtitle {
+    font-size: 0.75rem;
+  }
+}
+
+/* ─── 横屏手机 (landscape, max-height 500px) ─── */
+@media (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
+  /* 横屏：CH1 全屏区域启用 dvh */
+  .chapter--full {
+    min-height: 100dvh;
+  }
+
+  /* 横屏：Hero 字号缩小防止溢出 */
+  .h-hero {
+    font-size: 1.75rem !important;
+  }
+
+  /* 横屏：导航正常显示 */
+  .floating-nav {
+    padding: var(--space-2) var(--space-4);
+  }
+
+  /* 横屏：滚动提示隐藏 */
+  .ch1__scroll-hint {
+    display: none !important;
+  }
+
+  /* 横屏：Modal 改为横向布局 */
+  #work-modal .modal__panel {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+    height: 90dvh;
+    width: 96vw;
+    border-radius: 8px;
+  }
+
+  #work-modal {
+    align-items: center;  /* 横屏居中 */
+  }
+}

@@ -537,20 +537,83 @@ body.modal-open {
    移动端：单列布局
    ═══════════════════════════════════════════ */
 @media (max-width: 767px) {
+  #work-modal {
+    align-items: flex-end;  /* 从底部弹出，更接近 native sheet */
+  }
+
   .modal__panel {
     grid-template-columns: 1fr;
-    grid-template-rows: 40vh 1fr;
+    grid-template-rows: 45vw 1fr;  /* 图片区域：正方形比例 */
     width: 100vw;
-    height: 100dvh;
+    height: 92dvh;      /* 留出顶部一点，避免全屏压迫感 */
+    max-height: 92dvh;
     border: none;
+    border-radius: 16px 16px 0 0;  /* 顶部圆角，sheet 感 */
+    transform: translateY(40px) scale(1) !important;  /* 改为向上滑入 */
+    overflow: hidden;
+  }
+
+  #work-modal.modal--active .modal__panel {
+    transform: translateY(0) scale(1) !important;
+  }
+
+  /* 关闭按钮：移动端放大触摸区域 */
+  .modal__close {
+    top: var(--space-3);
+    right: var(--space-3);
+    width: 44px;
+    height: 44px;
+  }
+
+  /* 信息列：减少内边距 */
+  .modal__info-col {
+    padding: var(--space-4);
+    gap: var(--space-3);
+  }
+
+  /* 标题 */
+  .modal__title {
+    font-size: var(--fs-h3);
+  }
+
+  /* BTF 按钮：移动端全宽 */
+  .modal__btf-toggle {
+    margin-top: var(--space-3);
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* BTF 节点标签：移动端允许换行 */
+  .btf__node-label {
+    white-space: normal;
+    text-align: center;
+    font-size: 0.55rem;
+  }
+
+  /* 导航按钮增大触摸区 */
+  .btf__prev,
+  .btf__next {
+    padding: var(--space-2) var(--space-3);
+    font-size: 0.8rem;
+  }
+}
+
+/* ─── 小手机 (<480px) ─── */
+@media (max-width: 479px) {
+  .modal__panel {
+    grid-template-rows: 40vw 1fr;
+    height: 95dvh;
+    max-height: 95dvh;
+    border-radius: 12px 12px 0 0;
   }
 
   .modal__info-col {
-    padding: var(--space-lg);
+    padding: var(--space-3);
   }
 
-  .modal__btf-toggle {
-    margin-top: 0;
+  /* CH3 四节点改为单列 */
+  .ch3__nodes {
+    grid-template-columns: 1fr 1fr;
   }
 }
 

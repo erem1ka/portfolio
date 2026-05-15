@@ -133,18 +133,43 @@
   }
 }
 
+/* ─── 平板 (768-1023px) ─── */
+@media (max-width: 1023px) and (min-width: 768px) {
+  :root {
+    --fs-hero: 4rem;     /* 64px */
+    --fs-hero-md: 3.5rem;
+    --fs-h2: 2.5rem;
+    --fs-h3: 1.5rem;
+  }
+}
+
 /* ─── 移动端 (<768px) ─── */
 @media (max-width: 767px) {
   :root {
-    --fs-hero: 2rem;     /* ≥32px */
-    --fs-hero-md: 2rem;
-    --fs-h2: 2rem;
-    --fs-h3: 1.25rem;    /* 20px */
-    --fs-body: 0.875rem; /* ≥14px */
-    --card-width: 100vw;
+    --fs-hero: 2.5rem;    /* 40px — 大标题在竖屏仍有冲击力 */
+    --fs-hero-md: 2rem;   /* 32px */
+    --fs-h2: 1.75rem;     /* 28px — 章节标题 */
+    --fs-h3: 1.125rem;    /* 18px — 卡片标题 */
+    --fs-body: 0.9375rem; /* 15px — 正文，略大更易读 */
+    --fs-caption: 0.75rem; /* 12px */
+    --card-width: calc(100vw - 3rem); /* 左右各留 1.5rem 边距 */
     --card-height: auto;
-    --mx: -9999px;       /* 关闭 Layer 4 光斑 */
+    --mx: -9999px;        /* 关闭 Layer 4 光斑 */
     --my: -9999px;
+    /* 间距收紧 */
+    --space-8: 4rem;      /* 章节间距从 96px → 64px */
+    --space-7: 3rem;      /* 64px → 48px */
+    --space-6: 2rem;      /* 48px → 32px */
+  }
+}
+
+/* ─── 小手机 (<480px) ─── */
+@media (max-width: 479px) {
+  :root {
+    --fs-hero: 2rem;      /* 32px — 小屏保守处理 */
+    --fs-hero-md: 1.75rem;
+    --fs-h2: 1.5rem;
+    --fs-h3: 1rem;
   }
 }
 

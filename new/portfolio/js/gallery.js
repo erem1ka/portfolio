@@ -138,10 +138,32 @@
      1. pin 住 section（纵向滚动时 section 固定在视口）
      2. 用 scrub 将纵向滚动量转换为 track 的 x 偏移
      3. 滚动量 = trackWidth - viewportWidth（全部卡片都移出左侧）
+
+     移动端（<768px）：跳过 pin，改为纵向滚动 + IntersectionObserver 淡入
      ═══════════════════════════════════════════ */
   function setupScrollTrigger(section) {
     if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
       console.warn('[gallery] GSAP / ScrollTrigger 未加载，跳过横向滚动');
+      return;
+    }
+
+    // ─── 移动端：跳过横向 ScrollTrigger ───
+    const isMobile = window.innerWidth <= 767;
+    if (isMobile) {
+      const cards = section.querySelectorAll('.gallery-card');
+      cards.forEach((card) => {
+        gsap.set(card, { opacity: 0, y: 24 });
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              gsap.to(entry.target, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
+              io.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.12 });
+        io.observe(card);
+      });
+      console.log('[gallery] 移动端模式：纵向布局，跳过横向 ScrollTrigger');
       return;
     }
 

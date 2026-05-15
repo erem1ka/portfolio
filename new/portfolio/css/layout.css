@@ -262,15 +262,63 @@ body {
 
 /* ─── 移动端布局调整 ─── */
 @media (max-width: 767px) {
+  /* 导航栏收紧 */
   .floating-nav {
     padding: var(--space-2) var(--space-3);
+    /* 移动端固定高度 52px，确保内容不被遮挡 */
+  }
+
+  /* 左侧导航身份缩小 */
+  .floating-nav__identity {
+    font-size: 0.6875rem;  /* 11px，移动端更克制 */
+    letter-spacing: 0.03em;
+  }
+
+  /* 右侧章节指示 — 移动端只保留 CH 编号，不显示完整名称 */
+  .floating-nav__right .chapter-indicator__name {
+    display: none;  /* 隐藏章节名称文字，只留 CH 编号 */
+  }
+
+  /* 全屏覆盖菜单 — 移动端字号与间距 */
+  .nav-overlay__item {
+    font-size: 1.5rem;  /* 固定 24px，不随 h3 变量变 */
+    padding: var(--space-2) 0;  /* 增大点击区域 */
+  }
+
+  .nav-overlay__content {
+    gap: var(--space-3);
+  }
+
+  .nav-overlay__close {
+    top: var(--space-4);
+    right: var(--space-4);
+    font-size: 1.25rem;
+    /* 增大触摸区域 */
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 进度条 — 移动端隐藏（侧边进度条在手机上干扰内容）*/
+  .scroll-progress {
+    display: none;
+  }
+
+  /* 章节分隔线 — 移动端减少外边距 */
+  .chapter-divider {
+    margin: var(--space-6) 0;
+  }
+}
+
+/* ─── 小手机额外收紧 (<480px) ─── */
+@media (max-width: 479px) {
+  .floating-nav {
+    padding: var(--space-2) var(--space-2);
   }
 
   .nav-overlay__item {
-    font-size: var(--fs-h3);  /* 移动端菜单字号缩小 */
-  }
-
-  .scroll-progress {
-    display: none;  /* 移动端可隐藏进度条或简化 */
+    font-size: 1.25rem;
   }
 }
