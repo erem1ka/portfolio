@@ -365,8 +365,6 @@ function toggleEdit(){
   const qrImg = document.getElementById('wechat-qr-img');
   const qrActions = document.getElementById('wechat-qr-actions');
   if(qrActions) qrActions.style.display = (editMode && qrImg && qrImg.src && !qrImg.src.endsWith('/')) ? 'flex' : 'none';
-  // show/hide resume edit controls
-  document.querySelectorAll('.resume-edit-ctrl,.nav-resume-edit').forEach(el=>el.style.display=editMode?'flex':'none');
   // re-render tags to show/hide edit controls
   rerenderAllTags();
   ['contact-douyin'].forEach(id=>{

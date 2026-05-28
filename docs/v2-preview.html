@@ -771,10 +771,6 @@
     a { color: inherit; }
     button { font-family: inherit; }
 
-    /* Resume edit ctrl */
-    .resume-edit-ctrl { display: none; }
-    .nav-resume-edit { display: none; }
-
     /* grain (subtle) */
     #grain-overlay {
       position: fixed; inset: 0; pointer-events: none; z-index: 500;
@@ -1066,18 +1062,7 @@
       </button>
       <span class="sidebar-link-label" id="douyin-label">抖音主页</span>
     </div>
-    <div class="sidebar-link-item">
-      <div id="nav-resume-wrap" style="display:flex;align-items:center;gap:8px">
-        <button id="nav-resume-btn" class="sidebar-btn magnetic" title="简历下载" style="display:none">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        </button>
-      </div>
-      <span class="sidebar-link-label" id="resume-label">简历下载</span>
-      <div class="nav-resume-edit" style="display:none;flex-direction:column;gap:6px">
-        <button onclick="triggerResumeUpload()" style="font-family:'Noto Sans SC',sans-serif;font-size:.52rem;font-weight:200;color:var(--color-sub);border:1px solid var(--color-sep);border-radius:4px;padding:3px 10px;background:transparent;cursor:pointer">上传简历</button>
-        <button onclick="deleteResume()" id="nav-resume-del" style="display:none;color:rgba(200,80,60,.8);font-family:'Noto Sans SC',sans-serif;font-size:.52rem;border:1px solid var(--color-sep);border-radius:4px;padding:3px 10px;background:transparent;cursor:pointer">删除</button>
-      </div>
-    </div>
+    
   </div>
 
   <!-- copyright 固定在 sidebar 左下角 -->
