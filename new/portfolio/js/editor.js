@@ -55,6 +55,15 @@
      ═══════════════════════════════════════════ */
   function init() {
     loadWorks();
+    // ─── 关键修复：将 localStorage 自定义数据同步到 gallery ───
+    // gallery.js init() 会在同一个 DOMContentLoaded 事件中稍后执行，
+    // 它通过检查 window.__editorWorks 来决定是否使用自定义数据。
+    // 之前没有这一行，gallery.js 总是 fetch 原始 works.json，
+    // 导致先渲染原始内容，再到某个时机闪烁变成自定义内容。
+    // 仅在有实际数据时同步，避免首次访问时空数组干扰 gallery 的 fetch
+    if (works.length > 0) {
+      window.__editorWorks = works;
+    }
     buildEditorDOM();
   }
 
@@ -64,12 +73,14 @@
     if (saved) {
       try { works = JSON.parse(saved); return; } catch (e) {}
     }
-    // 无本地数据，从 works.json 读取
+    // 无本地数据，从 works.json 读取（但不要覆盖已有的 localStorage 数据）
     fetch('data/works.json')
       .then(r => r.json())
       .then(data => {
-        works = data;
-        saveWorks();
+        if (!localStorage.getItem(STORAGE_KEY)) {
+          works = data;
+          saveWorks();
+        }
       })
       .catch(() => { works = []; });
   }
